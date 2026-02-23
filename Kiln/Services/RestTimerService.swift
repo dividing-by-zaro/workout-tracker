@@ -6,7 +6,7 @@ import SwiftUI
 final class RestTimerService {
     var isRunning: Bool = false
     var remainingSeconds: Int = 0
-    var totalSeconds: Int = 90
+    var totalSeconds: Int = 120
 
     private var endDate: Date?
     private var displayTimer: Timer?
@@ -51,7 +51,7 @@ final class RestTimerService {
 
         let storedEndDate = Date(timeIntervalSince1970: storedTimestamp)
         totalSeconds = UserDefaults.standard.integer(forKey: Self.totalSecondsKey)
-        if totalSeconds == 0 { totalSeconds = 90 }
+        if totalSeconds == 0 { totalSeconds = 120 }
 
         let remaining = storedEndDate.timeIntervalSinceNow
         if remaining > 0 {
