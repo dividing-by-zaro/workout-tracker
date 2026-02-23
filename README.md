@@ -23,6 +23,7 @@ MVP implementation complete. Ready for Xcode build and testing.
 - [x] Custom body-part icons on template cards
 - [x] Template detail modal with full exercise list
 - [x] Exercise picker with equipment type and body part selection
+- [x] Custom app icon
 
 ## Getting Started
 
@@ -42,4 +43,4 @@ MVP implementation complete. Ready for Xcode build and testing.
 
 ## Tech Stack
 
-Swift 5.9+ / SwiftUI / SwiftData / Swift Charts / iOS 17+ / iPhone 13
+Swift 5.9+ / SwiftUI / SwiftData / Swift Charts / iOS 17+ / iPhone 17

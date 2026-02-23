@@ -2,7 +2,7 @@
 
 ## Active Technologies
 
-- Swift 5.9+ / SwiftUI / iOS 17+ (iPhone 13 target)
+- Swift 5.9+ / SwiftUI / iOS 17+ (iPhone 17 target)
 - SwiftData (local persistence, autosave disabled, explicit save on every set)
 - Swift Charts (workouts-per-week bar chart)
 - UserNotifications (background rest timer alerts)
