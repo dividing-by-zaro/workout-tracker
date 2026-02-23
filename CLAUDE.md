@@ -15,16 +15,30 @@
 - **Rest timer**: `UNUserNotificationCenter` for background alerts + `Date` end-time in UserDefaults + wall-clock-derived foreground countdown
 - **CSV import**: `@ModelActor` background actor with batched saves
 
+## Build
+
+- Xcode project generated via `xcodegen` from `project.yml` at repo root
+- Run `xcodegen generate` after adding/removing Swift files to regenerate `Kiln.xcodeproj`
+- Open `Kiln.xcodeproj` in Xcode, build with Cmd+R
+
 ## Project Structure
 
 ```text
 Kiln/
-├── KilnApp.swift
-├── Models/         # SwiftData @Model classes (Exercise, Workout, WorkoutSet, etc.)
-├── Views/          # SwiftUI views organized by tab (Workout/, History/, Profile/, Templates/)
-├── Services/       # WorkoutSessionManager, RestTimerService, CSVImportService, PreFillService
-├── Design/         # DesignSystem (colors, typography, spacing)
-└── KilnTests/
+├── KilnApp.swift                  # App entry, ModelContainer (autosave off), environment
+├── Models/                        # 7 files: ExerciseType, Exercise, WorkoutTemplate,
+│                                  #   TemplateExercise, Workout, WorkoutExercise, WorkoutSet
+├── Views/
+│   ├── ContentView.swift          # 3-tab TabView with conditional Workout tab
+│   ├── Workout/                   # StartWorkoutView, ActiveWorkoutView, SetRowView,
+│   │                              #   ExerciseCardView, TemplateCardView, RestTimerView,
+│   │                              #   ExercisePickerView
+│   ├── Templates/                 # TemplateEditorView, TemplateExerciseRow
+│   ├── History/                   # HistoryListView, WorkoutCardView, WorkoutDetailView
+│   └── Profile/                   # ProfileView, WorkoutsPerWeekChart
+├── Services/                      # WorkoutSessionManager, RestTimerService,
+│                                  #   CSVImportService, PreFillService
+└── Design/                        # DesignSystem (colors, typography, spacing, icons)
 ```
 
 ## Key Decisions
