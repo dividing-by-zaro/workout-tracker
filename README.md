@@ -23,6 +23,7 @@ MVP implementation complete. Ready for Xcode build and testing.
 - [x] Custom body-part icons on template cards
 - [x] Template detail modal with full exercise list
 - [x] Exercise picker with equipment type and body part selection
+- [x] Edit and delete completed workouts from history (long-press context menu)
 - [x] Custom app icon
 - [x] Fire light theme (warm cream, fire red accents, grain texture, warm shadows)
 

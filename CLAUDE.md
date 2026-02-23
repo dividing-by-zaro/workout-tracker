@@ -34,7 +34,8 @@ Kiln/
 │   │                              #   ExerciseCardView, TemplateCardView, RestTimerView,
 │   │                              #   ExercisePickerView
 │   ├── Templates/                 # TemplateEditorView, TemplateExerciseRow
-│   ├── History/                   # HistoryListView, WorkoutCardView, WorkoutDetailView
+│   ├── History/                   # HistoryListView, WorkoutCardView, WorkoutDetailView,
+│   │                              #   WorkoutEditView
 │   └── Profile/                   # ProfileView, WorkoutsPerWeekChart
 ├── Services/                      # WorkoutSessionManager, RestTimerService,
 │                                  #   CSVImportService, PreFillService
@@ -66,4 +67,5 @@ Constitution at `.specify/memory/constitution.md`.
 <!-- MANUAL ADDITIONS END -->
 
 ## Recent Changes
+- Edit & delete completed workouts from History via long-press context menu; WorkoutEditView reuses ExerciseCardView for full editing
 - 002-visual-redesign: Fire light theme redesign — 14 color tokens, warm shadows, grain texture, forced light mode
