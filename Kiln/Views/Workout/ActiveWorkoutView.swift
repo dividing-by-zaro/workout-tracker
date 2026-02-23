@@ -4,8 +4,7 @@ import SwiftData
 struct ActiveWorkoutView: View {
     @Environment(WorkoutSessionManager.self) private var sessionManager
     @Environment(\.modelContext) private var modelContext
-    @State private var showFinishConfirmation = false
-    @State private var showDiscardConfirmation = false
+    @State private var showEndConfirmation = false
     @State private var showExercisePicker = false
     @State private var swappingExercise: WorkoutExercise?
 
@@ -43,10 +42,6 @@ struct ActiveWorkoutView: View {
                     }
                     .padding(.vertical, DesignSystem.Spacing.md)
                 }
-
-                addExerciseButton
-
-                finishButton
             }
             .grainedBackground()
             .sheet(isPresented: $showExercisePicker) {
@@ -59,13 +54,10 @@ struct ActiveWorkoutView: View {
                     swapExercise(workoutExercise, with: newExercise)
                 }
             }
-            .alert("Finish Workout?", isPresented: $showFinishConfirmation) {
-                Button("Finish", role: .destructive) {
-                    sessionManager.finishWorkout(context: modelContext)
+            .overlay {
+                if showEndConfirmation {
+                    endWorkoutOverlay
                 }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text("Save this workout and return to templates?")
             }
         }
     }
@@ -83,60 +75,91 @@ struct ActiveWorkoutView: View {
             }
             Spacer()
             Button {
-                if sessionManager.hasCompletedSets {
-                    showDiscardConfirmation = true
-                } else {
-                    sessionManager.discardWorkout(context: modelContext)
-                }
+                showExercisePicker = true
             } label: {
-                Image(systemName: DesignSystem.Icon.close)
-                    .foregroundStyle(DesignSystem.Colors.textSecondary)
-            }
-            .alert("Discard Workout?", isPresented: $showDiscardConfirmation) {
-                Button("Discard", role: .destructive) {
-                    sessionManager.discardWorkout(context: modelContext)
-                }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text("All progress will be lost.")
-            }
-        }
-        .padding(DesignSystem.Spacing.md)
-        .background(DesignSystem.Colors.surface)
-    }
-
-    private var finishButton: some View {
-        Button {
-            showFinishConfirmation = true
-        } label: {
-            Text("Finish Workout")
-                .font(DesignSystem.Typography.headline)
-                .frame(maxWidth: .infinity)
-                .padding(DesignSystem.Spacing.md)
-                .background(DesignSystem.Colors.success)
-                .foregroundStyle(DesignSystem.Colors.textOnPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
-        }
-        .padding(DesignSystem.Spacing.md)
-        .background(DesignSystem.Colors.surface)
-    }
-
-    private var addExerciseButton: some View {
-        Button {
-            showExercisePicker = true
-        } label: {
-            HStack {
                 Image(systemName: DesignSystem.Icon.add)
-                Text("Add Exercise")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(DesignSystem.Colors.textOnPrimary)
+                    .frame(width: 36, height: 36)
+                    .background(DesignSystem.Colors.success)
+                    .clipShape(Circle())
             }
-            .font(DesignSystem.Typography.body)
-            .frame(maxWidth: .infinity)
-            .padding(DesignSystem.Spacing.md)
-            .background(DesignSystem.Colors.surface)
-            .foregroundStyle(DesignSystem.Colors.primary)
-            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
+            Button {
+                showEndConfirmation = true
+            } label: {
+                HStack(spacing: DesignSystem.Spacing.xs) {
+                    Image(systemName: "stop.fill")
+                        .font(.system(size: 10))
+                    Text("End")
+                        .font(.system(size: 13, weight: .semibold))
+                }
+                .foregroundStyle(DesignSystem.Colors.textOnPrimary)
+                .frame(height: 36)
+                .padding(.horizontal, DesignSystem.Spacing.sm + 2)
+                .background(DesignSystem.Colors.primary)
+                .clipShape(Capsule())
+            }
         }
-        .padding(.horizontal, DesignSystem.Spacing.md)
+        .padding(DesignSystem.Spacing.md)
+        .background(DesignSystem.Colors.surface)
+    }
+
+    private var endWorkoutOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.4)
+                .ignoresSafeArea()
+                .onTapGesture { showEndConfirmation = false }
+
+            VStack(spacing: DesignSystem.Spacing.md) {
+                Text("End Workout")
+                    .font(DesignSystem.Typography.headline)
+                    .foregroundStyle(DesignSystem.Colors.textPrimary)
+
+                Button {
+                    showEndConfirmation = false
+                    sessionManager.finishWorkout(context: modelContext)
+                } label: {
+                    Text("Finish")
+                        .font(DesignSystem.Typography.body.bold())
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, DesignSystem.Spacing.sm + 2)
+                        .foregroundStyle(DesignSystem.Colors.textOnPrimary)
+                        .background(DesignSystem.Colors.success)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
+                }
+
+                Button {
+                    showEndConfirmation = false
+                    sessionManager.discardWorkout(context: modelContext)
+                } label: {
+                    Text("Discard")
+                        .font(DesignSystem.Typography.body)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, DesignSystem.Spacing.sm + 2)
+                        .foregroundStyle(DesignSystem.Colors.destructive)
+                        .background(DesignSystem.Colors.surfaceSecondary)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
+                }
+
+                Button {
+                    showEndConfirmation = false
+                } label: {
+                    Text("Cancel")
+                        .font(DesignSystem.Typography.body)
+                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+                }
+            }
+            .padding(DesignSystem.Spacing.lg)
+            .background {
+                ZStack {
+                    DesignSystem.Colors.surface
+                    CardGrainOverlay()
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
+            .cardShadow()
+            .padding(.horizontal, DesignSystem.Spacing.xxl)
+        }
     }
 
     private func addExercise(_ exercise: Exercise, to workout: Workout) {

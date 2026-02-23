@@ -103,7 +103,10 @@ struct TemplateCardView: View {
     }
 
     private func lastUsedLabel(_ date: Date) -> String {
-        let days = Calendar.current.dateComponents([.day], from: date, to: .now).day ?? 0
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: .now)
+        let startOfDate = calendar.startOfDay(for: date)
+        let days = calendar.dateComponents([.day], from: startOfDate, to: startOfToday).day ?? 0
         if days == 0 { return "Today" }
         if days == 1 { return "Yesterday" }
         if days < 30 { return "\(days)d ago" }
@@ -204,7 +207,10 @@ private struct TemplateDetailSheet: View {
     }
 
     private func lastUsedLabel(_ date: Date) -> String {
-        let days = Calendar.current.dateComponents([.day], from: date, to: .now).day ?? 0
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: .now)
+        let startOfDate = calendar.startOfDay(for: date)
+        let days = calendar.dateComponents([.day], from: startOfDate, to: startOfToday).day ?? 0
         if days == 0 { return "Today" }
         if days == 1 { return "Yesterday" }
         if days < 30 { return "\(days)d ago" }
