@@ -75,8 +75,14 @@ struct ExerciseCardView: View {
             .padding(.top, DesignSystem.Spacing.xs)
         }
         .padding(DesignSystem.Spacing.md)
-        .background(DesignSystem.Colors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .background {
+            ZStack {
+                DesignSystem.Colors.surface
+                CardGrainOverlay()
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
+        .cardShadow()
     }
 
     @ViewBuilder

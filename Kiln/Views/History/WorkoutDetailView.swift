@@ -44,13 +44,14 @@ struct WorkoutDetailView: View {
                     }
                     .padding(DesignSystem.Spacing.md)
                     .background(DesignSystem.Colors.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
+                    .cardShadow()
                     .padding(.horizontal, DesignSystem.Spacing.md)
                 }
             }
             .padding(.vertical, DesignSystem.Spacing.md)
         }
-        .background(DesignSystem.Colors.background)
+        .grainedBackground()
         .navigationTitle(workout.name)
         .navigationBarTitleDisplayMode(.inline)
     }

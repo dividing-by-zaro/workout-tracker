@@ -38,7 +38,7 @@ struct RestTimerView: View {
             }
             .padding(DesignSystem.Spacing.md)
             .background(DesignSystem.Colors.timerBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
             .onTapGesture {
                 onAdjust?(restTimer.totalSeconds)
             }

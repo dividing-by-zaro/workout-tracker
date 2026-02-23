@@ -39,3 +39,4 @@ targets:
       path: Kiln/Info.plist
       properties:
         UIBackgroundModes: []
+        UIUserInterfaceStyle: Light

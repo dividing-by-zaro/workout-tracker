@@ -20,5 +20,7 @@
 	<string>1</string>
 	<key>UIBackgroundModes</key>
 	<array/>
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
 </dict>
 </plist>

@@ -48,7 +48,7 @@ struct ActiveWorkoutView: View {
 
                 finishButton
             }
-            .background(DesignSystem.Colors.background)
+            .grainedBackground()
             .sheet(isPresented: $showExercisePicker) {
                 ExercisePickerView { exercise in
                     addExercise(exercise, to: workout)
@@ -114,8 +114,8 @@ struct ActiveWorkoutView: View {
                 .frame(maxWidth: .infinity)
                 .padding(DesignSystem.Spacing.md)
                 .background(DesignSystem.Colors.success)
-                .foregroundStyle(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .foregroundStyle(DesignSystem.Colors.textOnPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
         }
         .padding(DesignSystem.Spacing.md)
         .background(DesignSystem.Colors.surface)
@@ -134,7 +134,7 @@ struct ActiveWorkoutView: View {
             .padding(DesignSystem.Spacing.md)
             .background(DesignSystem.Colors.surface)
             .foregroundStyle(DesignSystem.Colors.primary)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
         }
         .padding(.horizontal, DesignSystem.Spacing.md)
     }
@@ -175,7 +175,7 @@ struct ActiveWorkoutView: View {
                     sessionManager.discardInterruptedWorkout(context: modelContext)
                 }
                 .buttonStyle(.bordered)
-                .tint(.red)
+                .tint(DesignSystem.Colors.destructive)
             }
         }
         .padding(DesignSystem.Spacing.md)

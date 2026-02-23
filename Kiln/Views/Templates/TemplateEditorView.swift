@@ -25,7 +25,7 @@ struct TemplateEditorView: View {
                 Section("Exercises") {
                     if templateExercises.isEmpty {
                         Text("No exercises added yet")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(DesignSystem.Colors.textSecondary)
                     } else {
                         ForEach(templateExercises) { te in
                             TemplateExerciseRow(templateExercise: te)

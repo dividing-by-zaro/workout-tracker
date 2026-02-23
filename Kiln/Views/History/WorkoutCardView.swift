@@ -46,8 +46,14 @@ struct WorkoutCardView: View {
             }
         }
         .padding(DesignSystem.Spacing.md)
-        .background(DesignSystem.Colors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .background {
+            ZStack {
+                DesignSystem.Colors.surface
+                CardGrainOverlay()
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
+        .cardShadow()
     }
 
     private func bestSetLabel(for workoutExercise: WorkoutExercise) -> String {

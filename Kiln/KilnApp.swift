@@ -10,6 +10,7 @@ struct KilnApp: App {
         WindowGroup {
             ContentView()
                 .environment(sessionManager)
+                .preferredColorScheme(.light)
                 .onAppear {
                     // Crash recovery: check for interrupted workout on launch
                 }
