@@ -1,0 +1,6 @@
+# Images
+*.png
+*.PNG
+
+# Workout data
+strong_workouts.csv
