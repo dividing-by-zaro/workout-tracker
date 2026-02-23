@@ -38,7 +38,7 @@ struct WorkoutDetailView: View {
 
                                 Spacer()
 
-                                setDetailLabel(set: set, type: workoutExercise.exercise?.exerciseType ?? .strength)
+                                setDetailLabel(set: set, equipmentType: workoutExercise.exercise?.resolvedEquipmentType ?? .barbell)
                             }
                         }
                     }
@@ -56,25 +56,45 @@ struct WorkoutDetailView: View {
     }
 
     @ViewBuilder
-    private func setDetailLabel(set: WorkoutSet, type: ExerciseType) -> some View {
-        switch type {
-        case .strength:
+    private func setDetailLabel(set: WorkoutSet, equipmentType: EquipmentType) -> some View {
+        let bodyStyle = DesignSystem.Typography.body
+        let captionStyle = DesignSystem.Typography.caption
+
+        if equipmentType.tracksWeight && equipmentType.tracksReps && equipmentType == .weightedBodyweight {
             HStack(spacing: DesignSystem.Spacing.sm) {
-                if let w = set.weight { Text("\(Int(w)) lb").font(DesignSystem.Typography.body) }
-                if let r = set.reps { Text("x \(r)").font(DesignSystem.Typography.body) }
-                if let rpe = set.rpe { Text("RPE \(String(format: "%.0f", rpe))").font(DesignSystem.Typography.caption).foregroundStyle(DesignSystem.Colors.textSecondary) }
+                Text("+BW").font(bodyStyle).foregroundStyle(DesignSystem.Colors.textSecondary)
+                if let w = set.weight { Text("\(Int(w)) lb").font(bodyStyle) }
+                if let r = set.reps { Text("x \(r)").font(bodyStyle) }
+                if let rpe = set.rpe { Text("RPE \(String(format: "%.0f", rpe))").font(captionStyle).foregroundStyle(DesignSystem.Colors.textSecondary) }
             }
             .foregroundStyle(DesignSystem.Colors.textPrimary)
-        case .cardio:
+        } else if equipmentType.tracksWeight && equipmentType.tracksReps {
             HStack(spacing: DesignSystem.Spacing.sm) {
-                if let d = set.distance { Text(String(format: "%.1f mi", d)).font(DesignSystem.Typography.body) }
-                if let s = set.seconds { Text(String(format: "%.0fs", s)).font(DesignSystem.Typography.body) }
+                if let w = set.weight { Text("\(Int(w)) lb").font(bodyStyle) }
+                if let r = set.reps { Text("x \(r)").font(bodyStyle) }
+                if let rpe = set.rpe { Text("RPE \(String(format: "%.0f", rpe))").font(captionStyle).foregroundStyle(DesignSystem.Colors.textSecondary) }
             }
             .foregroundStyle(DesignSystem.Colors.textPrimary)
-        case .bodyweight:
+        } else if equipmentType == .repsOnly {
             HStack(spacing: DesignSystem.Spacing.sm) {
-                Text("BW").font(DesignSystem.Typography.body).foregroundStyle(DesignSystem.Colors.textSecondary)
-                if let r = set.reps { Text("x \(r)").font(DesignSystem.Typography.body) }
+                Text("BW").font(bodyStyle).foregroundStyle(DesignSystem.Colors.textSecondary)
+                if let r = set.reps { Text("x \(r)").font(bodyStyle) }
+            }
+            .foregroundStyle(DesignSystem.Colors.textPrimary)
+        } else if equipmentType == .weightedDistance {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                if let w = set.weight { Text("\(Int(w)) lb").font(bodyStyle) }
+                if let d = set.distance { Text(String(format: "%.1f mi", d)).font(bodyStyle) }
+            }
+            .foregroundStyle(DesignSystem.Colors.textPrimary)
+        } else if equipmentType == .distance {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                if let d = set.distance { Text(String(format: "%.1f mi", d)).font(bodyStyle) }
+            }
+            .foregroundStyle(DesignSystem.Colors.textPrimary)
+        } else if equipmentType == .duration {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                if let s = set.seconds { Text(String(format: "%.0fs", s)).font(bodyStyle) }
             }
             .foregroundStyle(DesignSystem.Colors.textPrimary)
         }

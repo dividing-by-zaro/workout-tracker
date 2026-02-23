@@ -104,8 +104,18 @@ actor CSVImportService {
                 if let cached = exerciseCache[exGroup.name] {
                     exercise = cached
                 } else {
-                    let type = inferExerciseType(from: exGroup.rows)
-                    exercise = Exercise(name: exGroup.name, exerciseType: type)
+                    let firstRow = exGroup.rows[0]
+                    let bodyPart = firstRow.count > 10 ? BodyPart(rawValue: firstRow[10]) : nil
+                    let equipType = firstRow.count > 11 ? EquipmentType(rawValue: firstRow[11]) : nil
+                    let resolvedEquip = equipType ?? .barbell
+                    let exType: ExerciseType = resolvedEquip.tracksWeight ? .strength :
+                        (resolvedEquip == .repsOnly ? .bodyweight : .cardio)
+                    exercise = Exercise(
+                        name: exGroup.name,
+                        exerciseType: exType,
+                        bodyPart: bodyPart,
+                        equipmentType: equipType
+                    )
                     modelContext.insert(exercise)
                     exerciseCache[exGroup.name] = exercise
                     exercisesCreated += 1
@@ -158,7 +168,7 @@ actor CSVImportService {
             )
             if let existing = try? modelContext.fetch(existingDescriptor), !existing.isEmpty { continue }
 
-            let template = WorkoutTemplate(name: templateName)
+            let template = WorkoutTemplate(name: templateName, lastUsedAt: recentWorkout.startedAt)
             modelContext.insert(template)
 
             for workoutExercise in recentWorkout.sortedExercises {
@@ -233,15 +243,4 @@ actor CSVImportService {
         return totalSeconds
     }
 
-    private func inferExerciseType(from rows: [[String]]) -> ExerciseType {
-        for row in rows {
-            let weight = Double(row[5]) ?? 0
-            let distance = Double(row[7]) ?? 0
-            let seconds = Double(row[8]) ?? 0
-
-            if distance > 0 && seconds > 0 { return .cardio }
-            if weight > 0 { return .strength }
-        }
-        return .bodyweight
-    }
 }

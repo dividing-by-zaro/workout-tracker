@@ -19,12 +19,16 @@ MVP implementation complete. Ready for Xcode build and testing.
 - [x] Workout history with detail view
 - [x] Profile with workout count and workouts-per-week chart
 - [x] Strong CSV import (1,734 rows of historical data)
+- [x] Equipment type system (barbell, dumbbell, kettlebell, machine, bodyweight, etc.)
+- [x] Custom body-part icons on template cards
+- [x] Template detail modal with full exercise list
+- [x] Exercise picker with equipment type and body part selection
 
 ## Getting Started
 
 1. Run `xcodegen generate` (requires [xcodegen](https://github.com/yonaskolb/XcodeGen))
 2. Open `Kiln.xcodeproj` in Xcode
-3. Select iPhone 13 simulator (iOS 17+)
+3. Select iPhone 17 simulator (iOS 17+)
 4. Build and run (Cmd+R)
 5. Import `strong_workouts.csv` from the Profile tab
 

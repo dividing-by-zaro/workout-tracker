@@ -15,7 +15,7 @@ struct ContentView: View {
                 }
             }
             .tabItem {
-                Label("Workout", systemImage: DesignSystem.Icon.workout)
+                Label("Workouts", systemImage: DesignSystem.Icon.workout)
             }
 
             NavigationStack {

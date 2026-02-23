@@ -4,7 +4,7 @@ import SwiftData
 struct SetRowView: View {
     @Bindable var workoutSet: WorkoutSet
     let setNumber: Int
-    let exerciseType: ExerciseType
+    let equipmentType: EquipmentType
     let previousData: PreFillData?
     var onComplete: () -> Void
 
@@ -37,61 +37,76 @@ struct SetRowView: View {
     @ViewBuilder
     private var previousLabel: some View {
         if let prev = previousData {
-            switch exerciseType {
-            case .strength:
+            if equipmentType.tracksWeight && equipmentType.tracksReps {
                 if let w = prev.weight, let r = prev.reps {
                     Text("\(Int(w)) x \(r)")
                         .font(DesignSystem.Typography.caption)
                         .foregroundStyle(DesignSystem.Colors.textSecondary)
                 } else {
-                    Text("—")
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    dashLabel
                 }
-            case .cardio:
-                if let d = prev.distance, let s = prev.seconds {
-                    Text(String(format: "%.1f mi / %.0fs", d, s))
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundStyle(DesignSystem.Colors.textSecondary)
-                } else {
-                    Text("—")
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundStyle(DesignSystem.Colors.textSecondary)
-                }
-            case .bodyweight:
+            } else if equipmentType.tracksReps && !equipmentType.tracksWeight {
                 if let r = prev.reps {
                     Text("x \(r)")
                         .font(DesignSystem.Typography.caption)
                         .foregroundStyle(DesignSystem.Colors.textSecondary)
                 } else {
-                    Text("—")
+                    dashLabel
+                }
+            } else if equipmentType.tracksDistance {
+                if let d = prev.distance {
+                    Text(String(format: "%.1f mi", d))
                         .font(DesignSystem.Typography.caption)
                         .foregroundStyle(DesignSystem.Colors.textSecondary)
+                } else {
+                    dashLabel
                 }
+            } else if equipmentType.tracksDuration {
+                if let s = prev.seconds {
+                    Text(String(format: "%.0fs", s))
+                        .font(DesignSystem.Typography.caption)
+                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+                } else {
+                    dashLabel
+                }
+            } else {
+                dashLabel
             }
         } else {
-            Text("—")
-                .font(DesignSystem.Typography.caption)
-                .foregroundStyle(DesignSystem.Colors.textSecondary)
+            dashLabel
         }
+    }
+
+    private var dashLabel: some View {
+        Text("—")
+            .font(DesignSystem.Typography.caption)
+            .foregroundStyle(DesignSystem.Colors.textSecondary)
     }
 
     @ViewBuilder
     private var inputFields: some View {
-        switch exerciseType {
-        case .strength:
+        if equipmentType.tracksWeight && equipmentType.tracksReps && equipmentType == .weightedBodyweight {
+            // Weighted bodyweight: +BW label, weight, x, reps
+            HStack(spacing: DesignSystem.Spacing.xs) {
+                Text("+BW")
+                    .font(DesignSystem.Typography.caption)
+                    .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    .frame(width: 30)
+                NumericField(value: $workoutSet.weight, placeholder: "lbs")
+                Text("x")
+                    .foregroundStyle(DesignSystem.Colors.textSecondary)
+                IntField(value: $workoutSet.reps, placeholder: "reps")
+            }
+        } else if equipmentType.tracksWeight && equipmentType.tracksReps {
+            // Standard weight + reps (barbell, dumbbell, kettlebell, machineOther)
             HStack(spacing: DesignSystem.Spacing.xs) {
                 NumericField(value: $workoutSet.weight, placeholder: "lbs")
                 Text("x")
                     .foregroundStyle(DesignSystem.Colors.textSecondary)
                 IntField(value: $workoutSet.reps, placeholder: "reps")
             }
-        case .cardio:
-            HStack(spacing: DesignSystem.Spacing.xs) {
-                NumericField(value: $workoutSet.distance, placeholder: "mi")
-                IntSeconds(value: $workoutSet.seconds, placeholder: "sec")
-            }
-        case .bodyweight:
+        } else if equipmentType == .repsOnly {
+            // Reps only (bodyweight)
             HStack(spacing: DesignSystem.Spacing.xs) {
                 Text("BW")
                     .font(DesignSystem.Typography.body)
@@ -100,6 +115,22 @@ struct SetRowView: View {
                 Text("x")
                     .foregroundStyle(DesignSystem.Colors.textSecondary)
                 IntField(value: $workoutSet.reps, placeholder: "reps")
+            }
+        } else if equipmentType == .weightedDistance {
+            // Weight + distance
+            HStack(spacing: DesignSystem.Spacing.xs) {
+                NumericField(value: $workoutSet.weight, placeholder: "lbs")
+                NumericField(value: $workoutSet.distance, placeholder: "mi")
+            }
+        } else if equipmentType == .distance {
+            // Distance only
+            HStack(spacing: DesignSystem.Spacing.xs) {
+                NumericField(value: $workoutSet.distance, placeholder: "mi")
+            }
+        } else if equipmentType == .duration {
+            // Duration only
+            HStack(spacing: DesignSystem.Spacing.xs) {
+                IntSeconds(value: $workoutSet.seconds, placeholder: "sec")
             }
         }
     }

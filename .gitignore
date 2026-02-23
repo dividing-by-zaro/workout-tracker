@@ -1,6 +1,7 @@
-# Images
+# Images (except asset catalog icons)
 *.png
 *.PNG
+!Kiln/Assets.xcassets/**/*.png
 
 # Workout data
 strong_workouts.csv

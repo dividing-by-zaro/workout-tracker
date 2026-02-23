@@ -26,8 +26,8 @@
 ```text
 Kiln/
 ├── KilnApp.swift                  # App entry, ModelContainer (autosave off), environment
-├── Models/                        # 7 files: ExerciseType, Exercise, WorkoutTemplate,
-│                                  #   TemplateExercise, Workout, WorkoutExercise, WorkoutSet
+├── Models/                        # 9 files: ExerciseType, EquipmentType, BodyPart, Exercise,
+│                                  #   WorkoutTemplate, TemplateExercise, Workout, WorkoutExercise, WorkoutSet
 ├── Views/
 │   ├── ContentView.swift          # 3-tab TabView with conditional Workout tab
 │   ├── Workout/                   # StartWorkoutView, ActiveWorkoutView, SetRowView,
@@ -38,6 +38,7 @@ Kiln/
 │   └── Profile/                   # ProfileView, WorkoutsPerWeekChart
 ├── Services/                      # WorkoutSessionManager, RestTimerService,
 │                                  #   CSVImportService, PreFillService
+├── Assets.xcassets/               # App icon + body part icons (bodypart_*.imageset)
 └── Design/                        # DesignSystem (colors, typography, spacing, icons)
 ```
 
@@ -49,6 +50,10 @@ Kiln/
 - Weight in lbs only
 - Templates auto-created from import for "New Legs/full Body A" and "New Legs/full Body B" only
 - Pre-fill from most recent workout containing that exercise (global, per-set)
+- **EquipmentType** (9 cases: barbell, dumbbell, kettlebell, machineOther, weightedBodyweight, repsOnly, duration, distance, weightedDistance) determines which input fields show per set
+- **BodyPart** (9 cases) with custom PNG icons in asset catalog (template rendering mode for tint color)
+- Body part + equipment type are pre-enriched in the CSV — no runtime inference needed for imported data
+- Accent color: red (`DesignSystem.Colors.primary`)
 
 ## Spec Artifacts
 

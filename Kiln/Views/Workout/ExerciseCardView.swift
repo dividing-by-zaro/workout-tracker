@@ -9,8 +9,8 @@ struct ExerciseCardView: View {
     var onSwapExercise: (() -> Void)?
     var onRemoveExercise: (() -> Void)?
 
-    private var exerciseType: ExerciseType {
-        workoutExercise.exercise?.exerciseType ?? .strength
+    private var equipmentType: EquipmentType {
+        workoutExercise.exercise?.resolvedEquipmentType ?? .barbell
     }
 
     var body: some View {
@@ -42,36 +42,14 @@ struct ExerciseCardView: View {
                 }
             }
 
-            HStack(spacing: DesignSystem.Spacing.sm) {
-                Text("SET")
-                    .frame(width: 28)
-                Text("PREVIOUS")
-                    .frame(width: 80, alignment: .leading)
-                switch exerciseType {
-                case .strength:
-                    Text("LBS")
-                    Text("")
-                    Text("REPS")
-                case .cardio:
-                    Text("DIST")
-                    Text("TIME")
-                case .bodyweight:
-                    Text("")
-                    Text("")
-                    Text("REPS")
-                }
-                Spacer()
-                Text("")
-            }
-            .font(DesignSystem.Typography.caption)
-            .foregroundStyle(DesignSystem.Colors.textSecondary)
+            columnHeaders
 
             ForEach(Array(workoutExercise.sortedSets.enumerated()), id: \.element.id) { index, workoutSet in
                 let prefill = index < preFillData.count ? preFillData[index] : nil
                 SetRowView(
                     workoutSet: workoutSet,
                     setNumber: index + 1,
-                    exerciseType: exerciseType,
+                    equipmentType: equipmentType,
                     previousData: prefill,
                     onComplete: { onCompleteSet(workoutSet) }
                 )
@@ -99,6 +77,40 @@ struct ExerciseCardView: View {
         .padding(DesignSystem.Spacing.md)
         .background(DesignSystem.Colors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    @ViewBuilder
+    private var columnHeaders: some View {
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            Text("SET")
+                .frame(width: 28)
+            Text("PREVIOUS")
+                .frame(width: 80, alignment: .leading)
+            if equipmentType.tracksWeight && equipmentType.tracksReps && equipmentType == .weightedBodyweight {
+                Text("+LBS")
+                Text("")
+                Text("REPS")
+            } else if equipmentType.tracksWeight && equipmentType.tracksReps {
+                Text("LBS")
+                Text("")
+                Text("REPS")
+            } else if equipmentType == .repsOnly {
+                Text("")
+                Text("")
+                Text("REPS")
+            } else if equipmentType == .weightedDistance {
+                Text("LBS")
+                Text("DIST")
+            } else if equipmentType == .distance {
+                Text("DIST")
+            } else if equipmentType == .duration {
+                Text("TIME")
+            }
+            Spacer()
+            Text("")
+        }
+        .font(DesignSystem.Typography.caption)
+        .foregroundStyle(DesignSystem.Colors.textSecondary)
     }
 
     private func addSet() {

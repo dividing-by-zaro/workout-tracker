@@ -8,7 +8,8 @@ struct ExercisePickerView: View {
     @State private var searchText = ""
     @State private var showCreateExercise = false
     @State private var newExerciseName = ""
-    @State private var newExerciseType: ExerciseType = .strength
+    @State private var newEquipmentType: EquipmentType = .barbell
+    @State private var newBodyPart: BodyPart = .other
 
     var onSelect: (Exercise) -> Void
 
@@ -38,7 +39,7 @@ struct ExercisePickerView: View {
                             Text(exercise.name)
                                 .foregroundStyle(DesignSystem.Colors.textPrimary)
                             Spacer()
-                            Text(exercise.exerciseType.rawValue.capitalized)
+                            Text(exercise.resolvedEquipmentType.displayName)
                                 .font(DesignSystem.Typography.caption)
                                 .foregroundStyle(DesignSystem.Colors.textSecondary)
                         }
@@ -61,21 +62,60 @@ struct ExercisePickerView: View {
                     }
                 }
             }
-            .alert("New Exercise", isPresented: $showCreateExercise) {
-                TextField("Exercise name", text: $newExerciseName)
-                Picker("Type", selection: $newExerciseType) {
-                    ForEach(ExerciseType.allCases, id: \.self) { type in
-                        Text(type.rawValue.capitalized).tag(type)
+            .sheet(isPresented: $showCreateExercise) {
+                createExerciseSheet
+            }
+        }
+    }
+
+    private var createExerciseSheet: some View {
+        NavigationStack {
+            Form {
+                Section("Exercise Name") {
+                    TextField("Exercise name", text: $newExerciseName)
+                }
+                Section("Equipment Type") {
+                    Picker("Equipment", selection: $newEquipmentType) {
+                        ForEach(EquipmentType.allCases, id: \.self) { type in
+                            Text(type.displayName).tag(type)
+                        }
                     }
+                    .pickerStyle(.menu)
                 }
-                Button("Create") {
-                    let exercise = Exercise(name: newExerciseName, exerciseType: newExerciseType)
-                    modelContext.insert(exercise)
-                    try? modelContext.save()
-                    onSelect(exercise)
-                    dismiss()
+                Section("Body Part") {
+                    Picker("Body Part", selection: $newBodyPart) {
+                        ForEach(BodyPart.allCases, id: \.self) { part in
+                            Text(part.displayName).tag(part)
+                        }
+                    }
+                    .pickerStyle(.menu)
                 }
-                Button("Cancel", role: .cancel) {}
+            }
+            .navigationTitle("New Exercise")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { showCreateExercise = false }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Create") {
+                        guard !newExerciseName.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+                        let exerciseType: ExerciseType = newEquipmentType.tracksWeight ? .strength :
+                            (newEquipmentType == .repsOnly ? .bodyweight : .cardio)
+                        let exercise = Exercise(
+                            name: newExerciseName,
+                            exerciseType: exerciseType,
+                            bodyPart: newBodyPart,
+                            equipmentType: newEquipmentType
+                        )
+                        modelContext.insert(exercise)
+                        try? modelContext.save()
+                        showCreateExercise = false
+                        onSelect(exercise)
+                        dismiss()
+                    }
+                    .disabled(newExerciseName.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
             }
         }
     }

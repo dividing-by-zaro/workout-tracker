@@ -5,7 +5,7 @@ enum DesignSystem {
     // MARK: - Colors
 
     enum Colors {
-        static let primary = Color(red: 0.95, green: 0.55, blue: 0.15)       // Orange/amber workout color
+        static let primary = Color(red: 0.92, green: 0.26, blue: 0.24)       // Red accent color
         static let background = Color(red: 0.07, green: 0.07, blue: 0.08)    // Near-black background
         static let surface = Color(red: 0.14, green: 0.14, blue: 0.16)       // Elevated surface
         static let textPrimary = Color.white
