@@ -30,6 +30,7 @@
 		924B378A14B11528E239FA96 /* ExercisePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 475DD355F85DDDE0B1D02EF2 /* ExercisePickerView.swift */; };
 		962E60897D1CD060B5473DF7 /* HistoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E5CB9B101930A5066A46EFD /* HistoryListView.swift */; };
 		99CF5FD2D8F220C60FCDE423 /* StartWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31CC9E43BBEA8BFFEA94D45E /* StartWorkoutView.swift */; };
+		A594C97AA0E620B2807BFF56 /* SwipeToDelete.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10BF05FE3E74B7B2CBE2E80E /* SwipeToDelete.swift */; };
 		B5BDBE768E5C274B90DE8F72 /* CSVImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B4B2EB0CEC527449D148C75 /* CSVImportService.swift */; };
 		B8EB1FC34463DE04531FB3B4 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ED6E0D6B70D4A4B0A0ADE44 /* DesignSystem.swift */; };
 		B9411BD9C3CE3B9B3E85BF0B /* TemplateEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADE7BB901CDDBF8055CA7D32 /* TemplateEditorView.swift */; };
@@ -44,6 +45,7 @@
 /* Begin PBXFileReference section */
 		09E71B0F76C3D78DA87982FF /* SetRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetRowView.swift; sourceTree = "<group>"; };
 		0F5C69118EA0BC51253F7BB3 /* TemplateCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateCardView.swift; sourceTree = "<group>"; };
+		10BF05FE3E74B7B2CBE2E80E /* SwipeToDelete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeToDelete.swift; sourceTree = "<group>"; };
 		18A6D68E6D153027A9F365C7 /* WorkoutTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutTemplate.swift; sourceTree = "<group>"; };
 		18C7BF4C5770B304C2B78194 /* RestTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimerView.swift; sourceTree = "<group>"; };
 		1C527C23E31797AC35BA03C7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -170,6 +172,7 @@
 				18C7BF4C5770B304C2B78194 /* RestTimerView.swift */,
 				09E71B0F76C3D78DA87982FF /* SetRowView.swift */,
 				31CC9E43BBEA8BFFEA94D45E /* StartWorkoutView.swift */,
+				10BF05FE3E74B7B2CBE2E80E /* SwipeToDelete.swift */,
 				0F5C69118EA0BC51253F7BB3 /* TemplateCardView.swift */,
 			);
 			path = Workout;
@@ -287,6 +290,7 @@
 				0D36B92C2AE7EAF056E3B18D /* RestTimerView.swift in Sources */,
 				193516A01622F9DA2B15B9AE /* SetRowView.swift in Sources */,
 				99CF5FD2D8F220C60FCDE423 /* StartWorkoutView.swift in Sources */,
+				A594C97AA0E620B2807BFF56 /* SwipeToDelete.swift in Sources */,
 				FE257F30F263B8B1DDE5B5F1 /* TemplateCardView.swift in Sources */,
 				B9411BD9C3CE3B9B3E85BF0B /* TemplateEditorView.swift in Sources */,
 				F20E9B1F34D6B835AD5DCC70 /* TemplateExercise.swift in Sources */,

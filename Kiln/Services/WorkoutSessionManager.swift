@@ -113,6 +113,18 @@ final class WorkoutSessionManager {
     // MARK: - Complete Set
 
     func completeSet(_ workoutSet: WorkoutSet, context: ModelContext) {
+        if workoutSet.isCompleted {
+            workoutSet.isCompleted = false
+            workoutSet.completedAt = nil
+            try? context.save()
+
+            if lastCompletedSetId == workoutSet.id {
+                restTimer.stop()
+                lastCompletedSetId = nil
+            }
+            return
+        }
+
         workoutSet.isCompleted = true
         workoutSet.completedAt = .now
         try? context.save()
@@ -120,6 +132,37 @@ final class WorkoutSessionManager {
         lastCompletedSetId = workoutSet.id
         let restDuration = workoutSet.workoutExercise?.exercise?.defaultRestSeconds ?? 120
         restTimer.start(duration: restDuration)
+    }
+
+    // MARK: - Delete Set
+
+    func deleteSet(_ workoutSet: WorkoutSet, context: ModelContext) {
+        let exercise = workoutSet.workoutExercise
+
+        if lastCompletedSetId == workoutSet.id {
+            restTimer.stop()
+            lastCompletedSetId = nil
+        }
+
+        context.delete(workoutSet)
+
+        if let exercise {
+            for (i, set) in exercise.sortedSets.enumerated() {
+                set.order = i
+            }
+        }
+        try? context.save()
+    }
+
+    // MARK: - Reset
+
+    func reset() {
+        restTimer.stop()
+        stopElapsedTimer()
+        activeWorkout = nil
+        elapsedSeconds = 0
+        lastCompletedSetId = nil
+        hasInterruptedWorkout = false
     }
 
     // MARK: - Finish Workout

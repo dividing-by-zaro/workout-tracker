@@ -6,10 +6,13 @@ struct ProfileView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(filter: #Predicate<Workout> { $0.isInProgress == false }) private var completedWorkouts: [Workout]
 
+    @Environment(WorkoutSessionManager.self) private var sessionManager
+
     @State private var isImporting = false
     @State private var importInProgress = false
     @State private var importResult: CSVImportResult?
     @State private var showImportResult = false
+    @State private var showDeleteConfirmation = false
 
     var body: some View {
         ScrollView {
@@ -58,6 +61,24 @@ struct ProfileView: View {
                     .disabled(importInProgress)
                 }
                 .padding(.horizontal, DesignSystem.Spacing.md)
+
+                // Delete all data
+                Button {
+                    showDeleteConfirmation = true
+                } label: {
+                    HStack {
+                        Image(systemName: "trash")
+                        Text("Delete All Data")
+                    }
+                    .font(DesignSystem.Typography.body)
+                    .frame(maxWidth: .infinity)
+                    .padding(DesignSystem.Spacing.md)
+                    .background(DesignSystem.Colors.surface)
+                    .foregroundStyle(DesignSystem.Colors.destructive)
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
+                    .cardShadow()
+                }
+                .padding(.horizontal, DesignSystem.Spacing.md)
             }
         }
         .grainedBackground()
@@ -76,6 +97,25 @@ struct ProfileView: View {
                 Text("Created \(r.workoutsCreated) workouts from \(r.rowsImported) rows. \(r.rowsSkipped) rows skipped. \(r.exercisesCreated) exercises created. \(r.templatesCreated) templates created.")
             }
         }
+        .alert("Delete All Data", isPresented: $showDeleteConfirmation) {
+            Button("Delete", role: .destructive) { deleteAllData() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will permanently delete all workouts, exercises, and templates. This cannot be undone.")
+        }
+    }
+
+    private func deleteAllData() {
+        sessionManager.reset()
+
+        // Delete in dependency order (children before parents)
+        try? modelContext.delete(model: WorkoutSet.self)
+        try? modelContext.delete(model: WorkoutExercise.self)
+        try? modelContext.delete(model: Workout.self)
+        try? modelContext.delete(model: TemplateExercise.self)
+        try? modelContext.delete(model: WorkoutTemplate.self)
+        try? modelContext.delete(model: Exercise.self)
+        try? modelContext.save()
     }
 
     private func handleImport(_ result: Result<[URL], Error>) {

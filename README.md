@@ -24,6 +24,9 @@ MVP implementation complete. Ready for Xcode build and testing.
 - [x] Template detail modal with full exercise list
 - [x] Exercise picker with equipment type and body part selection
 - [x] Edit and delete completed workouts from history (long-press context menu)
+- [x] Tap completed set to uncomplete (toggle), swipe-left to delete sets
+- [x] Delete All Data utility in Profile (with confirmation)
+- [x] Set completion/uncomplete bounce animations, rest timer appear/dismiss transitions
 - [x] Custom app icon
 - [x] Fire light theme (warm cream, fire red accents, grain texture, warm shadows)
 

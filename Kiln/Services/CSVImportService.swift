@@ -127,7 +127,7 @@ actor CSVImportService {
                 for row in exGroup.rows {
                     let setOrder = (Int(row[4]) ?? 1) - 1
                     let weight = Double(row[5])
-                    let reps = Int(row[6])
+                    let reps = Int(row[6]) ?? Double(row[6]).map { Int($0) }
                     let distance = Double(row[7])
                     let seconds = Double(row[8])
                     let rpe = Double(row[9])

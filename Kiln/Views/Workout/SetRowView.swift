@@ -7,16 +7,27 @@ struct SetRowView: View {
     let previousData: PreFillData?
     var onComplete: () -> Void
 
+    @State private var bounceScale: CGFloat = 1.0
+
     var body: some View {
         ZStack {
             // Full-row tappable background
             RoundedRectangle(cornerRadius: 6)
                 .fill(workoutSet.isCompleted ? DesignSystem.Colors.success.opacity(0.1) : Color.clear)
                 .contentShape(Rectangle())
-                .onTapGesture { onComplete() }
+                .onTapGesture {
+                    let wasCompleted = workoutSet.isCompleted
+                    onComplete()
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
+                        bounceScale = wasCompleted ? 0.95 : 1.08
+                    }
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6).delay(0.15)) {
+                        bounceScale = 1.0
+                    }
+                }
 
-            // Content centered in the row
-            HStack(spacing: DesignSystem.Spacing.md) {
+            // Content filling the row
+            HStack(spacing: DesignSystem.Spacing.sm) {
                 Group {
                     if workoutSet.isCompleted {
                         Image("brick_icon")
@@ -24,20 +35,26 @@ struct SetRowView: View {
                             .scaledToFit()
                             .frame(width: 16, height: 16)
                             .foregroundStyle(DesignSystem.Colors.textPrimary)
+                            .transition(.scale(scale: 0.3).combined(with: .opacity))
                     } else {
                         Image(systemName: "flame.fill")
                             .font(.system(size: 14))
                             .foregroundStyle(DesignSystem.Colors.primary)
+                            .transition(.scale(scale: 0.3).combined(with: .opacity))
                     }
                 }
-                .frame(width: 20)
+                .animation(.spring(response: 0.35, dampingFraction: 0.6), value: workoutSet.isCompleted)
+                .frame(width: 16)
                 .allowsHitTesting(false)
                 previousLabel
-                    .frame(width: 60, alignment: .center)
+                    .frame(maxWidth: .infinity, alignment: .center)
                     .allowsHitTesting(false)
                 inputFields
             }
+            .padding(.horizontal, DesignSystem.Spacing.xs)
         }
+        .scaleEffect(bounceScale)
+        .animation(.easeInOut(duration: 0.15), value: workoutSet.isCompleted)
         .frame(maxWidth: .infinity, minHeight: 44)
         .opacity(workoutSet.isCompleted ? 0.7 : 1.0)
     }
