@@ -29,6 +29,9 @@ struct ActiveWorkoutView: View {
                                 onCompleteSet: { workoutSet in
                                     sessionManager.completeSet(workoutSet, context: modelContext)
                                 },
+                                onDeleteSet: { workoutSet in
+                                    sessionManager.deleteSet(workoutSet, context: modelContext)
+                                },
                                 onSwapExercise: {
                                     swappingExercise = workoutExercise
                                 },

@@ -8,6 +8,7 @@ struct ExerciseCardView: View {
     var restTimer: RestTimerService? = nil
     var lastCompletedSetId: UUID? = nil
     var onCompleteSet: (WorkoutSet) -> Void
+    var onDeleteSet: ((WorkoutSet) -> Void)?
     var onSwapExercise: (() -> Void)?
     var onRemoveExercise: (() -> Void)?
 
@@ -48,22 +49,23 @@ struct ExerciseCardView: View {
 
             ForEach(Array(workoutExercise.sortedSets.enumerated()), id: \.element.id) { index, workoutSet in
                 let prefill = index < preFillData.count ? preFillData[index] : nil
-                SetRowView(
-                    workoutSet: workoutSet,
-                    equipmentType: equipmentType,
-                    previousData: prefill,
-                    onComplete: { onCompleteSet(workoutSet) }
-                )
-                .swipeActions(edge: .trailing) {
-                    Button(role: .destructive) {
-                        removeSet(workoutSet)
-                    } label: {
-                        Label("Delete", systemImage: DesignSystem.Icon.delete)
-                    }
+                SwipeToDelete {
+                    removeSet(workoutSet)
+                } content: {
+                    SetRowView(
+                        workoutSet: workoutSet,
+                        equipmentType: equipmentType,
+                        previousData: prefill,
+                        onComplete: { onCompleteSet(workoutSet) }
+                    )
                 }
 
                 if let timer = restTimer, timer.isRunning, workoutSet.id == lastCompletedSetId {
                     RestTimerView(restTimer: timer)
+                        .transition(.asymmetric(
+                            insertion: .scale(scale: 0.85).combined(with: .opacity),
+                            removal: .scale(scale: 0.85).combined(with: .opacity).combined(with: .move(edge: .top))
+                        ))
                 }
             }
 
@@ -80,6 +82,8 @@ struct ExerciseCardView: View {
             .padding(.top, DesignSystem.Spacing.xs)
         }
         .padding(DesignSystem.Spacing.md)
+        .animation(.spring(response: 0.35, dampingFraction: 0.75), value: restTimer?.isRunning)
+        .animation(.spring(response: 0.35, dampingFraction: 0.75), value: lastCompletedSetId)
         .background {
             ZStack {
                 DesignSystem.Colors.surface
@@ -92,10 +96,10 @@ struct ExerciseCardView: View {
 
     @ViewBuilder
     private var columnHeaders: some View {
-        HStack(spacing: DesignSystem.Spacing.md) {
-            Color.clear.frame(width: 20)
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            Color.clear.frame(width: 16)
             Text("PREVIOUS")
-                .frame(width: 60, alignment: .center)
+                .frame(maxWidth: .infinity, alignment: .center)
             if equipmentType.tracksWeight && equipmentType.tracksReps && equipmentType == .weightedBodyweight {
                 HStack(spacing: DesignSystem.Spacing.xs) {
                     Text("").frame(width: 30)
@@ -126,7 +130,7 @@ struct ExerciseCardView: View {
                 Text("TIME").frame(width: 60)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .center)
+        .padding(.horizontal, DesignSystem.Spacing.xs)
         .font(DesignSystem.Typography.caption)
         .foregroundStyle(DesignSystem.Colors.textSecondary)
     }
@@ -149,7 +153,11 @@ struct ExerciseCardView: View {
     }
 
     private func removeSet(_ workoutSet: WorkoutSet) {
-        modelContext.delete(workoutSet)
-        try? modelContext.save()
+        if let onDeleteSet {
+            onDeleteSet(workoutSet)
+        } else {
+            modelContext.delete(workoutSet)
+            try? modelContext.save()
+        }
     }
 }
