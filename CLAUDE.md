@@ -38,8 +38,8 @@ Kiln/
 │   └── Profile/                   # ProfileView, WorkoutsPerWeekChart
 ├── Services/                      # WorkoutSessionManager, RestTimerService,
 │                                  #   CSVImportService, PreFillService
-├── Assets.xcassets/               # App icon + body part icons (bodypart_*.imageset)
-└── Design/                        # DesignSystem (colors, typography, spacing, icons)
+├── Assets.xcassets/               # App icon + body part icons (bodypart_*.imageset) + noise_tile (grain texture)
+└── Design/                        # DesignSystem (colors, shadows, grain, corner radius, typography, spacing, icons)
 ```
 
 ## Key Decisions
@@ -53,12 +53,17 @@ Kiln/
 - **EquipmentType** (9 cases: barbell, dumbbell, kettlebell, machineOther, weightedBodyweight, repsOnly, duration, distance, weightedDistance) determines which input fields show per set
 - **BodyPart** (9 cases) with custom PNG icons in asset catalog (template rendering mode for tint color)
 - Body part + equipment type are pre-enriched in the CSV — no runtime inference needed for imported data
-- Accent color: red (`DesignSystem.Colors.primary`)
+- **Theme**: Fire light theme — warm cream backgrounds, fire red primary accent (#BF3326), warm brown/charcoal secondary tones, grain texture overlay (multiply blend), warm-tinted shadows
+- **DesignSystem** expanded: 14 color tokens, Shadows (cardShadow, elevatedShadow), CornerRadius, GrainedBackground modifier (multiply blend, 0.12 opacity), CardGrainOverlay view (0.06 opacity)
+- Forced light mode via Info.plist `UIUserInterfaceStyle: Light` + `.preferredColorScheme(.light)`
 
 ## Spec Artifacts
 
-Feature specs, plans, and tasks live in `specs/001-workout-mvp/`.
+Feature specs, plans, and tasks live in `specs/001-workout-mvp/` and `specs/002-visual-redesign/`.
 Constitution at `.specify/memory/constitution.md`.
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
+
+## Recent Changes
+- 002-visual-redesign: Fire light theme redesign — 14 color tokens, warm shadows, grain texture, forced light mode

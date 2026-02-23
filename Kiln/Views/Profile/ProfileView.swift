@@ -34,7 +34,8 @@ struct ProfileView: View {
                 WorkoutsPerWeekChart(workouts: completedWorkouts)
                     .padding(DesignSystem.Spacing.md)
                     .background(DesignSystem.Colors.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
+                    .cardShadow()
                     .padding(.horizontal, DesignSystem.Spacing.md)
 
                 // Import section
@@ -51,14 +52,15 @@ struct ProfileView: View {
                         .padding(DesignSystem.Spacing.md)
                         .background(DesignSystem.Colors.surface)
                         .foregroundStyle(DesignSystem.Colors.primary)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
+                        .cardShadow()
                     }
                     .disabled(importInProgress)
                 }
                 .padding(.horizontal, DesignSystem.Spacing.md)
             }
         }
-        .background(DesignSystem.Colors.background)
+        .grainedBackground()
         .navigationTitle("Profile")
         .fileImporter(
             isPresented: $isImporting,

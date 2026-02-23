@@ -35,7 +35,7 @@ struct HistoryListView: View {
                 .padding(DesignSystem.Spacing.md)
             }
         }
-        .background(DesignSystem.Colors.background)
+        .grainedBackground()
         .navigationTitle("History")
         .navigationDestination(for: Workout.self) { workout in
             WorkoutDetailView(workout: workout)

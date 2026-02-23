@@ -69,7 +69,7 @@ struct StartWorkoutView: View {
             }
             .padding(.vertical, DesignSystem.Spacing.md)
         }
-        .background(DesignSystem.Colors.background)
+        .grainedBackground()
         .sheet(isPresented: $showTemplateEditor) {
             TemplateEditorView()
         }
