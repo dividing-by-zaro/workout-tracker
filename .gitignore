@@ -1,6 +1,37 @@
-# Images
+# Images (except asset catalog icons)
 *.png
 *.PNG
+!Kiln/Assets.xcassets/**/*.png
 
 # Workout data
 strong_workouts.csv
+
+# Xcode
+DerivedData/
+*.xcuserdata
+*.xcworkspace
+!Kiln.xcodeproj/project.xcworkspace
+xcuserdata/
+*.moved-aside
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+
+# Swift
+.build/
+*.swiftpm/
+Packages/
+
+# macOS
+.DS_Store
+*.swp
+*.tmp
+
+# IDE
+.vscode/
+.idea/
