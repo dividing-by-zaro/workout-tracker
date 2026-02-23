@@ -7,6 +7,7 @@ final class WorkoutSessionManager {
     var activeWorkout: Workout?
     var isWorkoutInProgress: Bool { activeWorkout != nil }
     var elapsedSeconds: Int = 0
+    var lastCompletedSetId: UUID?
 
     let restTimer = RestTimerService()
 
@@ -116,7 +117,8 @@ final class WorkoutSessionManager {
         workoutSet.completedAt = .now
         try? context.save()
 
-        let restDuration = workoutSet.workoutExercise?.exercise?.defaultRestSeconds ?? 90
+        lastCompletedSetId = workoutSet.id
+        let restDuration = workoutSet.workoutExercise?.exercise?.defaultRestSeconds ?? 120
         restTimer.start(duration: restDuration)
     }
 

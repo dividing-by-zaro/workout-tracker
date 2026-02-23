@@ -3,34 +3,42 @@ import SwiftData
 
 struct SetRowView: View {
     @Bindable var workoutSet: WorkoutSet
-    let setNumber: Int
     let equipmentType: EquipmentType
     let previousData: PreFillData?
     var onComplete: () -> Void
 
     var body: some View {
-        HStack(spacing: DesignSystem.Spacing.sm) {
-            Text("\(setNumber)")
-                .font(DesignSystem.Typography.body)
-                .foregroundStyle(DesignSystem.Colors.textSecondary)
-                .frame(width: 28)
+        ZStack {
+            // Full-row tappable background
+            RoundedRectangle(cornerRadius: 6)
+                .fill(workoutSet.isCompleted ? DesignSystem.Colors.success.opacity(0.1) : Color.clear)
+                .contentShape(Rectangle())
+                .onTapGesture { onComplete() }
 
-            previousLabel
-                .frame(width: 80, alignment: .leading)
-
-            inputFields
-
-            Spacer()
-
-            Button(action: {
-                onComplete()
-            }) {
-                Image(systemName: workoutSet.isCompleted ? DesignSystem.Icon.checkmark : "circle")
-                    .font(.title2)
-                    .foregroundStyle(workoutSet.isCompleted ? DesignSystem.Colors.success : DesignSystem.Colors.textSecondary)
+            // Content centered in the row
+            HStack(spacing: DesignSystem.Spacing.md) {
+                Group {
+                    if workoutSet.isCompleted {
+                        Image("brick_icon")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 16, height: 16)
+                            .foregroundStyle(DesignSystem.Colors.textPrimary)
+                    } else {
+                        Image(systemName: "flame.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(DesignSystem.Colors.primary)
+                    }
+                }
+                .frame(width: 20)
+                .allowsHitTesting(false)
+                previousLabel
+                    .frame(width: 60, alignment: .center)
+                    .allowsHitTesting(false)
+                inputFields
             }
         }
-        .padding(.vertical, DesignSystem.Spacing.xs)
+        .frame(maxWidth: .infinity, minHeight: 44)
         .opacity(workoutSet.isCompleted ? 0.7 : 1.0)
     }
 
@@ -39,7 +47,11 @@ struct SetRowView: View {
         if let prev = previousData {
             if equipmentType.tracksWeight && equipmentType.tracksReps {
                 if let w = prev.weight, let r = prev.reps {
-                    Text("\(Int(w)) x \(r)")
+                    Text("\(Int(w)) lbs x \(r)")
+                        .font(DesignSystem.Typography.caption)
+                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+                } else if let w = prev.weight {
+                    Text("\(Int(w)) lbs")
                         .font(DesignSystem.Typography.caption)
                         .foregroundStyle(DesignSystem.Colors.textSecondary)
                 } else {
@@ -86,49 +98,51 @@ struct SetRowView: View {
     @ViewBuilder
     private var inputFields: some View {
         if equipmentType.tracksWeight && equipmentType.tracksReps && equipmentType == .weightedBodyweight {
-            // Weighted bodyweight: +BW label, weight, x, reps
             HStack(spacing: DesignSystem.Spacing.xs) {
                 Text("+BW")
                     .font(DesignSystem.Typography.caption)
                     .foregroundStyle(DesignSystem.Colors.textSecondary)
                     .frame(width: 30)
+                    .allowsHitTesting(false)
                 NumericField(value: $workoutSet.weight, placeholder: "lbs")
                 Text("x")
                     .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    .frame(width: 14)
+                    .allowsHitTesting(false)
                 IntField(value: $workoutSet.reps, placeholder: "reps")
             }
         } else if equipmentType.tracksWeight && equipmentType.tracksReps {
-            // Standard weight + reps (barbell, dumbbell, kettlebell, machineOther)
             HStack(spacing: DesignSystem.Spacing.xs) {
                 NumericField(value: $workoutSet.weight, placeholder: "lbs")
                 Text("x")
                     .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    .frame(width: 14)
+                    .allowsHitTesting(false)
                 IntField(value: $workoutSet.reps, placeholder: "reps")
             }
         } else if equipmentType == .repsOnly {
-            // Reps only (bodyweight)
             HStack(spacing: DesignSystem.Spacing.xs) {
                 Text("BW")
                     .font(DesignSystem.Typography.body)
                     .foregroundStyle(DesignSystem.Colors.textSecondary)
                     .frame(width: 60)
+                    .allowsHitTesting(false)
                 Text("x")
                     .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    .frame(width: 14)
+                    .allowsHitTesting(false)
                 IntField(value: $workoutSet.reps, placeholder: "reps")
             }
         } else if equipmentType == .weightedDistance {
-            // Weight + distance
             HStack(spacing: DesignSystem.Spacing.xs) {
                 NumericField(value: $workoutSet.weight, placeholder: "lbs")
                 NumericField(value: $workoutSet.distance, placeholder: "mi")
             }
         } else if equipmentType == .distance {
-            // Distance only
             HStack(spacing: DesignSystem.Spacing.xs) {
                 NumericField(value: $workoutSet.distance, placeholder: "mi")
             }
         } else if equipmentType == .duration {
-            // Duration only
             HStack(spacing: DesignSystem.Spacing.xs) {
                 IntSeconds(value: $workoutSet.seconds, placeholder: "sec")
             }
@@ -159,7 +173,7 @@ private struct IntField: View {
         TextField(placeholder, value: $value, format: .number)
             .keyboardType(.numberPad)
             .textFieldStyle(.roundedBorder)
-            .frame(width: 50)
+            .frame(width: 60)
             .font(DesignSystem.Typography.body)
     }
 }

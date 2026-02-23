@@ -5,6 +5,8 @@ struct ExerciseCardView: View {
     @Bindable var workoutExercise: WorkoutExercise
     @Environment(\.modelContext) private var modelContext
     let preFillData: [PreFillData]
+    var restTimer: RestTimerService? = nil
+    var lastCompletedSetId: UUID? = nil
     var onCompleteSet: (WorkoutSet) -> Void
     var onSwapExercise: (() -> Void)?
     var onRemoveExercise: (() -> Void)?
@@ -48,7 +50,6 @@ struct ExerciseCardView: View {
                 let prefill = index < preFillData.count ? preFillData[index] : nil
                 SetRowView(
                     workoutSet: workoutSet,
-                    setNumber: index + 1,
                     equipmentType: equipmentType,
                     previousData: prefill,
                     onComplete: { onCompleteSet(workoutSet) }
@@ -59,6 +60,10 @@ struct ExerciseCardView: View {
                     } label: {
                         Label("Delete", systemImage: DesignSystem.Icon.delete)
                     }
+                }
+
+                if let timer = restTimer, timer.isRunning, workoutSet.id == lastCompletedSetId {
+                    RestTimerView(restTimer: timer)
                 }
             }
 
@@ -87,34 +92,41 @@ struct ExerciseCardView: View {
 
     @ViewBuilder
     private var columnHeaders: some View {
-        HStack(spacing: DesignSystem.Spacing.sm) {
-            Text("SET")
-                .frame(width: 28)
+        HStack(spacing: DesignSystem.Spacing.md) {
+            Color.clear.frame(width: 20)
             Text("PREVIOUS")
-                .frame(width: 80, alignment: .leading)
+                .frame(width: 60, alignment: .center)
             if equipmentType.tracksWeight && equipmentType.tracksReps && equipmentType == .weightedBodyweight {
-                Text("+LBS")
-                Text("")
-                Text("REPS")
+                HStack(spacing: DesignSystem.Spacing.xs) {
+                    Text("").frame(width: 30)
+                    Text("WEIGHT").frame(width: 60)
+                    Text("").frame(width: 14)
+                    Text("REPS").frame(width: 60)
+                }
             } else if equipmentType.tracksWeight && equipmentType.tracksReps {
-                Text("LBS")
-                Text("")
-                Text("REPS")
+                HStack(spacing: DesignSystem.Spacing.xs) {
+                    Text("WEIGHT").frame(width: 60)
+                    Text("").frame(width: 14)
+                    Text("REPS").frame(width: 60)
+                }
             } else if equipmentType == .repsOnly {
-                Text("")
-                Text("")
-                Text("REPS")
+                HStack(spacing: DesignSystem.Spacing.xs) {
+                    Text("").frame(width: 60)
+                    Text("").frame(width: 14)
+                    Text("REPS").frame(width: 60)
+                }
             } else if equipmentType == .weightedDistance {
-                Text("LBS")
-                Text("DIST")
+                HStack(spacing: DesignSystem.Spacing.xs) {
+                    Text("WEIGHT").frame(width: 60)
+                    Text("DIST").frame(width: 60)
+                }
             } else if equipmentType == .distance {
-                Text("DIST")
+                Text("DIST").frame(width: 60)
             } else if equipmentType == .duration {
-                Text("TIME")
+                Text("TIME").frame(width: 60)
             }
-            Spacer()
-            Text("")
         }
+        .frame(maxWidth: .infinity, alignment: .center)
         .font(DesignSystem.Typography.caption)
         .foregroundStyle(DesignSystem.Colors.textSecondary)
     }

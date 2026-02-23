@@ -12,7 +12,7 @@
 - **@Observable** `WorkoutSessionManager` injected via `.environment()` — owns active workout state, rest timer
 - **SwiftData @Model** objects bound directly to views via `@Bindable` and `@Query` — no classical ViewModel layer
 - **TabView** with conditional content in Workout tab (template grid vs. active workout)
-- **Rest timer**: `UNUserNotificationCenter` for background alerts + `Date` end-time in UserDefaults + wall-clock-derived foreground countdown
+- **Rest timer**: inline below completed set (auto-hides when done), `UNUserNotificationCenter` for background alerts + `Date` end-time in UserDefaults + wall-clock-derived foreground countdown; `lastCompletedSetId` on `WorkoutSessionManager` tracks placement
 - **CSV import**: `@ModelActor` background actor with batched saves
 
 ## Build
@@ -39,7 +39,7 @@ Kiln/
 │   └── Profile/                   # ProfileView, WorkoutsPerWeekChart
 ├── Services/                      # WorkoutSessionManager, RestTimerService,
 │                                  #   CSVImportService, PreFillService
-├── Assets.xcassets/               # App icon + body part icons (bodypart_*.imageset) + noise_tile (grain texture)
+├── Assets.xcassets/               # App icon + body part icons (bodypart_*.imageset) + brick_icon + noise_tile (grain texture)
 └── Design/                        # DesignSystem (colors, shadows, grain, corner radius, typography, spacing, icons)
 ```
 
@@ -50,7 +50,7 @@ Kiln/
 - Exercises seeded from Strong CSV import + created on-the-fly
 - Weight in lbs only
 - Templates auto-created from import for "New Legs/full Body A" and "New Legs/full Body B" only
-- Pre-fill from most recent workout containing that exercise (global, per-set)
+- Pre-fill from most recent workout containing that exercise (matched by unique exercise name, not persistentModelID); previous column shows "55 lbs x 8" format
 - **EquipmentType** (9 cases: barbell, dumbbell, kettlebell, machineOther, weightedBodyweight, repsOnly, duration, distance, weightedDistance) determines which input fields show per set
 - **BodyPart** (9 cases) with custom PNG icons in asset catalog (template rendering mode for tint color)
 - Body part + equipment type are pre-enriched in the CSV — no runtime inference needed for imported data
@@ -67,5 +67,6 @@ Constitution at `.specify/memory/constitution.md`.
 <!-- MANUAL ADDITIONS END -->
 
 ## Recent Changes
+- Active workout UI redesign: removed set number column and checkbox; full-row tap-to-complete via ZStack + allowsHitTesting pattern; centered layout; flame icon (incomplete) / brick icon (completed) per set; inline rest timer below completed set; default rest 120s; PREVIOUS column shows "weight lbs x reps" from previous workout; PreFillService matches by exercise name
 - Edit & delete completed workouts from History via long-press context menu; WorkoutEditView reuses ExerciseCardView for full editing
 - 002-visual-redesign: Fire light theme redesign — 14 color tokens, warm shadows, grain texture, forced light mode

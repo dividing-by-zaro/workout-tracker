@@ -11,8 +11,8 @@ MVP implementation complete. Ready for Xcode build and testing.
 - [x] Implementation plan with architecture decisions
 - [x] Data model (6 entities)
 - [x] One-tap workout start from templates
-- [x] Set logging with pre-filled previous data and one-tap completion
-- [x] Rest timer with background notifications (audio + haptic)
+- [x] Set logging with pre-filled previous data, tap-anywhere completion, flame/brick status icons
+- [x] Inline rest timer (appears below completed set, auto-hides, 120s default) with background notifications
 - [x] Mid-workout modifications (add/swap/remove exercises and sets)
 - [x] Crash-safe workout recovery (zero data loss)
 - [x] Workout template creation and management

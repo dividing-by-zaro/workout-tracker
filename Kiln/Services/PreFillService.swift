@@ -10,7 +10,7 @@ struct PreFillData {
 
 struct PreFillService {
     static func preFillSets(for exercise: Exercise, setCount: Int, in context: ModelContext) -> [PreFillData] {
-        let exerciseId = exercise.persistentModelID
+        let exerciseName = exercise.name
         let descriptor = FetchDescriptor<Workout>(
             predicate: #Predicate<Workout> { workout in
                 workout.isInProgress == false
@@ -23,9 +23,15 @@ struct PreFillService {
         }
 
         for workout in workouts {
-            if let workoutExercise = workout.exercises.first(where: { $0.exercise?.persistentModelID == exerciseId }) {
+            if let workoutExercise = workout.exercises.first(where: { $0.exercise?.name == exerciseName }) {
                 let previousSets = workoutExercise.sortedSets
                 if previousSets.isEmpty { continue }
+
+                // Only use this workout if at least one set has meaningful data
+                let hasData = previousSets.contains { set in
+                    set.weight != nil || set.reps != nil || set.distance != nil || set.seconds != nil
+                }
+                if !hasData { continue }
 
                 return (0..<setCount).map { index in
                     let sourceSet = index < previousSets.count ? previousSets[index] : previousSets[previousSets.count - 1]

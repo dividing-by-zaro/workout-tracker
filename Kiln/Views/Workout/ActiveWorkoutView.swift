@@ -19,14 +19,13 @@ struct ActiveWorkoutView: View {
 
                 ScrollView {
                     VStack(spacing: DesignSystem.Spacing.md) {
-                        RestTimerView(restTimer: sessionManager.restTimer)
-                            .padding(.horizontal, DesignSystem.Spacing.md)
-
                         ForEach(workout.sortedExercises) { workoutExercise in
                             let preFill = buildPreFillData(for: workoutExercise)
                             ExerciseCardView(
                                 workoutExercise: workoutExercise,
                                 preFillData: preFill,
+                                restTimer: sessionManager.restTimer,
+                                lastCompletedSetId: sessionManager.lastCompletedSetId,
                                 onCompleteSet: { workoutSet in
                                     sessionManager.completeSet(workoutSet, context: modelContext)
                                 },

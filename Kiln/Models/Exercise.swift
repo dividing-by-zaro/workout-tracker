@@ -22,7 +22,7 @@ final class Exercise {
         id: UUID = UUID(),
         name: String,
         exerciseType: ExerciseType = .strength,
-        defaultRestSeconds: Int = 90,
+        defaultRestSeconds: Int = 120,
         bodyPart: BodyPart? = nil,
         equipmentType: EquipmentType? = nil
     ) {
