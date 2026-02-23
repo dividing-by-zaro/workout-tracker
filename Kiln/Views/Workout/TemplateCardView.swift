@@ -27,7 +27,7 @@ struct TemplateCardView: View {
                             Image(systemName: "play.fill")
                                 .font(.system(size: 10))
                         }
-                        .foregroundStyle(.white)
+                        .foregroundStyle(DesignSystem.Colors.textOnPrimary)
                         .padding(.horizontal, DesignSystem.Spacing.sm + 2)
                         .padding(.vertical, DesignSystem.Spacing.xs + 2)
                         .background(DesignSystem.Colors.primary)
@@ -54,8 +54,14 @@ struct TemplateCardView: View {
         }
         .padding(DesignSystem.Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(DesignSystem.Colors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .background {
+            ZStack {
+                DesignSystem.Colors.surface
+                CardGrainOverlay()
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
+        .cardShadow()
         .contentShape(Rectangle())
         .onTapGesture { showDetail = true }
         .sheet(isPresented: $showDetail) {
@@ -111,7 +117,7 @@ struct TemplateCardView: View {
             .foregroundStyle(DesignSystem.Colors.textSecondary)
             .padding(.horizontal, DesignSystem.Spacing.sm)
             .padding(.vertical, DesignSystem.Spacing.xxs)
-            .background(DesignSystem.Colors.background)
+            .background(DesignSystem.Colors.surfaceSecondary)
             .clipShape(Capsule())
     }
 }
@@ -174,7 +180,7 @@ private struct TemplateDetailSheet: View {
                 } label: {
                     Text("Start Workout")
                         .font(DesignSystem.Typography.body.bold())
-                        .foregroundStyle(.white)
+                        .foregroundStyle(DesignSystem.Colors.textOnPrimary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, DesignSystem.Spacing.md)
                         .background(DesignSystem.Colors.primary)
@@ -184,7 +190,7 @@ private struct TemplateDetailSheet: View {
                 .padding(.bottom, DesignSystem.Spacing.lg)
             }
         }
-        .background(DesignSystem.Colors.background)
+        .grainedBackground()
     }
 
     private func metadataPill(_ text: String) -> some View {
@@ -193,7 +199,7 @@ private struct TemplateDetailSheet: View {
             .foregroundStyle(DesignSystem.Colors.textSecondary)
             .padding(.horizontal, DesignSystem.Spacing.sm)
             .padding(.vertical, DesignSystem.Spacing.xxs)
-            .background(DesignSystem.Colors.surface)
+            .background(DesignSystem.Colors.surfaceSecondary)
             .clipShape(Capsule())
     }
 

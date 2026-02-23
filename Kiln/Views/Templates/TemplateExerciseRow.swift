@@ -7,7 +7,7 @@ struct TemplateExerciseRow: View {
     var body: some View {
         HStack {
             Image(systemName: "line.3.horizontal")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DesignSystem.Colors.textSecondary)
 
             Text(templateExercise.exercise?.name ?? "Unknown")
                 .font(.body)

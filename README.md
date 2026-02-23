@@ -24,6 +24,7 @@ MVP implementation complete. Ready for Xcode build and testing.
 - [x] Template detail modal with full exercise list
 - [x] Exercise picker with equipment type and body part selection
 - [x] Custom app icon
+- [x] Fire light theme (warm cream, fire red accents, grain texture, warm shadows)
 
 ## Getting Started
 
