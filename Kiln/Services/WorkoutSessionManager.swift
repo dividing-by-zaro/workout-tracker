@@ -290,12 +290,6 @@ final class WorkoutSessionManager {
 
         updateLiveActivity(with: cachedState)
         scheduleBackgroundRestExpiry(duration: restDuration)
-
-        // Best effort: mark set complete in-memory so handleTimerExpired finds the correct next set
-        if let (_, set) = findCurrentSet(), set.id == setId {
-            set.isCompleted = true
-            set.completedAt = .now
-        }
     }
 
     func adjustWeightFromIntent(delta: Double) {
@@ -315,6 +309,7 @@ final class WorkoutSessionManager {
         restTimer.stop()
         lastCompletedSetId = nil
         cancelBackgroundRestExpiry()
+        applyPendingCompletionsInMemory()
         updateLiveActivity()
         cacheCurrentState()
     }
@@ -335,6 +330,11 @@ final class WorkoutSessionManager {
     private func handleTimerExpired() {
         lastCompletedSetId = nil
         cancelBackgroundRestExpiry()
+
+        // Apply any pending lock screen completions to in-memory SwiftData
+        // so buildContentState finds the correct next set
+        applyPendingCompletionsInMemory()
+
         let alert = AlertConfiguration(
             title: "Rest Complete",
             body: "Time for your next set!",
@@ -342,6 +342,23 @@ final class WorkoutSessionManager {
         )
         updateLiveActivity(alertConfiguration: alert)
         cacheCurrentState()
+    }
+
+    /// Marks pending completion set IDs as complete in the in-memory model graph
+    /// (no context.save — just so buildContentState traversal sees them).
+    private func applyPendingCompletionsInMemory() {
+        guard let workout = activeWorkout else { return }
+        let pendingIds = LiveActivityCache.pendingCompletionIds
+        guard !pendingIds.isEmpty else { return }
+
+        for exercise in workout.sortedExercises {
+            for set in exercise.sortedSets {
+                if pendingIds.contains(set.id) && !set.isCompleted {
+                    set.isCompleted = true
+                    set.completedAt = .now
+                }
+            }
+        }
     }
 
     // MARK: - Background Rest Timer
