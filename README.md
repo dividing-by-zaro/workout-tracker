@@ -29,6 +29,7 @@ MVP implementation complete. Ready for Xcode build and testing.
 - [x] Set completion/uncomplete bounce animations, rest timer appear/dismiss transitions
 - [x] Custom app icon
 - [x] Fire light theme (warm cream, fire red accents, grain texture, warm shadows)
+- [x] Custom numeric keyboard with +/− buttons and auto-replace on focus
 
 ## Getting Started
 

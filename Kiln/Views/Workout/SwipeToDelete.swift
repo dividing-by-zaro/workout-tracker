@@ -33,7 +33,7 @@ struct SwipeToDelete<Content: View>: View {
             // Main content
             content()
                 .offset(x: offset)
-                .gesture(
+                .simultaneousGesture(
                     DragGesture(minimumDistance: 20)
                         .onChanged { value in
                             let translation = value.translation.width

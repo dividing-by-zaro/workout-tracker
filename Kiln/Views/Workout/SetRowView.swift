@@ -10,23 +10,8 @@ struct SetRowView: View {
     @State private var bounceScale: CGFloat = 1.0
 
     var body: some View {
-        ZStack {
-            // Full-row tappable background
-            RoundedRectangle(cornerRadius: 6)
-                .fill(workoutSet.isCompleted ? DesignSystem.Colors.success.opacity(0.1) : Color.clear)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    let wasCompleted = workoutSet.isCompleted
-                    onComplete()
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
-                        bounceScale = wasCompleted ? 0.95 : 1.08
-                    }
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6).delay(0.15)) {
-                        bounceScale = 1.0
-                    }
-                }
-
-            // Content filling the row
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            // Tappable area: icon + previous label
             HStack(spacing: DesignSystem.Spacing.sm) {
                 Group {
                     if workoutSet.isCompleted {
@@ -45,14 +30,30 @@ struct SetRowView: View {
                 }
                 .animation(.spring(response: 0.35, dampingFraction: 0.6), value: workoutSet.isCompleted)
                 .frame(width: 16)
-                .allowsHitTesting(false)
                 previousLabel
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .allowsHitTesting(false)
-                inputFields
             }
-            .padding(.horizontal, DesignSystem.Spacing.xs)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                let wasCompleted = workoutSet.isCompleted
+                onComplete()
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
+                    bounceScale = wasCompleted ? 0.95 : 1.08
+                }
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.6).delay(0.15)) {
+                    bounceScale = 1.0
+                }
+            }
+
+            // Input fields — no tap gesture so TextFields receive focus
+            inputFields
         }
+        .padding(.horizontal, DesignSystem.Spacing.xs)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(workoutSet.isCompleted ? DesignSystem.Colors.success.opacity(0.1) : Color.clear)
+        )
         .scaleEffect(bounceScale)
         .animation(.easeInOut(duration: 0.15), value: workoutSet.isCompleted)
         .frame(maxWidth: .infinity, minHeight: 44)
@@ -121,21 +122,21 @@ struct SetRowView: View {
                     .foregroundStyle(DesignSystem.Colors.textSecondary)
                     .frame(width: 30)
                     .allowsHitTesting(false)
-                NumericField(value: $workoutSet.weight, placeholder: "lbs")
+                NumericInputField(value: $workoutSet.weight, placeholder: "lbs", incrementStep: 1.0)
                 Text("x")
                     .foregroundStyle(DesignSystem.Colors.textSecondary)
                     .frame(width: 14)
                     .allowsHitTesting(false)
-                IntField(value: $workoutSet.reps, placeholder: "reps")
+                IntInputField(value: $workoutSet.reps, placeholder: "reps", incrementStep: 1.0)
             }
         } else if equipmentType.tracksWeight && equipmentType.tracksReps {
             HStack(spacing: DesignSystem.Spacing.xs) {
-                NumericField(value: $workoutSet.weight, placeholder: "lbs")
+                NumericInputField(value: $workoutSet.weight, placeholder: "lbs", incrementStep: 1.0)
                 Text("x")
                     .foregroundStyle(DesignSystem.Colors.textSecondary)
                     .frame(width: 14)
                     .allowsHitTesting(false)
-                IntField(value: $workoutSet.reps, placeholder: "reps")
+                IntInputField(value: $workoutSet.reps, placeholder: "reps", incrementStep: 1.0)
             }
         } else if equipmentType == .repsOnly {
             HStack(spacing: DesignSystem.Spacing.xs) {
@@ -148,62 +149,22 @@ struct SetRowView: View {
                     .foregroundStyle(DesignSystem.Colors.textSecondary)
                     .frame(width: 14)
                     .allowsHitTesting(false)
-                IntField(value: $workoutSet.reps, placeholder: "reps")
+                IntInputField(value: $workoutSet.reps, placeholder: "reps", incrementStep: 1.0)
             }
         } else if equipmentType == .weightedDistance {
             HStack(spacing: DesignSystem.Spacing.xs) {
-                NumericField(value: $workoutSet.weight, placeholder: "lbs")
-                NumericField(value: $workoutSet.distance, placeholder: "mi")
+                NumericInputField(value: $workoutSet.weight, placeholder: "lbs", incrementStep: 1.0)
+                NumericInputField(value: $workoutSet.distance, placeholder: "mi", incrementStep: 0.1)
             }
         } else if equipmentType == .distance {
             HStack(spacing: DesignSystem.Spacing.xs) {
-                NumericField(value: $workoutSet.distance, placeholder: "mi")
+                NumericInputField(value: $workoutSet.distance, placeholder: "mi", incrementStep: 0.1)
             }
         } else if equipmentType == .duration {
             HStack(spacing: DesignSystem.Spacing.xs) {
-                IntSeconds(value: $workoutSet.seconds, placeholder: "sec")
+                NumericInputField(value: $workoutSet.seconds, placeholder: "sec", incrementStep: 5.0)
             }
         }
     }
 }
 
-// MARK: - Numeric Input Helpers
-
-private struct NumericField: View {
-    @Binding var value: Double?
-    let placeholder: String
-
-    var body: some View {
-        TextField(placeholder, value: $value, format: .number)
-            .keyboardType(.decimalPad)
-            .textFieldStyle(.roundedBorder)
-            .frame(width: 60)
-            .font(DesignSystem.Typography.body)
-    }
-}
-
-private struct IntField: View {
-    @Binding var value: Int?
-    let placeholder: String
-
-    var body: some View {
-        TextField(placeholder, value: $value, format: .number)
-            .keyboardType(.numberPad)
-            .textFieldStyle(.roundedBorder)
-            .frame(width: 60)
-            .font(DesignSystem.Typography.body)
-    }
-}
-
-private struct IntSeconds: View {
-    @Binding var value: Double?
-    let placeholder: String
-
-    var body: some View {
-        TextField(placeholder, value: $value, format: .number)
-            .keyboardType(.decimalPad)
-            .textFieldStyle(.roundedBorder)
-            .frame(width: 60)
-            .font(DesignSystem.Typography.body)
-    }
-}
