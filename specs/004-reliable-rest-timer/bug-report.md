@@ -18,46 +18,31 @@ Tapping +/- weight/reps buttons on the lock screen Live Activity has noticeable 
 
 2. **Background audio runs for entire workout** — Originally started/stopped per rest period, meaning the app was suspended between rests and each tap required a full process wake-up (~100ms–1s). Changed to run from workout start to workout end. Should eliminate wake-up latency but buttons are still laggy.
 
+3. **UserDefaults cache for intent handlers (LiveActivityCache)** — Created `LiveActivityCache` enum backed by App Group UserDefaults. Intent handlers now read/write cached `ContentState` JSON instead of traversing SwiftData. `adjustWeightFromIntent` / `adjustRepsFromIntent` call `LiveActivityCache.adjustWeight(delta:)` → `updateLiveActivity(with:)` with zero SwiftData access. `completeCurrentSetFromIntent` reads cached state, mutates timer fields, records completion ID for later sync. Foreground resume syncs cache → SwiftData via `syncCacheToSwiftData()`. **Result:** Still laggy on +/- buttons. The bottleneck is `Activity.update()` itself (async system round-trip to re-render the widget), not SwiftData or model traversal.
+
+**Current understanding:**
+
+The intent hot path is now: read UserDefaults → decode JSON → mutate struct → encode JSON → write UserDefaults → `Activity.update()`. The first 5 steps are microseconds. The remaining delay is the `Activity.update()` system call — iOS processes the update, re-renders the WidgetKit view, and pushes it to the lock screen. This is an iOS system-level constraint, not something we can optimize on the app side.
+
 **Things to investigate:**
 
-- Is `Activity.update()` itself the bottleneck? iOS may throttle rapid updates.
-- Cache current set weight/reps in `UserDefaults` (App Group `group.app.izaro.kiln`) so intents can read/write without traversing SwiftData. Only sync back on set completion / foreground resume. This removes `findCurrentSet()` + `buildContentState()` model graph traversals from the hot path.
-- Profile the intent execution time to identify which step is slowest.
+- iOS may throttle rapid Live Activity updates. Check if there's a minimum interval between `Activity.update()` calls.
+- Profile the intent execution time end-to-end to confirm `Activity.update()` is the slow step.
+- Consider whether the lag is acceptable given it's a system-level constraint, or if there's an alternative rendering approach.
 
 ### Bug 2: FaceID required to complete a set
 
-**Status:** Open
-
-Tapping the "Complete" button on the lock screen Live Activity prompts FaceID authentication. Adjusting weight/reps may also require it.
+**Status:** Fixed
 
 **Root cause:** SwiftData's backing SQLite store uses `NSFileProtectionComplete` by default. The database is encrypted and inaccessible when the device is locked. When a `LiveActivityIntent` tries to read/write SwiftData objects, iOS forces FaceID to unlock the file.
 
 **What we tried:**
 
-Set `NSFileProtectionCompleteUntilFirstUserAuthentication` on the Application Support directory and existing store file in `KilnApp.init()`. This should make data accessible after the first device unlock of the day.
+1. Set `NSFileProtectionCompleteUntilFirstUserAuthentication` on the Application Support directory and store file in `KilnApp.init()`. **Result:** Still required FaceID.
 
-```swift
-// In KilnApp.init()
-let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-try? FileManager.default.createDirectory(at: appSupport, withIntermediateDirectories: true)
-let protection = FileProtectionType.completeUntilFirstUserAuthentication
-try? FileManager.default.setAttributes([.protectionKey: protection], ofItemAtPath: appSupport.path)
-let storeFile = appSupport.appendingPathComponent("default.store")
-if FileManager.default.fileExists(atPath: storeFile.path) {
-    try? FileManager.default.setAttributes([.protectionKey: protection], ofItemAtPath: storeFile.path)
-}
-```
+2. **UserDefaults cache (LiveActivityCache)** — Bypassed SwiftData entirely for lock screen intents. All intent handlers now read/write from App Group UserDefaults. SwiftData is only touched on foreground resume. Removed the file protection hack from `KilnApp.init()`. **Result:** Still required FaceID to complete a set — `completeCurrentSetFromIntent()` had a trailing `findCurrentSet()` call that touched SwiftData.
 
-**Result:** Still requires FaceID.
-
-**Things to investigate:**
-
-- The store file may not be at `default.store` — check the actual SwiftData store path. Print `ModelConfiguration().url` to find it.
-- Setting attributes on the directory may not retroactively change existing files' protection class. May need to set it on every file in the store directory (`.store`, `.store-shm`, `.store-wal`).
-- SwiftData may use a custom store location, not Application Support. Need to verify.
-- Alternative: create a `ModelConfiguration` with an explicit URL in a directory with the correct protection set before any files are created.
-- Alternative: bypass SwiftData entirely for lock screen intents — cache the active set data in `UserDefaults` (App Group) and only sync to SwiftData when the app is in foreground. This would fix both the FaceID issue and the lag issue simultaneously.
-- Check if the app needs to be deleted and reinstalled for file protection changes to take effect on already-created store files.
+3. **Removed `findCurrentSet()` from `completeCurrentSetFromIntent()`** — The "best effort" in-memory SwiftData mark was triggering FaceID. Moved that logic to `applyPendingCompletionsInMemory()`, called only from `handleTimerExpired()` and `skipRestTimerFromIntent()` (which run while the app is active in background, not from a lock screen intent). **Result:** Fixed — no FaceID prompt on Complete.
 
 ### Non-issue: Screen timeout not reset by button taps
 
@@ -69,8 +54,9 @@ Tapping Live Activity buttons doesn't reset the screen auto-lock timer (e.g., sc
 |------|--------|
 | `Kiln/Resources/silence.caf` | 1-second quiet 100Hz sine wave (~0.3% amplitude) for background audio |
 | `Kiln/Services/BackgroundAudioService.swift` | New `@Observable` service: `AVAudioSession` `.playback` + `.mixWithOthers`, plays `silence.caf` on loop at volume 0.01 |
+| `Kiln/Services/LiveActivityCache.swift` | New `enum` with static methods: caches `ContentState` JSON + set ID + rest duration in App Group UserDefaults. Provides `adjustWeight(delta:)`, `adjustReps(delta:)`, `recordCompletion(setId:)`, `consumePendingSync()` |
 | `project.yml` | `UIBackgroundModes: [audio]`, `Kiln/Resources` in resources, `Resources` excluded from sources |
 | `Kiln/Info.plist` | `audio` in `UIBackgroundModes` array |
-| `Kiln/Services/WorkoutSessionManager.swift` | Background audio starts at workout start, stops at workout end. `context.save()` removed from adjust intents. Foreground resume flushes unsaved changes and restarts audio if needed. |
+| `Kiln/Services/WorkoutSessionManager.swift` | Intent handlers rewritten to use `LiveActivityCache` (no SwiftData). `cacheCurrentState()` called after every app-side LA update. `syncCacheToSwiftData()` on foreground resume applies pending completions + dirty weight/reps. Background audio starts at workout start, stops at workout end. |
 | `Kiln/Intents/WorkoutLiveActivityIntents+App.swift` | `CompleteSetIntent.perform()` simplified — removed `Task.sleep` hack |
-| `Kiln/KilnApp.swift` | `init()` attempts to set `NSFileProtectionCompleteUntilFirstUserAuthentication` on store directory (not working yet) |
+| `Kiln/KilnApp.swift` | Removed file protection `init()` hack (no longer needed) |

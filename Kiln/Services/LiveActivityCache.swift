@@ -92,6 +92,12 @@ enum LiveActivityCache {
         suite.set(ids, forKey: completedSetIdsKey)
     }
 
+    /// Read-only access to pending completion IDs (without consuming them)
+    static var pendingCompletionIds: Set<UUID> {
+        let idStrings = suite.stringArray(forKey: completedSetIdsKey) ?? []
+        return Set(idStrings.compactMap { UUID(uuidString: $0) })
+    }
+
     // MARK: - Consume pending sync
 
     static func consumePendingSync() -> PendingSync? {
