@@ -2,7 +2,7 @@ Kiln is a personal workout tracker iOS app — custom software built as an upgra
 
 ## Status
 
-MVP implementation complete. Ready for Xcode build and testing.
+MVP implementation complete. Live Activity feature on branch `003-live-activity`.
 
 ## Features (MVP)
 
@@ -12,7 +12,7 @@ MVP implementation complete. Ready for Xcode build and testing.
 - [x] Data model (6 entities)
 - [x] One-tap workout start from templates
 - [x] Set logging with pre-filled previous data, tap-anywhere completion, flame/brick status icons
-- [x] Inline rest timer (appears below completed set, auto-hides, 120s default) with background notifications
+- [x] Inline rest timer (appears below completed set, auto-hides, 120s default)
 - [x] Mid-workout modifications (add/swap/remove exercises and sets)
 - [x] Crash-safe workout recovery (zero data loss)
 - [x] Workout template creation and management
@@ -30,18 +30,23 @@ MVP implementation complete. Ready for Xcode build and testing.
 - [x] Custom app icon
 - [x] Fire light theme (warm cream, fire red accents, grain texture, warm shadows)
 - [x] Custom numeric keyboard with +/− buttons and auto-replace on focus
+- [x] Live Activity on lock screen — complete entire workout without unlocking
+  - [x] Current exercise, set progress, previous set info
+  - [x] Adjustable weight/reps with +/− buttons
+  - [x] Complete Set button with auto-advancing rest timer
+  - [x] Countdown timer with progress bar and Skip button
+  - [x] Sound alert on timer expiry, auto-advance to next set
 
 ## Getting Started
 
 1. Run `xcodegen generate` (requires [xcodegen](https://github.com/yonaskolb/XcodeGen))
 2. Open `Kiln.xcodeproj` in Xcode
-3. Select iPhone 17 simulator (iOS 17+)
+3. Select iPhone 13 simulator (iOS 17+)
 4. Build and run (Cmd+R)
 5. Import `strong_workouts.csv` from the Profile tab
 
 ## Future
 
-- Live Activity on lock screen (set completion + rest timer countdown)
 - Server sync via Railway backend
 - Exercise progression graphs
 - Muscle group tracking
@@ -49,4 +54,4 @@ MVP implementation complete. Ready for Xcode build and testing.
 
 ## Tech Stack
 
-Swift 5.9+ / SwiftUI / SwiftData / Swift Charts / iOS 17+ / iPhone 17
+Swift 5.9+ / SwiftUI / SwiftData / Swift Charts / ActivityKit / WidgetKit / AppIntents / iOS 17+

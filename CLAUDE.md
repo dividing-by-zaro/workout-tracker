@@ -2,17 +2,20 @@
 
 ## Active Technologies
 
-- Swift 5.9+ / SwiftUI / iOS 17+ (iPhone 17 target)
+- Swift 5.9+ / SwiftUI / iOS 17+ (iPhone 13 target)
 - SwiftData (local persistence, autosave disabled, explicit save on every set)
 - Swift Charts (workouts-per-week bar chart)
-- UserNotifications (background rest timer alerts)
+- ActivityKit + WidgetKit + AppIntents (Live Activity on lock screen)
+- App Groups (`group.app.izaro.kiln`) for shared UserDefaults (rest timer persistence)
 
 ## Architecture
 
-- **@Observable** `WorkoutSessionManager` injected via `.environment()` — owns active workout state, rest timer
+- **@Observable** `WorkoutSessionManager` injected via `.environment()` — owns active workout state, rest timer, live activity lifecycle; `static var shared` singleton for intent access
 - **SwiftData @Model** objects bound directly to views via `@Bindable` and `@Query` — no classical ViewModel layer
 - **TabView** with conditional content in Workout tab (template grid vs. active workout)
-- **Rest timer**: inline below completed set (auto-hides when done), `UNUserNotificationCenter` for background alerts + `Date` end-time in UserDefaults + wall-clock-derived foreground countdown; `lastCompletedSetId` on `WorkoutSessionManager` tracks placement
+- **Rest timer**: inline below completed set (auto-hides when done), `Date` end-time in UserDefaults + wall-clock-derived foreground countdown; `lastCompletedSetId` on `WorkoutSessionManager` tracks placement; `AlertConfiguration(sound: .default)` plays sound via Live Activity update on expiry
+- **Live Activity**: Lock screen widget for completing entire workout without unlocking. Three views: `SetView` (adjustable weight/reps + Complete button), `TimerView` (countdown + Skip button), `CompleteView` (all sets done). Interactive buttons via `LiveActivityIntent` (runs in app process). `CompleteSetIntent.perform()` stays alive via `Task.sleep` for the rest duration so the app can fire the timer expiry and advance to the next set.
+- **Intent split pattern**: Shared struct declarations in `Kiln/Shared/`, app-target `perform()` with real logic in `Kiln/Intents/`, widget-target stubs in `KilnWidgets/`. Widget extension cannot access SwiftData.
 - **CSV import**: `@ModelActor` background actor with batched saves
 
 ## Build
@@ -20,12 +23,14 @@
 - Xcode project generated via `xcodegen` from `project.yml` at repo root
 - Run `xcodegen generate` after adding/removing Swift files to regenerate `Kiln.xcodeproj`
 - Open `Kiln.xcodeproj` in Xcode, build with Cmd+R
+- Bundle IDs: `app.izaro.kiln` (app), `app.izaro.kiln.kilnwidgets` (widget extension)
+- Development Team: `85S8MAN3A4`
 
 ## Project Structure
 
 ```text
 Kiln/
-├── KilnApp.swift                  # App entry, ModelContainer (autosave off), environment
+├── KilnApp.swift                  # App entry, ModelContainer (autosave off), environment, foreground resume
 ├── Models/                        # 9 files: ExerciseType, EquipmentType, BodyPart, Exercise,
 │                                  #   WorkoutTemplate, TemplateExercise, Workout, WorkoutExercise, WorkoutSet
 ├── Views/
@@ -39,9 +44,17 @@ Kiln/
 │   │                              #   WorkoutEditView
 │   └── Profile/                   # ProfileView, WorkoutsPerWeekChart
 ├── Services/                      # WorkoutSessionManager, RestTimerService,
-│                                  #   CSVImportService, PreFillService
-├── Assets.xcassets/               # App icon + body part icons (bodypart_*.imageset) + brick_icon + noise_tile (grain texture)
+│                                  #   LiveActivityService, CSVImportService, PreFillService
+├── Shared/                        # WorkoutActivityAttributes, WorkoutLiveActivityIntents (shared with widget)
+├── Intents/                       # WorkoutLiveActivityIntents+App (perform() bodies)
+├── Assets.xcassets/               # App icon + body part icons + brick_icon + noise_tile
 └── Design/                        # DesignSystem (colors, shadows, grain, corner radius, typography, spacing, icons)
+
+KilnWidgets/
+├── KilnWidgetBundle.swift         # @main WidgetBundle + ActivityConfiguration
+├── Views/                         # SetView, TimerView, CompleteView (lock screen presentations)
+├── WorkoutLiveActivityIntents+Widget.swift  # Stub perform() bodies
+└── Assets.xcassets/               # 7 widget color sets (WidgetPrimary, WidgetBackground, etc.)
 ```
 
 ## Key Decisions
@@ -52,24 +65,19 @@ Kiln/
 - Weight in lbs only
 - Templates auto-created from import for "New Legs/full Body A" and "New Legs/full Body B" only
 - Pre-fill from most recent workout containing that exercise (matched by unique exercise name, not persistentModelID); previous column shows "55 lbs x 8" format
-- **EquipmentType** (9 cases: barbell, dumbbell, kettlebell, machineOther, weightedBodyweight, repsOnly, duration, distance, weightedDistance) determines which input fields show per set
+- **EquipmentType** (9 cases) with `equipmentCategory` computed property mapping to 5 display categories: weightReps, repsOnly, duration, distance, weightDistance — used by Live Activity for adaptive input fields
 - **BodyPart** (9 cases) with custom PNG icons in asset catalog (template rendering mode for tint color)
 - Body part + equipment type are pre-enriched in the CSV — no runtime inference needed for imported data
 - **Theme**: Fire light theme — warm cream backgrounds, fire red primary accent (#BF3326), warm brown/charcoal secondary tones, grain texture overlay (multiply blend), warm-tinted shadows
 - **DesignSystem** expanded: 14 color tokens, Shadows (cardShadow, elevatedShadow), CornerRadius, GrainedBackground modifier (multiply blend, 0.12 opacity), CardGrainOverlay view (0.06 opacity)
 - Forced light mode via Info.plist `UIUserInterfaceStyle: Light` + `.preferredColorScheme(.light)`
+- **Live Activity timer display**: `Text(timerInterval:countsDown:)` shows "1:--" on Simulator (reduced fidelity mode) — works correctly on real device. `ProgressView(timerInterval:countsDown:)` for auto-updating progress bar.
+- **No push notifications**: Rest timer sound played via `AlertConfiguration` on Live Activity update. No `UNUserNotificationCenter` usage.
 
 ## Spec Artifacts
 
-Feature specs, plans, and tasks live in `specs/001-workout-mvp/` and `specs/002-visual-redesign/`.
+Feature specs, plans, and tasks live in `specs/001-workout-mvp/`, `specs/002-visual-redesign/`, and `specs/003-live-activity/`.
 Constitution at `.specify/memory/constitution.md`.
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
-
-## Recent Changes
-- **Custom numeric keyboard**: `NumericKeyboardView` + `CustomInputTextField` (UIViewRepresentable with custom `inputView`) replaces system `.decimalPad`/`.numberPad`. 4-column layout: 3-col numpad + right column with dismiss, −/+ buttons. Increment steps: ±1 weight/reps, ±5 seconds, ±0.1 distance. `pendingReplace` flag auto-selects existing value on focus so first digit typed replaces rather than appends. `NumericInputField` (Double?) and `IntInputField` (Int?) convenience wrappers used in SetRowView.
-- Tap completed set to uncomplete (toggle behavior in `completeSet`); swipe-left to delete sets via custom `SwipeToDelete` view (DragGesture-based, `.swipeActions` only works in `List`); "Delete All Data" button in Profile with confirmation alert; `reset()` and `deleteSet(_:context:)` on WorkoutSessionManager
-- Active workout UI redesign: removed set number column and checkbox; full-row tap-to-complete via ZStack + allowsHitTesting pattern; centered layout; flame icon (incomplete) / brick icon (completed) per set; inline rest timer below completed set; default rest 120s; PREVIOUS column shows "weight lbs x reps" from previous workout; PreFillService matches by exercise name
-- Edit & delete completed workouts from History via long-press context menu; WorkoutEditView reuses ExerciseCardView for full editing
-- 002-visual-redesign: Fire light theme redesign — 14 color tokens, warm shadows, grain texture, forced light mode
