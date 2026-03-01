@@ -32,7 +32,8 @@ Kiln/
 │   ├── ContentView.swift          # 3-tab TabView with conditional Workout tab
 │   ├── Workout/                   # StartWorkoutView, ActiveWorkoutView, SetRowView,
 │   │                              #   ExerciseCardView, TemplateCardView, RestTimerView,
-│   │                              #   ExercisePickerView, SwipeToDelete
+│   │                              #   ExercisePickerView, SwipeToDelete,
+│   │                              #   NumericKeyboardView, CustomInputTextField
 │   ├── Templates/                 # TemplateEditorView, TemplateExerciseRow
 │   ├── History/                   # HistoryListView, WorkoutCardView, WorkoutDetailView,
 │   │                              #   WorkoutEditView
@@ -67,10 +68,8 @@ Constitution at `.specify/memory/constitution.md`.
 <!-- MANUAL ADDITIONS END -->
 
 ## Recent Changes
+- **Custom numeric keyboard**: `NumericKeyboardView` + `CustomInputTextField` (UIViewRepresentable with custom `inputView`) replaces system `.decimalPad`/`.numberPad`. 4-column layout: 3-col numpad + right column with dismiss, −/+ buttons. Increment steps: ±1 weight/reps, ±5 seconds, ±0.1 distance. `pendingReplace` flag auto-selects existing value on focus so first digit typed replaces rather than appends. `NumericInputField` (Double?) and `IntInputField` (Int?) convenience wrappers used in SetRowView.
 - Tap completed set to uncomplete (toggle behavior in `completeSet`); swipe-left to delete sets via custom `SwipeToDelete` view (DragGesture-based, `.swipeActions` only works in `List`); "Delete All Data" button in Profile with confirmation alert; `reset()` and `deleteSet(_:context:)` on WorkoutSessionManager
-- CSV import reps fix: `Int(row[6]) ?? Double(row[6]).map { Int($0) }` handles Strong's decimal reps like "8.0"
-- Set row layout uses flexible PREVIOUS column (`maxWidth: .infinity`) instead of fixed 60pt to prevent text wrapping
-- Completion animations: spring bounce scale on set complete/uncomplete, icon crossfade transition, rest timer scale+fade+slide transition
 - Active workout UI redesign: removed set number column and checkbox; full-row tap-to-complete via ZStack + allowsHitTesting pattern; centered layout; flame icon (incomplete) / brick icon (completed) per set; inline rest timer below completed set; default rest 120s; PREVIOUS column shows "weight lbs x reps" from previous workout; PreFillService matches by exercise name
 - Edit & delete completed workouts from History via long-press context menu; WorkoutEditView reuses ExerciseCardView for full editing
 - 002-visual-redesign: Fire light theme redesign — 14 color tokens, warm shadows, grain texture, forced light mode
