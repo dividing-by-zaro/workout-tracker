@@ -1,27 +1,40 @@
+import ActivityKit
 import Foundation
 import SwiftData
 import SwiftUI
 
 @Observable
 final class WorkoutSessionManager {
+    static var shared: WorkoutSessionManager?
+
     var activeWorkout: Workout?
     var isWorkoutInProgress: Bool { activeWorkout != nil }
     var elapsedSeconds: Int = 0
     var lastCompletedSetId: UUID?
 
     let restTimer = RestTimerService()
+    let liveActivityService = LiveActivityService()
 
+    private var currentActivity: Activity<WorkoutActivityAttributes>?
     private var modelContext: ModelContext?
     private var elapsedTimer: Timer?
-    private var hasRequestedNotificationPermission = false
+    private var backgroundTaskId: UIBackgroundTaskIdentifier = .invalid
+    private var restExpiryWorkItem: DispatchWorkItem?
 
     var hasInterruptedWorkout: Bool = false
+
+    init() {
+        Self.shared = self
+        restTimer.onTimerExpired = { [weak self] in
+            self?.handleTimerExpired()
+        }
+    }
 
     func setModelContext(_ context: ModelContext) {
         self.modelContext = context
     }
 
-    // MARK: - Crash Recovery (T030)
+    // MARK: - Crash Recovery
 
     func checkForInterruptedWorkout(context: ModelContext) {
         self.modelContext = context
@@ -40,6 +53,7 @@ final class WorkoutSessionManager {
 
     func resumeInterruptedWorkout() {
         hasInterruptedWorkout = false
+        reconnectLiveActivity()
     }
 
     func discardInterruptedWorkout(context: ModelContext) {
@@ -52,11 +66,6 @@ final class WorkoutSessionManager {
     func startWorkout(from template: WorkoutTemplate, context: ModelContext) {
         guard activeWorkout == nil else { return }
         self.modelContext = context
-
-        if !hasRequestedNotificationPermission {
-            RestTimerService.requestPermission()
-            hasRequestedNotificationPermission = true
-        }
 
         let workout = Workout(name: template.name, templateId: template.id)
         context.insert(workout)
@@ -88,6 +97,7 @@ final class WorkoutSessionManager {
         activeWorkout = workout
         elapsedSeconds = 0
         startElapsedTimer()
+        startLiveActivity()
     }
 
     // MARK: - Start Empty Workout
@@ -96,11 +106,6 @@ final class WorkoutSessionManager {
         guard activeWorkout == nil else { return }
         self.modelContext = context
 
-        if !hasRequestedNotificationPermission {
-            RestTimerService.requestPermission()
-            hasRequestedNotificationPermission = true
-        }
-
         let workout = Workout(name: "Workout")
         context.insert(workout)
         try? context.save()
@@ -108,6 +113,7 @@ final class WorkoutSessionManager {
         activeWorkout = workout
         elapsedSeconds = 0
         startElapsedTimer()
+        startLiveActivity()
     }
 
     // MARK: - Complete Set
@@ -121,7 +127,9 @@ final class WorkoutSessionManager {
             if lastCompletedSetId == workoutSet.id {
                 restTimer.stop()
                 lastCompletedSetId = nil
+                cancelBackgroundRestExpiry()
             }
+            updateLiveActivity()
             return
         }
 
@@ -132,6 +140,8 @@ final class WorkoutSessionManager {
         lastCompletedSetId = workoutSet.id
         let restDuration = workoutSet.workoutExercise?.exercise?.defaultRestSeconds ?? 120
         restTimer.start(duration: restDuration)
+        updateLiveActivity()
+        scheduleBackgroundRestExpiry(duration: restDuration)
     }
 
     // MARK: - Delete Set
@@ -152,6 +162,7 @@ final class WorkoutSessionManager {
             }
         }
         try? context.save()
+        updateLiveActivity()
     }
 
     // MARK: - Reset
@@ -159,6 +170,7 @@ final class WorkoutSessionManager {
     func reset() {
         restTimer.stop()
         stopElapsedTimer()
+        endLiveActivity()
         activeWorkout = nil
         elapsedSeconds = 0
         lastCompletedSetId = nil
@@ -177,6 +189,7 @@ final class WorkoutSessionManager {
 
         restTimer.stop()
         stopElapsedTimer()
+        endLiveActivity()
         activeWorkout = nil
         elapsedSeconds = 0
     }
@@ -191,8 +204,180 @@ final class WorkoutSessionManager {
 
         restTimer.stop()
         stopElapsedTimer()
+        endLiveActivity()
         activeWorkout = nil
         elapsedSeconds = 0
+    }
+
+    // MARK: - Live Activity Lifecycle
+
+    private func startLiveActivity() {
+        guard let workout = activeWorkout else { return }
+        let state = liveActivityService.buildContentState(from: self)
+        currentActivity = liveActivityService.startActivity(
+            workoutName: workout.name,
+            startedAt: workout.startedAt,
+            initialState: state
+        )
+    }
+
+    func updateLiveActivity(alertConfiguration: AlertConfiguration? = nil) {
+        guard let activity = currentActivity else { return }
+        let state = liveActivityService.buildContentState(from: self)
+        liveActivityService.updateActivity(activity, state: state, alertConfiguration: alertConfiguration)
+    }
+
+    private func endLiveActivity() {
+        guard let activity = currentActivity else { return }
+        let state = liveActivityService.buildContentState(from: self)
+        liveActivityService.endActivity(activity, finalState: state)
+        currentActivity = nil
+    }
+
+    func reconnectLiveActivity() {
+        guard activeWorkout != nil, currentActivity == nil else { return }
+        for activity in Activity<WorkoutActivityAttributes>.activities {
+            currentActivity = activity
+            updateLiveActivity()
+            return
+        }
+        // No existing activity found — start a new one
+        startLiveActivity()
+    }
+
+    // MARK: - Intent Handlers (called from LiveActivityIntents)
+
+    func completeCurrentSetFromIntent() {
+        guard let context = modelContext,
+              let (exercise, set) = findCurrentSet() else { return }
+
+        set.isCompleted = true
+        set.completedAt = .now
+        try? context.save()
+
+        lastCompletedSetId = set.id
+        let restDuration = exercise.exercise?.defaultRestSeconds ?? 120
+        restTimer.start(duration: restDuration)
+        updateLiveActivity()
+        scheduleBackgroundRestExpiry(duration: restDuration)
+    }
+
+    func adjustWeightFromIntent(delta: Double) {
+        if checkAndHandleExpiredTimer() { return }
+        guard let context = modelContext,
+              let (exercise, set) = findCurrentSet() else { return }
+
+        let equipmentType = exercise.exercise?.resolvedEquipmentType ?? .barbell
+        switch equipmentType.equipmentCategory {
+        case "weightReps", "weightDistance":
+            set.weight = max(0, (set.weight ?? 0) + delta)
+        case "duration":
+            set.seconds = max(0, (set.seconds ?? 0) + delta)
+        case "distance":
+            set.distance = max(0, (set.distance ?? 0) + delta)
+        default:
+            return
+        }
+        try? context.save()
+        updateLiveActivity()
+    }
+
+    func adjustRepsFromIntent(delta: Int) {
+        if checkAndHandleExpiredTimer() { return }
+        guard let context = modelContext,
+              let (_, set) = findCurrentSet() else { return }
+
+        set.reps = max(0, (set.reps ?? 0) + delta)
+        try? context.save()
+        updateLiveActivity()
+    }
+
+    func skipRestTimerFromIntent() {
+        if checkAndHandleExpiredTimer() { return }
+        restTimer.stop()
+        lastCompletedSetId = nil
+        cancelBackgroundRestExpiry()
+        updateLiveActivity()
+    }
+
+    /// Returns true if the timer had expired and was handled (caller should return early)
+    @discardableResult
+    func checkAndHandleExpiredTimer() -> Bool {
+        guard restTimer.isRunning,
+              let endDate = restTimer.endDate,
+              endDate.timeIntervalSinceNow <= 0 else { return false }
+        restTimer.stop()
+        handleTimerExpired()
+        return true
+    }
+
+    // MARK: - Timer Expiry Handler
+
+    private func handleTimerExpired() {
+        lastCompletedSetId = nil
+        cancelBackgroundRestExpiry()
+        let alert = AlertConfiguration(
+            title: "Rest Complete",
+            body: "Time for your next set!",
+            sound: .default
+        )
+        updateLiveActivity(alertConfiguration: alert)
+    }
+
+    // MARK: - Background Rest Timer
+
+    private func scheduleBackgroundRestExpiry(duration: Int) {
+        cancelBackgroundRestExpiry()
+
+        backgroundTaskId = UIApplication.shared.beginBackgroundTask { [weak self] in
+            self?.endBackgroundTask()
+        }
+
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                if self.restTimer.isRunning {
+                    self.restTimer.stop()
+                    self.handleTimerExpired()
+                }
+                self.endBackgroundTask()
+            }
+        }
+        restExpiryWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + Double(duration) + 0.5, execute: workItem)
+    }
+
+    private func cancelBackgroundRestExpiry() {
+        restExpiryWorkItem?.cancel()
+        restExpiryWorkItem = nil
+        endBackgroundTask()
+    }
+
+    private func endBackgroundTask() {
+        if backgroundTaskId != .invalid {
+            UIApplication.shared.endBackgroundTask(backgroundTaskId)
+            backgroundTaskId = .invalid
+        }
+    }
+
+    // MARK: - Foreground Resume
+
+    func handleForegroundResume() {
+        let wasTimerRunning = restTimer.isRunning
+        restTimer.syncFromPersistedState()
+
+        // Timer expired while backgrounded and background task didn't fire
+        if wasTimerRunning && !restTimer.isRunning {
+            lastCompletedSetId = nil
+        }
+
+        guard isWorkoutInProgress else { return }
+
+        if currentActivity == nil {
+            reconnectLiveActivity()
+        } else {
+            updateLiveActivity()
+        }
     }
 
     // MARK: - Elapsed Timer
@@ -210,6 +395,20 @@ final class WorkoutSessionManager {
     private func stopElapsedTimer() {
         elapsedTimer?.invalidate()
         elapsedTimer = nil
+    }
+
+    // MARK: - Set Progression
+
+    func findCurrentSet() -> (WorkoutExercise, WorkoutSet)? {
+        guard let workout = activeWorkout else { return nil }
+        for exercise in workout.sortedExercises {
+            for set in exercise.sortedSets {
+                if !set.isCompleted {
+                    return (exercise, set)
+                }
+            }
+        }
+        return nil
     }
 
     var hasCompletedSets: Bool {
