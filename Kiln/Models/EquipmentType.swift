@@ -50,6 +50,21 @@ enum EquipmentType: String, Codable, CaseIterable {
         self == .duration
     }
 
+    var equipmentCategory: String {
+        switch self {
+        case .barbell, .dumbbell, .kettlebell, .machineOther, .weightedBodyweight:
+            return "weightReps"
+        case .repsOnly:
+            return "repsOnly"
+        case .duration:
+            return "duration"
+        case .distance:
+            return "distance"
+        case .weightedDistance:
+            return "weightDistance"
+        }
+    }
+
     static func infer(from exerciseName: String, fallback: ExerciseType) -> EquipmentType {
         let name = exerciseName.lowercased()
 

@@ -14,6 +14,10 @@ struct KilnApp: App {
                 .onAppear {
                     // Crash recovery: check for interrupted workout on launch
                 }
+                .onOpenURL { url in
+                    // Handle kiln://active-workout deep link from Live Activity
+                    // The app is already showing the active workout in the Workout tab
+                }
         }
         .modelContainer(for: [
             Exercise.self,
@@ -25,7 +29,7 @@ struct KilnApp: App {
         ], isAutosaveEnabled: false)
         .onChange(of: scenePhase) {
             if scenePhase == .active {
-                sessionManager.restTimer.syncFromPersistedState()
+                sessionManager.handleForegroundResume()
             }
         }
     }
