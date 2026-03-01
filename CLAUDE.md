@@ -6,7 +6,7 @@
 - SwiftData (local persistence, autosave disabled, explicit save on every set)
 - Swift Charts (workouts-per-week bar chart)
 - ActivityKit + WidgetKit + AppIntents (Live Activity on lock screen)
-- App Groups (`group.app.izaro.kiln`) for shared UserDefaults (rest timer persistence)
+- App Groups (`group.app.izaro.kiln`) for shared UserDefaults (rest timer persistence + Live Activity cache)
 
 ## Architecture
 
@@ -14,7 +14,9 @@
 - **SwiftData @Model** objects bound directly to views via `@Bindable` and `@Query` — no classical ViewModel layer
 - **TabView** with conditional content in Workout tab (template grid vs. active workout)
 - **Rest timer**: inline below completed set (auto-hides when done), `Date` end-time in UserDefaults + wall-clock-derived foreground countdown; `lastCompletedSetId` on `WorkoutSessionManager` tracks placement; `AlertConfiguration(sound: .default)` plays sound via Live Activity update on expiry
-- **Live Activity**: Lock screen widget for completing entire workout without unlocking. Three views: `SetView` (adjustable weight/reps + Complete button), `TimerView` (countdown + Skip button), `CompleteView` (all sets done). Interactive buttons via `LiveActivityIntent` (runs in app process). `CompleteSetIntent.perform()` stays alive via `Task.sleep` for the rest duration so the app can fire the timer expiry and advance to the next set.
+- **Live Activity**: Lock screen widget for completing entire workout without unlocking. Three views: `SetView` (adjustable weight/reps + Complete button), `TimerView` (countdown + Skip button), `CompleteView` (all sets done). Interactive buttons via `LiveActivityIntent` (runs in app process).
+- **LiveActivityCache**: `enum` with static methods backed by App Group UserDefaults. Intent handlers read/write cached `ContentState` (no SwiftData access) — eliminates FaceID prompts on lock screen and removes model traversal lag. Cache keys: `la.state` (JSON-encoded ContentState), `la.setId`, `la.restDuration`, `la.dirty`, `la.completedSetIds`. Foreground resume syncs cache → SwiftData via `syncCacheToSwiftData()`.
+- **BackgroundAudioService**: Plays silent audio to keep the app process alive in background (required for rest timer expiry and Live Activity updates).
 - **Intent split pattern**: Shared struct declarations in `Kiln/Shared/`, app-target `perform()` with real logic in `Kiln/Intents/`, widget-target stubs in `KilnWidgets/`. Widget extension cannot access SwiftData.
 - **CSV import**: `@ModelActor` background actor with batched saves
 
@@ -43,8 +45,8 @@ Kiln/
 │   ├── History/                   # HistoryListView, WorkoutCardView, WorkoutDetailView,
 │   │                              #   WorkoutEditView
 │   └── Profile/                   # ProfileView, WorkoutsPerWeekChart
-├── Services/                      # WorkoutSessionManager, RestTimerService,
-│                                  #   LiveActivityService, CSVImportService, PreFillService
+├── Services/                      # WorkoutSessionManager, RestTimerService, LiveActivityService,
+│                                  #   LiveActivityCache, BackgroundAudioService, CSVImportService, PreFillService
 ├── Shared/                        # WorkoutActivityAttributes, WorkoutLiveActivityIntents (shared with widget)
 ├── Intents/                       # WorkoutLiveActivityIntents+App (perform() bodies)
 ├── Assets.xcassets/               # App icon + body part icons + brick_icon + noise_tile
@@ -76,7 +78,7 @@ KilnWidgets/
 
 ## Spec Artifacts
 
-Feature specs, plans, and tasks live in `specs/001-workout-mvp/`, `specs/002-visual-redesign/`, and `specs/003-live-activity/`.
+Feature specs, plans, and tasks live in `specs/001-workout-mvp/`, `specs/002-visual-redesign/`, `specs/003-live-activity/`, and `specs/004-reliable-rest-timer/`.
 Constitution at `.specify/memory/constitution.md`.
 
 <!-- MANUAL ADDITIONS START -->

@@ -18,8 +18,10 @@ targets:
       - path: Kiln
         excludes:
           - "**/*.xcassets/AppIcon.appiconset/Contents.json"
+          - Resources
     resources:
       - path: Kiln/Assets.xcassets
+      - path: Kiln/Resources
     settings:
       base:
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
@@ -43,7 +45,7 @@ targets:
     info:
       path: Kiln/Info.plist
       properties:
-        UIBackgroundModes: []
+        UIBackgroundModes: [audio]
         UIUserInterfaceStyle: Light
         NSSupportsLiveActivities: true
     dependencies:

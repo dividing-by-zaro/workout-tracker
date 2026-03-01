@@ -14,6 +14,7 @@ final class WorkoutSessionManager {
 
     let restTimer = RestTimerService()
     let liveActivityService = LiveActivityService()
+    let backgroundAudio = BackgroundAudioService()
 
     private var currentActivity: Activity<WorkoutActivityAttributes>?
     private var modelContext: ModelContext?
@@ -54,6 +55,7 @@ final class WorkoutSessionManager {
     func resumeInterruptedWorkout() {
         hasInterruptedWorkout = false
         reconnectLiveActivity()
+        backgroundAudio.startSilentAudio()
     }
 
     func discardInterruptedWorkout(context: ModelContext) {
@@ -98,6 +100,7 @@ final class WorkoutSessionManager {
         elapsedSeconds = 0
         startElapsedTimer()
         startLiveActivity()
+        backgroundAudio.startSilentAudio()
     }
 
     // MARK: - Start Empty Workout
@@ -114,6 +117,7 @@ final class WorkoutSessionManager {
         elapsedSeconds = 0
         startElapsedTimer()
         startLiveActivity()
+        backgroundAudio.startSilentAudio()
     }
 
     // MARK: - Complete Set
@@ -130,6 +134,7 @@ final class WorkoutSessionManager {
                 cancelBackgroundRestExpiry()
             }
             updateLiveActivity()
+            cacheCurrentState()
             return
         }
 
@@ -141,6 +146,7 @@ final class WorkoutSessionManager {
         let restDuration = workoutSet.workoutExercise?.exercise?.defaultRestSeconds ?? 120
         restTimer.start(duration: restDuration)
         updateLiveActivity()
+        cacheCurrentState()
         scheduleBackgroundRestExpiry(duration: restDuration)
     }
 
@@ -163,12 +169,14 @@ final class WorkoutSessionManager {
         }
         try? context.save()
         updateLiveActivity()
+        cacheCurrentState()
     }
 
     // MARK: - Reset
 
     func reset() {
         restTimer.stop()
+        backgroundAudio.stopSilentAudio()
         stopElapsedTimer()
         endLiveActivity()
         activeWorkout = nil
@@ -188,6 +196,7 @@ final class WorkoutSessionManager {
         try? context.save()
 
         restTimer.stop()
+        backgroundAudio.stopSilentAudio()
         stopElapsedTimer()
         endLiveActivity()
         activeWorkout = nil
@@ -203,6 +212,7 @@ final class WorkoutSessionManager {
         try? context.save()
 
         restTimer.stop()
+        backgroundAudio.stopSilentAudio()
         stopElapsedTimer()
         endLiveActivity()
         activeWorkout = nil
@@ -219,6 +229,7 @@ final class WorkoutSessionManager {
             startedAt: workout.startedAt,
             initialState: state
         )
+        cacheCurrentState()
     }
 
     func updateLiveActivity(alertConfiguration: AlertConfiguration? = nil) {
@@ -227,11 +238,17 @@ final class WorkoutSessionManager {
         liveActivityService.updateActivity(activity, state: state, alertConfiguration: alertConfiguration)
     }
 
+    func updateLiveActivity(with state: WorkoutActivityAttributes.ContentState, alertConfiguration: AlertConfiguration? = nil) {
+        guard let activity = currentActivity else { return }
+        liveActivityService.updateActivity(activity, state: state, alertConfiguration: alertConfiguration)
+    }
+
     private func endLiveActivity() {
         guard let activity = currentActivity else { return }
         let state = liveActivityService.buildContentState(from: self)
         liveActivityService.endActivity(activity, finalState: state)
         currentActivity = nil
+        LiveActivityCache.clear()
     }
 
     func reconnectLiveActivity() {
@@ -239,57 +256,58 @@ final class WorkoutSessionManager {
         for activity in Activity<WorkoutActivityAttributes>.activities {
             currentActivity = activity
             updateLiveActivity()
+            cacheCurrentState()
             return
         }
         // No existing activity found — start a new one
         startLiveActivity()
     }
 
+    private func cacheCurrentState() {
+        let state = liveActivityService.buildContentState(from: self)
+        let setId = findCurrentSet()?.1.id
+        let restDuration = findCurrentSet()?.0.exercise?.defaultRestSeconds ?? 120
+        LiveActivityCache.cache(state, setId: setId, restDuration: restDuration)
+    }
+
     // MARK: - Intent Handlers (called from LiveActivityIntents)
 
     func completeCurrentSetFromIntent() {
-        guard let context = modelContext,
-              let (exercise, set) = findCurrentSet() else { return }
+        guard var cachedState = LiveActivityCache.state,
+              let setId = LiveActivityCache.setId,
+              !cachedState.isWorkoutComplete else { return }
 
-        set.isCompleted = true
-        set.completedAt = .now
-        try? context.save()
-
-        lastCompletedSetId = set.id
-        let restDuration = exercise.exercise?.defaultRestSeconds ?? 120
+        let restDuration = LiveActivityCache.restDuration > 0 ? LiveActivityCache.restDuration : 120
         restTimer.start(duration: restDuration)
-        updateLiveActivity()
+
+        cachedState.isRestTimerActive = true
+        cachedState.restTimerEndDate = restTimer.endDate ?? Date.now.addingTimeInterval(Double(restDuration))
+        cachedState.restTotalSeconds = restDuration
+
+        LiveActivityCache.state = cachedState
+        LiveActivityCache.recordCompletion(setId: setId)
+        lastCompletedSetId = setId
+
+        updateLiveActivity(with: cachedState)
         scheduleBackgroundRestExpiry(duration: restDuration)
+
+        // Best effort: mark set complete in-memory so handleTimerExpired finds the correct next set
+        if let (_, set) = findCurrentSet(), set.id == setId {
+            set.isCompleted = true
+            set.completedAt = .now
+        }
     }
 
     func adjustWeightFromIntent(delta: Double) {
         if checkAndHandleExpiredTimer() { return }
-        guard let context = modelContext,
-              let (exercise, set) = findCurrentSet() else { return }
-
-        let equipmentType = exercise.exercise?.resolvedEquipmentType ?? .barbell
-        switch equipmentType.equipmentCategory {
-        case "weightReps", "weightDistance":
-            set.weight = max(0, (set.weight ?? 0) + delta)
-        case "duration":
-            set.seconds = max(0, (set.seconds ?? 0) + delta)
-        case "distance":
-            set.distance = max(0, (set.distance ?? 0) + delta)
-        default:
-            return
-        }
-        try? context.save()
-        updateLiveActivity()
+        guard let state = LiveActivityCache.adjustWeight(delta: delta) else { return }
+        updateLiveActivity(with: state)
     }
 
     func adjustRepsFromIntent(delta: Int) {
         if checkAndHandleExpiredTimer() { return }
-        guard let context = modelContext,
-              let (_, set) = findCurrentSet() else { return }
-
-        set.reps = max(0, (set.reps ?? 0) + delta)
-        try? context.save()
-        updateLiveActivity()
+        guard let state = LiveActivityCache.adjustReps(delta: delta) else { return }
+        updateLiveActivity(with: state)
     }
 
     func skipRestTimerFromIntent() {
@@ -298,6 +316,7 @@ final class WorkoutSessionManager {
         lastCompletedSetId = nil
         cancelBackgroundRestExpiry()
         updateLiveActivity()
+        cacheCurrentState()
     }
 
     /// Returns true if the timer had expired and was handled (caller should return early)
@@ -322,6 +341,7 @@ final class WorkoutSessionManager {
             sound: .default
         )
         updateLiveActivity(alertConfiguration: alert)
+        cacheCurrentState()
     }
 
     // MARK: - Background Rest Timer
@@ -366,18 +386,53 @@ final class WorkoutSessionManager {
         let wasTimerRunning = restTimer.isRunning
         restTimer.syncFromPersistedState()
 
-        // Timer expired while backgrounded and background task didn't fire
         if wasTimerRunning && !restTimer.isRunning {
             lastCompletedSetId = nil
         }
 
         guard isWorkoutInProgress else { return }
 
+        // Ensure audio is alive — restart if iOS reclaimed it while backgrounded
+        if !backgroundAudio.isPlaying {
+            backgroundAudio.startSilentAudio()
+        }
+
+        // Sync cached lock screen changes to SwiftData
+        syncCacheToSwiftData()
+
         if currentActivity == nil {
             reconnectLiveActivity()
         } else {
             updateLiveActivity()
         }
+    }
+
+    private func syncCacheToSwiftData() {
+        guard let context = modelContext,
+              let pending = LiveActivityCache.consumePendingSync() else { return }
+
+        // Apply completions from lock screen
+        for completedId in pending.completedSetIds {
+            let descriptor = FetchDescriptor<WorkoutSet>(
+                predicate: #Predicate<WorkoutSet> { $0.id == completedId }
+            )
+            if let set = try? context.fetch(descriptor).first, !set.isCompleted {
+                set.isCompleted = true
+                set.completedAt = .now
+            }
+        }
+
+        // Apply weight/reps adjustments from lock screen
+        if pending.isDirty, let cachedState = pending.currentState,
+           let (_, currentSet) = findCurrentSet() {
+            currentSet.weight = cachedState.weight
+            currentSet.reps = cachedState.reps
+            currentSet.seconds = cachedState.duration
+            currentSet.distance = cachedState.distance
+        }
+
+        try? context.save()
+        cacheCurrentState()
     }
 
     // MARK: - Elapsed Timer
