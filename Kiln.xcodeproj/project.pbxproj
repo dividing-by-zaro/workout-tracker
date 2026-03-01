@@ -8,20 +8,28 @@
 
 /* Begin PBXBuildFile section */
 		07B5219F183A0308BF45EDB8 /* WorkoutSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33DD78D988B1619D49175217 /* WorkoutSessionManager.swift */; };
+		0CCD4FD9A2D5E2D46C939974 /* WorkoutActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25E942BED8928D67E3E344B4 /* WorkoutActivityAttributes.swift */; };
 		0D36B92C2AE7EAF056E3B18D /* RestTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18C7BF4C5770B304C2B78194 /* RestTimerView.swift */; };
 		193516A01622F9DA2B15B9AE /* SetRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09E71B0F76C3D78DA87982FF /* SetRowView.swift */; };
 		1ACF46B8624F2F66D08852E0 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA496475B5378C23CA07E83 /* ContentView.swift */; };
 		1FBDBA9C4E38F2011177E63D /* Exercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 720835ADDE84C7A63C01E9D1 /* Exercise.swift */; };
 		20FC097FBCDA7A7932EEA9DF /* EquipmentType.swift in Sources */ = {isa = PBXBuildFile; fileRef = C83673F8C74C51DBEA7C6D21 /* EquipmentType.swift */; };
 		220B6A8EF1737DA63EEAB3A7 /* PreFillService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D67B8481533CEAE0D365B0CE /* PreFillService.swift */; };
+		2C5D57AFCB704592F35A534C /* WorkoutLiveActivityIntents+App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7790D141AD23B09F96A8CA4D /* WorkoutLiveActivityIntents+App.swift */; };
 		2E7A38A1E94D94B49F1152BA /* RestTimerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95FD1C13168449520BC53044 /* RestTimerService.swift */; };
 		337E4413CC3E57D07DA9FC9C /* ExerciseType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DA4E36A8C5E80D76957DE99 /* ExerciseType.swift */; };
 		388339A2FD506B77947158EC /* WorkoutEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 233B9C6DD2A37A3607DBAE83 /* WorkoutEditView.swift */; };
 		3D8F36EFF536102906450485 /* ExerciseCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 732E39921F13970E5FB13F81 /* ExerciseCardView.swift */; };
 		52E3AC7C73E10CFEDA761583 /* WorkoutSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E2F48000E3A15FA75CD3B5 /* WorkoutSet.swift */; };
 		5C5554745DD14ADE09C6F8C4 /* WorkoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F6F852B668CC9ECD9B05BF8 /* WorkoutDetailView.swift */; };
+		5E40EBFE867A47C6A5390AFB /* CompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 259A3675721A5E65293B23C0 /* CompleteView.swift */; };
+		62F8CAD63868D66D59B8F95A /* WorkoutLiveActivityIntents+Widget.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE83C57D250533B71E6B8FF5 /* WorkoutLiveActivityIntents+Widget.swift */; };
+		687006283D6A528D6368B16A /* LiveActivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9B11F63D41118A72E86932 /* LiveActivityService.swift */; };
 		6AB088FE56E5D59EAB91674B /* TemplateExerciseRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB57211C7AEBE038D0EAE425 /* TemplateExerciseRow.swift */; };
 		6B5207262883677BC602DA50 /* KilnApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E748F31F939B0EF1F118FB9D /* KilnApp.swift */; };
+		6C8D1F9B00E23E824E5C6711 /* WorkoutActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25E942BED8928D67E3E344B4 /* WorkoutActivityAttributes.swift */; };
+		7155739E4C8CDB304896FA54 /* WorkoutLiveActivityIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED930F72F14339C0595891BB /* WorkoutLiveActivityIntents.swift */; };
+		7FF2F1C3B13C2E1895D05C1A /* SetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDF663B68A131B6AD8775B29 /* SetView.swift */; };
 		81D095C9092E0EAD3819E5CC /* NumericKeyboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C168611F11149FC65A4A1672 /* NumericKeyboardView.swift */; };
 		8628832F4C0A624BCF1A9841 /* WorkoutExercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495BAEF47CB0C0BF84ED4069 /* WorkoutExercise.swift */; };
 		878D16A0334795D84A3A12D9 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE8BD03536A4D5D5C56E0AE0 /* ProfileView.swift */; };
@@ -35,7 +43,12 @@
 		B5BDBE768E5C274B90DE8F72 /* CSVImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B4B2EB0CEC527449D148C75 /* CSVImportService.swift */; };
 		B8EB1FC34463DE04531FB3B4 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ED6E0D6B70D4A4B0A0ADE44 /* DesignSystem.swift */; };
 		B9411BD9C3CE3B9B3E85BF0B /* TemplateEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADE7BB901CDDBF8055CA7D32 /* TemplateEditorView.swift */; };
+		BC54090516EBDBCED0153DD4 /* WorkoutLiveActivityIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED930F72F14339C0595891BB /* WorkoutLiveActivityIntents.swift */; };
+		C05CF76A876390340E793840 /* KilnWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5CF29394B83146F54454E30 /* KilnWidgetBundle.swift */; };
+		C647FD2A7F64A6B8943695AF /* KilnWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2BEDC7B0BEEC97480026A8E6 /* KilnWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D8AC7B12F26DD39DE2BC947C /* WorkoutsPerWeekChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6722755A227E0D1BDFAACBD5 /* WorkoutsPerWeekChart.swift */; };
+		D8DBD2D62932A604CDED457C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1D4F75A88AF70559CB9F8641 /* Assets.xcassets */; };
+		DD0A452958B3DBBEBA6AC501 /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6ABFEC49D0E51B1D1EC789E /* TimerView.swift */; };
 		E47AC389FACE4C685A5A5375 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1C527C23E31797AC35BA03C7 /* Assets.xcassets */; };
 		E5E3F22FC2A73F74C5AAF6CE /* WorkoutCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EDE368D947FC4D8BCD2326A /* WorkoutCardView.swift */; };
 		E94DB233E9B4A18955F8AF39 /* ActiveWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78BE0D5F9D7D09F21754E0D4 /* ActiveWorkoutView.swift */; };
@@ -44,16 +57,45 @@
 		FE257F30F263B8B1DDE5B5F1 /* TemplateCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F5C69118EA0BC51253F7BB3 /* TemplateCardView.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		A42C1BD3D26FCE55501016D2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4357292991C74A6FC04D1074 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F1B8F87F4FD7D77091F39060;
+			remoteInfo = KilnWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F35FD584BC984DC66C069FC0 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C647FD2A7F64A6B8943695AF /* KilnWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		09E71B0F76C3D78DA87982FF /* SetRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetRowView.swift; sourceTree = "<group>"; };
 		0F5C69118EA0BC51253F7BB3 /* TemplateCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateCardView.swift; sourceTree = "<group>"; };
 		10BF05FE3E74B7B2CBE2E80E /* SwipeToDelete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeToDelete.swift; sourceTree = "<group>"; };
 		18A6D68E6D153027A9F365C7 /* WorkoutTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutTemplate.swift; sourceTree = "<group>"; };
 		18C7BF4C5770B304C2B78194 /* RestTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimerView.swift; sourceTree = "<group>"; };
+		195A2674415C9EEAD99E9683 /* KilnWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = KilnWidgets.entitlements; sourceTree = "<group>"; };
 		1C527C23E31797AC35BA03C7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		1D4F75A88AF70559CB9F8641 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1EE4CADBA3CA298DE45AC66E /* TemplateExercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateExercise.swift; sourceTree = "<group>"; };
 		1F793B8AC029C26EBA34C73F /* Kiln.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Kiln.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		233B9C6DD2A37A3607DBAE83 /* WorkoutEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutEditView.swift; sourceTree = "<group>"; };
+		259A3675721A5E65293B23C0 /* CompleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompleteView.swift; sourceTree = "<group>"; };
+		25E942BED8928D67E3E344B4 /* WorkoutActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutActivityAttributes.swift; sourceTree = "<group>"; };
+		2BEDC7B0BEEC97480026A8E6 /* KilnWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = KilnWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		30E2F48000E3A15FA75CD3B5 /* WorkoutSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSet.swift; sourceTree = "<group>"; };
 		31CC9E43BBEA8BFFEA94D45E /* StartWorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartWorkoutView.swift; sourceTree = "<group>"; };
 		33DD78D988B1619D49175217 /* WorkoutSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSessionManager.swift; sourceTree = "<group>"; };
@@ -67,21 +109,30 @@
 		6722755A227E0D1BDFAACBD5 /* WorkoutsPerWeekChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutsPerWeekChart.swift; sourceTree = "<group>"; };
 		720835ADDE84C7A63C01E9D1 /* Exercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exercise.swift; sourceTree = "<group>"; };
 		732E39921F13970E5FB13F81 /* ExerciseCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseCardView.swift; sourceTree = "<group>"; };
+		7790D141AD23B09F96A8CA4D /* WorkoutLiveActivityIntents+App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkoutLiveActivityIntents+App.swift"; sourceTree = "<group>"; };
 		78BE0D5F9D7D09F21754E0D4 /* ActiveWorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWorkoutView.swift; sourceTree = "<group>"; };
+		823A378351DA7A8E0FE7097B /* Kiln.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Kiln.entitlements; sourceTree = "<group>"; };
 		8E5CB9B101930A5066A46EFD /* HistoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryListView.swift; sourceTree = "<group>"; };
 		8ED6E0D6B70D4A4B0A0ADE44 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		8EDE368D947FC4D8BCD2326A /* WorkoutCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutCardView.swift; sourceTree = "<group>"; };
 		8F6F852B668CC9ECD9B05BF8 /* WorkoutDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutDetailView.swift; sourceTree = "<group>"; };
 		901AFD8DEBB78926CF5E883A /* BodyPart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyPart.swift; sourceTree = "<group>"; };
 		95FD1C13168449520BC53044 /* RestTimerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimerService.swift; sourceTree = "<group>"; };
+		A09C3F8DD88510F3B54207F7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		ADE7BB901CDDBF8055CA7D32 /* TemplateEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateEditorView.swift; sourceTree = "<group>"; };
 		AFA496475B5378C23CA07E83 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B6ABFEC49D0E51B1D1EC789E /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
+		BD9B11F63D41118A72E86932 /* LiveActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityService.swift; sourceTree = "<group>"; };
 		C168611F11149FC65A4A1672 /* NumericKeyboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumericKeyboardView.swift; sourceTree = "<group>"; };
+		C5CF29394B83146F54454E30 /* KilnWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KilnWidgetBundle.swift; sourceTree = "<group>"; };
 		C83673F8C74C51DBEA7C6D21 /* EquipmentType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquipmentType.swift; sourceTree = "<group>"; };
 		CB57211C7AEBE038D0EAE425 /* TemplateExerciseRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateExerciseRow.swift; sourceTree = "<group>"; };
 		CE8BD03536A4D5D5C56E0AE0 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		D67B8481533CEAE0D365B0CE /* PreFillService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreFillService.swift; sourceTree = "<group>"; };
+		DDF663B68A131B6AD8775B29 /* SetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetView.swift; sourceTree = "<group>"; };
 		E748F31F939B0EF1F118FB9D /* KilnApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KilnApp.swift; sourceTree = "<group>"; };
+		ED930F72F14339C0595891BB /* WorkoutLiveActivityIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutLiveActivityIntents.swift; sourceTree = "<group>"; };
+		FE83C57D250533B71E6B8FF5 /* WorkoutLiveActivityIntents+Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkoutLiveActivityIntents+Widget.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -106,10 +157,32 @@
 			path = Profile;
 			sourceTree = "<group>";
 		};
+		2A48327139BD46AB3770C558 /* KilnWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				1D4F75A88AF70559CB9F8641 /* Assets.xcassets */,
+				A09C3F8DD88510F3B54207F7 /* Info.plist */,
+				C5CF29394B83146F54454E30 /* KilnWidgetBundle.swift */,
+				195A2674415C9EEAD99E9683 /* KilnWidgets.entitlements */,
+				FE83C57D250533B71E6B8FF5 /* WorkoutLiveActivityIntents+Widget.swift */,
+				DE9FAF309CB03032E6595687 /* Views */,
+			);
+			path = KilnWidgets;
+			sourceTree = "<group>";
+		};
+		41DFF52D92C5E646F2FEE639 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				7790D141AD23B09F96A8CA4D /* WorkoutLiveActivityIntents+App.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
 		55F1EC6A443B28D9E9FB1EA8 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				1F793B8AC029C26EBA34C73F /* Kiln.app */,
+				2BEDC7B0BEEC97480026A8E6 /* KilnWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -136,10 +209,13 @@
 			children = (
 				1C527C23E31797AC35BA03C7 /* Assets.xcassets */,
 				66AA7F1CBE3746E162850B4E /* Info.plist */,
+				823A378351DA7A8E0FE7097B /* Kiln.entitlements */,
 				E748F31F939B0EF1F118FB9D /* KilnApp.swift */,
 				B320D63EF15C60F386102390 /* Design */,
+				41DFF52D92C5E646F2FEE639 /* Intents */,
 				FCC23847E9226DB78E573A6D /* Models */,
 				EED593F003C445DC38EB202C /* Services */,
+				CDF1B664FEC8967F120F89B8 /* Shared */,
 				1419E48ECC5DC443E4097279 /* Views */,
 			);
 			path = Kiln;
@@ -156,10 +232,30 @@
 			path = History;
 			sourceTree = "<group>";
 		};
+		CDF1B664FEC8967F120F89B8 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				25E942BED8928D67E3E344B4 /* WorkoutActivityAttributes.swift */,
+				ED930F72F14339C0595891BB /* WorkoutLiveActivityIntents.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		DE9FAF309CB03032E6595687 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				259A3675721A5E65293B23C0 /* CompleteView.swift */,
+				DDF663B68A131B6AD8775B29 /* SetView.swift */,
+				B6ABFEC49D0E51B1D1EC789E /* TimerView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
 		EED593F003C445DC38EB202C /* Services */ = {
 			isa = PBXGroup;
 			children = (
 				3B4B2EB0CEC527449D148C75 /* CSVImportService.swift */,
+				BD9B11F63D41118A72E86932 /* LiveActivityService.swift */,
 				D67B8481533CEAE0D365B0CE /* PreFillService.swift */,
 				95FD1C13168449520BC53044 /* RestTimerService.swift */,
 				33DD78D988B1619D49175217 /* WorkoutSessionManager.swift */,
@@ -204,6 +300,7 @@
 			isa = PBXGroup;
 			children = (
 				BCE56687F6E3DE9C3CD49D54 /* Kiln */,
+				2A48327139BD46AB3770C558 /* KilnWidgets */,
 				55F1EC6A443B28D9E9FB1EA8 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -211,16 +308,36 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		F1B8F87F4FD7D77091F39060 /* KilnWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 510C1AEEAF4AC75FA9C8BCDB /* Build configuration list for PBXNativeTarget "KilnWidgets" */;
+			buildPhases = (
+				9EF0FC5917102A1C1CA8CA1B /* Sources */,
+				6188683416A3803D0113905A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KilnWidgets;
+			packageProductDependencies = (
+			);
+			productName = KilnWidgets;
+			productReference = 2BEDC7B0BEEC97480026A8E6 /* KilnWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		F23342B9AF5DF7900B3AD108 /* Kiln */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A8344DA59F494D4F4FF5D706 /* Build configuration list for PBXNativeTarget "Kiln" */;
 			buildPhases = (
 				5AA389E4E747A8259C483411 /* Sources */,
 				1D33DB42653E1B223E83A859 /* Resources */,
+				F35FD584BC984DC66C069FC0 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				E3A074C5A8A6E0CFB19E4B7F /* PBXTargetDependency */,
 			);
 			name = Kiln;
 			packageProductDependencies = (
@@ -238,8 +355,11 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
+					F1B8F87F4FD7D77091F39060 = {
+						DevelopmentTeam = 85S8MAN3A4;
+					};
 					F23342B9AF5DF7900B3AD108 = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = 85S8MAN3A4;
 					};
 				};
 			};
@@ -258,6 +378,7 @@
 			projectRoot = "";
 			targets = (
 				F23342B9AF5DF7900B3AD108 /* Kiln */,
+				F1B8F87F4FD7D77091F39060 /* KilnWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -268,6 +389,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				E47AC389FACE4C685A5A5375 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6188683416A3803D0113905A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D8DBD2D62932A604CDED457C /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -291,6 +420,7 @@
 				337E4413CC3E57D07DA9FC9C /* ExerciseType.swift in Sources */,
 				962E60897D1CD060B5473DF7 /* HistoryListView.swift in Sources */,
 				6B5207262883677BC602DA50 /* KilnApp.swift in Sources */,
+				687006283D6A528D6368B16A /* LiveActivityService.swift in Sources */,
 				81D095C9092E0EAD3819E5CC /* NumericKeyboardView.swift in Sources */,
 				220B6A8EF1737DA63EEAB3A7 /* PreFillService.swift in Sources */,
 				878D16A0334795D84A3A12D9 /* ProfileView.swift in Sources */,
@@ -304,10 +434,13 @@
 				F20E9B1F34D6B835AD5DCC70 /* TemplateExercise.swift in Sources */,
 				6AB088FE56E5D59EAB91674B /* TemplateExerciseRow.swift in Sources */,
 				894E1B36B1C3A6AFCA3D1D26 /* Workout.swift in Sources */,
+				6C8D1F9B00E23E824E5C6711 /* WorkoutActivityAttributes.swift in Sources */,
 				E5E3F22FC2A73F74C5AAF6CE /* WorkoutCardView.swift in Sources */,
 				5C5554745DD14ADE09C6F8C4 /* WorkoutDetailView.swift in Sources */,
 				388339A2FD506B77947158EC /* WorkoutEditView.swift in Sources */,
 				8628832F4C0A624BCF1A9841 /* WorkoutExercise.swift in Sources */,
+				2C5D57AFCB704592F35A534C /* WorkoutLiveActivityIntents+App.swift in Sources */,
+				BC54090516EBDBCED0153DD4 /* WorkoutLiveActivityIntents.swift in Sources */,
 				07B5219F183A0308BF45EDB8 /* WorkoutSessionManager.swift in Sources */,
 				52E3AC7C73E10CFEDA761583 /* WorkoutSet.swift in Sources */,
 				902A7A38BB880AAB6FB9DE76 /* WorkoutTemplate.swift in Sources */,
@@ -315,7 +448,29 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9EF0FC5917102A1C1CA8CA1B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5E40EBFE867A47C6A5390AFB /* CompleteView.swift in Sources */,
+				C05CF76A876390340E793840 /* KilnWidgetBundle.swift in Sources */,
+				7FF2F1C3B13C2E1895D05C1A /* SetView.swift in Sources */,
+				DD0A452958B3DBBEBA6AC501 /* TimerView.swift in Sources */,
+				0CCD4FD9A2D5E2D46C939974 /* WorkoutActivityAttributes.swift in Sources */,
+				62F8CAD63868D66D59B8F95A /* WorkoutLiveActivityIntents+Widget.swift in Sources */,
+				7155739E4C8CDB304896FA54 /* WorkoutLiveActivityIntents.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E3A074C5A8A6E0CFB19E4B7F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F1B8F87F4FD7D77091F39060 /* KilnWidgets */;
+			targetProxy = A42C1BD3D26FCE55501016D2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		00819B2D95689EC0CA9D55F3 /* Release */ = {
@@ -379,9 +534,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Kiln/Kiln.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 85S8MAN3A4;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Kiln/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -394,7 +550,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.isabelgwara.Kiln;
+				PRODUCT_BUNDLE_IDENTIFIER = app.izaro.kiln;
 				PRODUCT_NAME = Kiln;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -466,13 +622,36 @@
 			};
 			name = Debug;
 		};
+		5DD5DFC3F9E1625715F7F11A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = KilnWidgets/KilnWidgets.entitlements;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 85S8MAN3A4;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = KilnWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.izaro.kiln.kilnwidgets;
+				PRODUCT_NAME = KilnWidgets;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
 		607DEDA6A7AC4862ADDC1998 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Kiln/Kiln.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 85S8MAN3A4;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Kiln/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -485,7 +664,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.isabelgwara.Kiln;
+				PRODUCT_BUNDLE_IDENTIFIER = app.izaro.kiln;
 				PRODUCT_NAME = Kiln;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -493,9 +672,40 @@
 			};
 			name = Debug;
 		};
+		77210AD1BA04F7194AD1497C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = KilnWidgets/KilnWidgets.entitlements;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 85S8MAN3A4;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = KilnWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.izaro.kiln.kilnwidgets;
+				PRODUCT_NAME = KilnWidgets;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		510C1AEEAF4AC75FA9C8BCDB /* Build configuration list for PBXNativeTarget "KilnWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5DD5DFC3F9E1625715F7F11A /* Debug */,
+				77210AD1BA04F7194AD1497C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		7B78CD1E6891E3AD018632EC /* Build configuration list for PBXProject "Kiln" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -1,5 +1,4 @@
 import Foundation
-import UserNotifications
 import SwiftUI
 
 @Observable
@@ -7,10 +6,10 @@ final class RestTimerService {
     var isRunning: Bool = false
     var remainingSeconds: Int = 0
     var totalSeconds: Int = 120
+    var onTimerExpired: (() -> Void)?
 
-    private var endDate: Date?
+    private(set) var endDate: Date?
     private var displayTimer: Timer?
-    private let notificationId = "rest-timer-notification"
 
     private static let endDateKey = "restTimerEndDate"
     private static let totalSecondsKey = "restTimerTotalSeconds"
@@ -25,7 +24,6 @@ final class RestTimerService {
         UserDefaults.standard.set(endDate!.timeIntervalSince1970, forKey: Self.endDateKey)
         UserDefaults.standard.set(totalSeconds, forKey: Self.totalSecondsKey)
 
-        scheduleNotification(in: duration)
         startDisplayTimer()
     }
 
@@ -38,8 +36,6 @@ final class RestTimerService {
 
         UserDefaults.standard.removeObject(forKey: Self.endDateKey)
         UserDefaults.standard.removeObject(forKey: Self.totalSecondsKey)
-
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [notificationId])
     }
 
     func syncFromPersistedState() {
@@ -62,6 +58,7 @@ final class RestTimerService {
         } else {
             stop()
             fireInAppAlert()
+            onTimerExpired?()
         }
     }
 
@@ -86,29 +83,14 @@ final class RestTimerService {
         if remaining <= 0 {
             stop()
             fireInAppAlert()
+            onTimerExpired?()
         } else {
             remainingSeconds = Int(ceil(remaining))
         }
     }
 
-    private func scheduleNotification(in seconds: Int) {
-        let content = UNMutableNotificationContent()
-        content.title = "Rest Complete"
-        content.body = "Time for your next set!"
-        content.sound = .default
-
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: Double(seconds), repeats: false)
-        let request = UNNotificationRequest(identifier: notificationId, content: content, trigger: trigger)
-
-        UNUserNotificationCenter.current().add(request)
-    }
-
     private func fireInAppAlert() {
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(.success)
-    }
-
-    static func requestPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
     }
 }
