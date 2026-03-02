@@ -16,7 +16,7 @@
 - **Rest timer**: inline below completed set (auto-hides when done), `Date` end-time in UserDefaults + wall-clock-derived foreground countdown; `lastCompletedSetId` on `WorkoutSessionManager` tracks placement; `AlertConfiguration(sound: .default)` plays sound via Live Activity update on expiry
 - **Live Activity**: Lock screen widget for completing entire workout without unlocking. Three views: `SetView` (adjustable weight/reps + Complete button), `TimerView` (countdown + Skip button), `CompleteView` (all sets done). Interactive buttons via `LiveActivityIntent` (runs in app process).
 - **LiveActivityCache**: `enum` with static methods backed by App Group UserDefaults. Intent handlers read/write cached `ContentState` (zero SwiftData access — even in-memory reads trigger FaceID on lock screen). Cache keys: `la.state` (JSON-encoded ContentState), `la.setId`, `la.restDuration`, `la.dirty`, `la.completedSetIds`. Pending completions applied to in-memory model on timer expiry (`applyPendingCompletionsInMemory`). Foreground resume syncs cache → SwiftData via `syncCacheToSwiftData()`.
-- **BackgroundAudioService**: Plays silent audio to keep the app process alive in background (required for rest timer expiry and Live Activity updates).
+- **BackgroundAudioService**: Plays silent audio to keep the app process alive in background (required for rest timer expiry and Live Activity updates). Also plays `alert_tone.caf` via `playAlertSound()` on timer expiry — the active `.playback` session suppresses `AlertConfiguration(sound:)`, so the alert must go through `AVAudioPlayer` directly.
 - **Intent split pattern**: Shared struct declarations in `Kiln/Shared/`, app-target `perform()` with real logic in `Kiln/Intents/`, widget-target stubs in `KilnWidgets/`. Widget extension cannot access SwiftData.
 - **CSV import**: `@ModelActor` background actor with batched saves
 
@@ -74,7 +74,7 @@ KilnWidgets/
 - **DesignSystem** expanded: 14 color tokens, Shadows (cardShadow, elevatedShadow), CornerRadius, GrainedBackground modifier (multiply blend, 0.12 opacity), CardGrainOverlay view (0.06 opacity)
 - Forced light mode via Info.plist `UIUserInterfaceStyle: Light` + `.preferredColorScheme(.light)`
 - **Live Activity timer display**: `Text(timerInterval:countsDown:)` shows "1:--" on Simulator (reduced fidelity mode) — works correctly on real device. `ProgressView(timerInterval:countsDown:)` for auto-updating progress bar.
-- **No push notifications**: Rest timer sound played via `AlertConfiguration` on Live Activity update. No `UNUserNotificationCenter` usage.
+- **No push notifications**: Rest timer sound played via `AVAudioPlayer` in `BackgroundAudioService.playAlertSound()` (AlertConfiguration kept for visual banner only). No `UNUserNotificationCenter` usage.
 
 ## Spec Artifacts
 

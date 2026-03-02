@@ -4,6 +4,7 @@ import Foundation
 @Observable
 final class BackgroundAudioService {
     private var audioPlayer: AVAudioPlayer?
+    private var alertPlayer: AVAudioPlayer?
     private(set) var isPlaying = false
 
     func startSilentAudio() {
@@ -27,6 +28,22 @@ final class BackgroundAudioService {
             isPlaying = true
         } catch {
             print("BackgroundAudioService: failed to start — \(error)")
+        }
+    }
+
+    func playAlertSound() {
+        guard let url = Bundle.main.url(forResource: "alert_tone", withExtension: "caf") else {
+            print("BackgroundAudioService: alert_tone.caf not found in bundle")
+            return
+        }
+        do {
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.volume = 1.0
+            player.prepareToPlay()
+            player.play()
+            alertPlayer = player
+        } catch {
+            print("BackgroundAudioService: failed to play alert — \(error)")
         }
     }
 
