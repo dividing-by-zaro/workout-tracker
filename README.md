@@ -34,7 +34,7 @@ MVP implementation complete. Live Activity feature on branch `003-live-activity`
   - [x] Current exercise, set progress, previous set info
   - [x] Adjustable weight/reps with +/− buttons
   - [x] Complete Set button with auto-advancing rest timer
-  - [x] Countdown timer with progress bar and Skip button
+  - [x] Countdown timer with progress bar, Skip button, and next set preview
   - [x] Sound alert on timer expiry, auto-advance to next set
   - [x] No FaceID required — UserDefaults cache eliminates SwiftData access from lock screen
   - [x] Background audio keeps app alive for reliable timer expiry
