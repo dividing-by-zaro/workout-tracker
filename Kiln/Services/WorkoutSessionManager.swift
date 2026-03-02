@@ -335,6 +335,10 @@ final class WorkoutSessionManager {
         // so buildContentState finds the correct next set
         applyPendingCompletionsInMemory()
 
+        // Play alert sound directly through our audio session — the
+        // AlertConfiguration sound is suppressed by the active .playback session
+        backgroundAudio.playAlertSound()
+
         let alert = AlertConfiguration(
             title: "Rest Complete",
             body: "Time for your next set!",
