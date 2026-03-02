@@ -3,6 +3,24 @@ import Foundation
 import SwiftData
 import SwiftUI
 
+struct TemplateDiff {
+    var moved: Int
+    var added: Int
+    var removed: Int
+
+    var hasChanges: Bool {
+        moved > 0 || added > 0 || removed > 0
+    }
+
+    var description: String {
+        var parts: [String] = []
+        if moved > 0 { parts.append("Moves \(moved) exercise\(moved == 1 ? "" : "s")") }
+        if added > 0 { parts.append("Adds \(added) exercise\(added == 1 ? "" : "s")") }
+        if removed > 0 { parts.append("Removes \(removed) exercise\(removed == 1 ? "" : "s")") }
+        return parts.joined(separator: ". ") + "."
+    }
+}
+
 @Observable
 final class WorkoutSessionManager {
     static var shared: WorkoutSessionManager?
@@ -172,6 +190,49 @@ final class WorkoutSessionManager {
         cacheCurrentState()
     }
 
+    // MARK: - Remove Exercise
+
+    func removeExercise(_ exercise: WorkoutExercise, context: ModelContext) {
+        // If the rest timer is running for a set in this exercise, stop it
+        if let completedId = lastCompletedSetId,
+           exercise.sets.contains(where: { $0.id == completedId }) {
+            restTimer.stop()
+            lastCompletedSetId = nil
+            cancelBackgroundRestExpiry()
+        }
+
+        context.delete(exercise)
+
+        // Re-normalize order on remaining exercises
+        if let workout = activeWorkout {
+            for (i, ex) in workout.sortedExercises.enumerated() {
+                ex.order = i
+            }
+        }
+
+        try? context.save()
+        updateLiveActivity()
+        cacheCurrentState()
+    }
+
+    // MARK: - Reorder Exercises
+
+    func reorderExercises(_ exercises: [WorkoutExercise], context: ModelContext) {
+        for (i, exercise) in exercises.enumerated() {
+            exercise.order = i
+        }
+        try? context.save()
+        updateLiveActivity()
+        cacheCurrentState()
+    }
+
+    // MARK: - Sync Live Activity State
+
+    func syncLiveActivityState() {
+        updateLiveActivity()
+        cacheCurrentState()
+    }
+
     // MARK: - Reset
 
     func reset() {
@@ -217,6 +278,69 @@ final class WorkoutSessionManager {
         endLiveActivity()
         activeWorkout = nil
         elapsedSeconds = 0
+    }
+
+    // MARK: - Template Diff & Update
+
+    func computeTemplateDiff(context: ModelContext) -> TemplateDiff? {
+        guard let workout = activeWorkout,
+              let templateId = workout.templateId else { return nil }
+
+        let descriptor = FetchDescriptor<WorkoutTemplate>(
+            predicate: #Predicate<WorkoutTemplate> { $0.id == templateId }
+        )
+        guard let template = try? context.fetch(descriptor).first else { return nil }
+
+        let templateExerciseIds = template.sortedExercises.compactMap { $0.exercise?.id }
+        let workoutExerciseIds = workout.sortedExercises.compactMap { $0.exercise?.id }
+
+        let templateSet = Set(templateExerciseIds)
+        let workoutSet = Set(workoutExerciseIds)
+
+        let added = workoutSet.subtracting(templateSet).count
+        let removed = templateSet.subtracting(workoutSet).count
+
+        // Count moved: among common exercises, how many changed relative position
+        let commonInTemplate = templateExerciseIds.filter { workoutSet.contains($0) }
+        let commonInWorkout = workoutExerciseIds.filter { templateSet.contains($0) }
+        var moved = 0
+        for (i, id) in commonInTemplate.enumerated() {
+            if i < commonInWorkout.count && commonInWorkout[i] != id {
+                moved += 1
+            }
+        }
+
+        return TemplateDiff(moved: moved, added: added, removed: removed)
+    }
+
+    func finishAndUpdateTemplate(context: ModelContext) {
+        guard let workout = activeWorkout,
+              let templateId = workout.templateId else { return }
+
+        let descriptor = FetchDescriptor<WorkoutTemplate>(
+            predicate: #Predicate<WorkoutTemplate> { $0.id == templateId }
+        )
+        guard let template = try? context.fetch(descriptor).first else { return }
+
+        // Delete existing template exercises
+        for existing in template.exercises {
+            context.delete(existing)
+        }
+
+        // Create new template exercises from workout
+        for workoutExercise in workout.sortedExercises {
+            let templateExercise = TemplateExercise(
+                order: workoutExercise.order,
+                defaultSets: workoutExercise.sets.count,
+                exercise: workoutExercise.exercise,
+                template: template
+            )
+            context.insert(templateExercise)
+        }
+
+        try? context.save()
+
+        finishWorkout(context: context)
     }
 
     // MARK: - Live Activity Lifecycle
