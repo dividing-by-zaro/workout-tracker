@@ -37,10 +37,6 @@ struct TemplateEditorView: View {
                             }
                         }
                         .onDelete { indexSet in
-                            for index in indexSet {
-                                let te = templateExercises[index]
-                                modelContext.delete(te)
-                            }
                             templateExercises.remove(atOffsets: indexSet)
                         }
                     }
@@ -73,7 +69,6 @@ struct TemplateEditorView: View {
                         defaultSets: 3,
                         exercise: exercise
                     )
-                    modelContext.insert(te)
                     templateExercises.append(te)
                 }
             }
@@ -89,7 +84,7 @@ struct TemplateEditorView: View {
     private func saveTemplate() {
         if let existing = existingTemplate {
             existing.name = name
-            // Remove old exercises that were deleted
+            // Remove old exercises that were deleted from the local list
             for ex in existing.exercises where !templateExercises.contains(where: { $0.id == ex.id }) {
                 modelContext.delete(ex)
             }
@@ -97,6 +92,9 @@ struct TemplateEditorView: View {
             for (index, te) in templateExercises.enumerated() {
                 te.order = index
                 te.template = existing
+                if te.modelContext == nil {
+                    modelContext.insert(te)
+                }
             }
         } else {
             let template = WorkoutTemplate(name: name)
@@ -104,6 +102,7 @@ struct TemplateEditorView: View {
             for (index, te) in templateExercises.enumerated() {
                 te.order = index
                 te.template = template
+                modelContext.insert(te)
             }
         }
         try? modelContext.save()

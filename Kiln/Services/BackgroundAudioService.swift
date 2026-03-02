@@ -1,6 +1,7 @@
 import AVFoundation
 import Foundation
 
+@MainActor
 @Observable
 final class BackgroundAudioService {
     private var audioPlayer: AVAudioPlayer?
@@ -53,6 +54,8 @@ final class BackgroundAudioService {
         audioPlayer = nil
         isPlaying = false
 
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        if alertPlayer?.isPlaying != true {
+            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        }
     }
 }

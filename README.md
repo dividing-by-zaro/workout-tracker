@@ -2,7 +2,7 @@ Kiln is a personal workout tracker iOS app — custom software built as an upgra
 
 ## Status
 
-MVP implementation complete. Live Activity feature on branch `003-live-activity`.
+MVP implementation complete. Celebration screen on branch `005-celebration-screen`.
 
 ## Features (MVP)
 

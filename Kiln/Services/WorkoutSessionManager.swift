@@ -21,6 +21,7 @@ struct TemplateDiff {
     }
 }
 
+@MainActor
 @Observable
 final class WorkoutSessionManager {
     static var shared: WorkoutSessionManager?
@@ -42,6 +43,7 @@ final class WorkoutSessionManager {
 
     var hasInterruptedWorkout: Bool = false
     var celebrationData: CelebrationData?
+    var shouldSwitchToWorkoutTab: Bool = false
 
     init() {
         Self.shared = self
@@ -69,6 +71,7 @@ final class WorkoutSessionManager {
         hasInterruptedWorkout = true
         startElapsedTimer()
         restTimer.syncFromPersistedState()
+        syncCacheToSwiftData()
     }
 
     func resumeInterruptedWorkout() {
@@ -300,6 +303,8 @@ final class WorkoutSessionManager {
         computeCelebrationData(for: workout, context: context)
 
         restTimer.stop()
+        cancelBackgroundRestExpiry()
+        lastCompletedSetId = nil
         backgroundAudio.stopSilentAudio()
         stopElapsedTimer()
         endLiveActivity()
@@ -316,6 +321,8 @@ final class WorkoutSessionManager {
         try? context.save()
 
         restTimer.stop()
+        cancelBackgroundRestExpiry()
+        lastCompletedSetId = nil
         backgroundAudio.stopSilentAudio()
         stopElapsedTimer()
         endLiveActivity()
@@ -432,8 +439,9 @@ final class WorkoutSessionManager {
 
     private func cacheCurrentState() {
         let state = liveActivityService.buildContentState(from: self)
-        let setId = findCurrentSet()?.1.id
-        let restDuration = findCurrentSet()?.0.exercise?.defaultRestSeconds ?? 120
+        let current = findCurrentSet()
+        let setId = current?.1.id
+        let restDuration = current?.0.exercise?.defaultRestSeconds ?? 120
         LiveActivityCache.cache(state, setId: setId, restDuration: restDuration)
     }
 
@@ -649,6 +657,8 @@ final class WorkoutSessionManager {
             Task { @MainActor in
                 guard let self, let workout = self.activeWorkout else { return }
                 self.elapsedSeconds = Int(Date.now.timeIntervalSince(workout.startedAt))
+                // Periodic save to persist any in-flight weight/reps edits
+                try? self.modelContext?.save()
             }
         }
     }

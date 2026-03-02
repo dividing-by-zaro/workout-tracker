@@ -1,6 +1,7 @@
 import ActivityKit
 import Foundation
 
+@MainActor
 final class LiveActivityService {
 
     func startActivity(

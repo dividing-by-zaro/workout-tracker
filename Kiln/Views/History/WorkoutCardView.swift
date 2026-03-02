@@ -18,7 +18,9 @@ struct WorkoutCardView: View {
 
             HStack(spacing: DesignSystem.Spacing.md) {
                 Label(workout.formattedDuration, systemImage: "clock")
-                Label(String(format: "%.0f lbs", workout.totalVolume), systemImage: "scalemass")
+                if workout.totalVolume > 0 {
+                    Label(String(format: "%.0f lbs", workout.totalVolume), systemImage: "scalemass")
+                }
             }
             .font(DesignSystem.Typography.caption)
             .foregroundStyle(DesignSystem.Colors.textSecondary)
@@ -57,17 +59,31 @@ struct WorkoutCardView: View {
     }
 
     private func bestSetLabel(for workoutExercise: WorkoutExercise) -> String {
-        guard let bestSet = workoutExercise.sortedSets.max(by: {
-            ($0.weight ?? 0) * Double($0.reps ?? 0) < ($1.weight ?? 0) * Double($1.reps ?? 0)
-        }) else { return "" }
+        let completedSets = workoutExercise.sortedSets.filter(\.isCompleted)
+        guard !completedSets.isEmpty else { return "" }
+        let category = workoutExercise.exercise?.resolvedEquipmentType.equipmentCategory ?? "weightReps"
 
-        if let w = bestSet.weight, let r = bestSet.reps {
-            return "\(Int(w)) lb x \(r)"
-        } else if let r = bestSet.reps {
-            return "x \(r)"
-        } else if let d = bestSet.distance, let s = bestSet.seconds {
-            return String(format: "%.1f mi / %.0fs", d, s)
+        switch category {
+        case "weightReps", "weightDistance":
+            guard let best = completedSets.max(by: {
+                ($0.weight ?? 0) * Double($0.reps ?? 0) < ($1.weight ?? 0) * Double($1.reps ?? 0)
+            }) else { return "" }
+            if let w = best.weight, let r = best.reps { return "\(Int(w)) lb x \(r)" }
+            return ""
+        case "repsOnly":
+            guard let best = completedSets.max(by: { ($0.reps ?? 0) < ($1.reps ?? 0) }) else { return "" }
+            if let r = best.reps { return "x \(r)" }
+            return ""
+        case "duration":
+            guard let best = completedSets.max(by: { ($0.seconds ?? 0) < ($1.seconds ?? 0) }) else { return "" }
+            if let s = best.seconds { return "\(Int(s))s" }
+            return ""
+        case "distance":
+            guard let best = completedSets.max(by: { ($0.distance ?? 0) < ($1.distance ?? 0) }) else { return "" }
+            if let d = best.distance { return String(format: "%.1f mi", d) }
+            return ""
+        default:
+            return ""
         }
-        return ""
     }
 }

@@ -19,7 +19,7 @@ final class Workout {
     }
 
     var totalVolume: Double {
-        exercises.flatMap { $0.sets }.reduce(0.0) { total, set in
+        exercises.flatMap { $0.sets }.filter(\.isCompleted).reduce(0.0) { total, set in
             total + (set.weight ?? 0) * Double(set.reps ?? 0)
         }
     }
