@@ -20,6 +20,7 @@
 - **Intent split pattern**: Shared struct declarations in `Kiln/Shared/`, app-target `perform()` with real logic in `Kiln/Intents/`, widget-target stubs in `KilnWidgets/`. Widget extension cannot access SwiftData.
 - **Template diff & update**: `TemplateDiff` struct compares workout exercises vs template exercises by `Exercise.id` (added/removed/moved counts). End-workout overlay conditionally shows "Finish & Update Template" button when exercises differ from the source template. `finishAndUpdateTemplate(context:)` replaces all `TemplateExercise` objects on the template with the workout's current exercise list.
 - **Exercise reorder**: `ExerciseReorderView` provides drag-and-drop reordering of exercises during an active workout via a sheet.
+- **Celebration screen**: `CelebrationData` struct snapshots workout stats (volume, sets, reps, distance, duration, workout count ordinal) at finish time. `CelebrationView` presented as `.fullScreenCover` on `ContentView` via `sessionManager.celebrationData`. Adaptive stat display uses `EquipmentType.tracksWeight/tracksReps/tracksDistance`. Ember particle animation via SwiftUI `Canvas` + `TimelineView`.
 - **CSV import**: `@ModelActor` background actor with batched saves
 
 ## Build
@@ -35,14 +36,15 @@
 ```text
 Kiln/
 ├── KilnApp.swift                  # App entry, ModelContainer (autosave off), environment, foreground resume
-├── Models/                        # 9 files: ExerciseType, EquipmentType, BodyPart, Exercise,
-│                                  #   WorkoutTemplate, TemplateExercise, Workout, WorkoutExercise, WorkoutSet
+├── Models/                        # 10 files: ExerciseType, EquipmentType, BodyPart, Exercise,
+│                                  #   WorkoutTemplate, TemplateExercise, Workout, WorkoutExercise, WorkoutSet,
+│                                  #   CelebrationData
 ├── Views/
 │   ├── ContentView.swift          # 3-tab TabView with conditional Workout tab
 │   ├── Workout/                   # StartWorkoutView, ActiveWorkoutView, SetRowView,
 │   │                              #   ExerciseCardView, TemplateCardView, RestTimerView,
 │   │                              #   ExercisePickerView, ExerciseReorderView, SwipeToDelete,
-│   │                              #   NumericKeyboardView, CustomInputTextField
+│   │                              #   NumericKeyboardView, CustomInputTextField, CelebrationView
 │   ├── Templates/                 # TemplateEditorView, TemplateExerciseRow
 │   ├── History/                   # HistoryListView, WorkoutCardView, WorkoutDetailView,
 │   │                              #   WorkoutEditView
@@ -80,7 +82,7 @@ KilnWidgets/
 
 ## Spec Artifacts
 
-Feature specs, plans, and tasks live in `specs/001-workout-mvp/`, `specs/002-visual-redesign/`, `specs/003-live-activity/`, and `specs/004-reliable-rest-timer/`.
+Feature specs, plans, and tasks live in `specs/001-workout-mvp/`, `specs/002-visual-redesign/`, `specs/003-live-activity/`, `specs/004-reliable-rest-timer/`, and `specs/005-celebration-screen/`.
 Constitution at `.specify/memory/constitution.md`.
 
 <!-- MANUAL ADDITIONS START -->
