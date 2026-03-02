@@ -44,6 +44,16 @@ struct ContentView: View {
             }
         }
         .tint(DesignSystem.Colors.primary)
+        .fullScreenCover(isPresented: Binding(
+            get: { sessionManager.celebrationData != nil },
+            set: { if !$0 { sessionManager.celebrationData = nil } }
+        )) {
+            if let data = sessionManager.celebrationData {
+                CelebrationView(data: data, onDismiss: {
+                    sessionManager.celebrationData = nil
+                })
+            }
+        }
         .onAppear {
             sessionManager.checkForInterruptedWorkout(context: modelContext)
         }

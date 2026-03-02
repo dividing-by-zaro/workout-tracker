@@ -41,6 +41,7 @@ final class WorkoutSessionManager {
     private var restExpiryWorkItem: DispatchWorkItem?
 
     var hasInterruptedWorkout: Bool = false
+    var celebrationData: CelebrationData?
 
     init() {
         Self.shared = self
@@ -246,6 +247,46 @@ final class WorkoutSessionManager {
         hasInterruptedWorkout = false
     }
 
+    // MARK: - Celebration Data
+
+    private func computeCelebrationData(for workout: Workout, context: ModelContext) {
+        let completedSets = workout.exercises.flatMap(\.sets).filter(\.isCompleted)
+
+        let totalSets = completedSets.count
+        let totalReps = completedSets.compactMap(\.reps).reduce(0, +)
+        let totalDistance = completedSets.compactMap(\.distance).reduce(0, +)
+
+        var hasWeight = false
+        var hasReps = false
+        var hasDistance = false
+        for workoutExercise in workout.exercises {
+            guard let equipType = workoutExercise.exercise?.resolvedEquipmentType else { continue }
+            if equipType.tracksWeight { hasWeight = true }
+            if equipType.tracksReps { hasReps = true }
+            if equipType.tracksDistance { hasDistance = true }
+        }
+
+        let countDescriptor = FetchDescriptor<Workout>(
+            predicate: #Predicate<Workout> { $0.isInProgress == false }
+        )
+        let workoutCount = (try? context.fetchCount(countDescriptor)) ?? 1
+
+        celebrationData = CelebrationData(
+            workoutName: workout.name,
+            duration: workout.formattedDuration,
+            durationSeconds: workout.durationSeconds ?? 0,
+            totalVolume: workout.totalVolume,
+            totalSets: totalSets,
+            totalReps: totalReps,
+            totalDistance: totalDistance,
+            workoutCount: workoutCount,
+            hasWeightStats: hasWeight,
+            hasRepsStats: hasReps,
+            hasDistanceStats: hasDistance,
+            personalRecords: []
+        )
+    }
+
     // MARK: - Finish Workout
 
     func finishWorkout(context: ModelContext) {
@@ -255,6 +296,8 @@ final class WorkoutSessionManager {
         workout.completedAt = .now
         workout.durationSeconds = Int(Date.now.timeIntervalSince(workout.startedAt))
         try? context.save()
+
+        computeCelebrationData(for: workout, context: context)
 
         restTimer.stop()
         backgroundAudio.stopSilentAudio()
