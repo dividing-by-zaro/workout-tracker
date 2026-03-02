@@ -18,6 +18,8 @@
 - **LiveActivityCache**: `enum` with static methods backed by App Group UserDefaults. Intent handlers read/write cached `ContentState` (zero SwiftData access — even in-memory reads trigger FaceID on lock screen). Cache keys: `la.state` (JSON-encoded ContentState), `la.setId`, `la.restDuration`, `la.dirty`, `la.dirtySetId`, `la.completedSetIds`. Pending completions applied to in-memory model on timer expiry (`applyPendingCompletionsInMemory`). Foreground resume syncs cache → SwiftData via `syncCacheToSwiftData()`.
 - **BackgroundAudioService**: Plays silent audio to keep the app process alive in background (required for rest timer expiry and Live Activity updates). Also plays `alert_tone.caf` via `playAlertSound()` on timer expiry — the active `.playback` session suppresses `AlertConfiguration(sound:)`, so the alert must go through `AVAudioPlayer` directly.
 - **Intent split pattern**: Shared struct declarations in `Kiln/Shared/`, app-target `perform()` with real logic in `Kiln/Intents/`, widget-target stubs in `KilnWidgets/`. Widget extension cannot access SwiftData.
+- **Template diff & update**: `TemplateDiff` struct compares workout exercises vs template exercises by `Exercise.id` (added/removed/moved counts). End-workout overlay conditionally shows "Finish & Update Template" button when exercises differ from the source template. `finishAndUpdateTemplate(context:)` replaces all `TemplateExercise` objects on the template with the workout's current exercise list.
+- **Exercise reorder**: `ExerciseReorderView` provides drag-and-drop reordering of exercises during an active workout via a sheet.
 - **CSV import**: `@ModelActor` background actor with batched saves
 
 ## Build
@@ -39,7 +41,7 @@ Kiln/
 │   ├── ContentView.swift          # 3-tab TabView with conditional Workout tab
 │   ├── Workout/                   # StartWorkoutView, ActiveWorkoutView, SetRowView,
 │   │                              #   ExerciseCardView, TemplateCardView, RestTimerView,
-│   │                              #   ExercisePickerView, SwipeToDelete,
+│   │                              #   ExercisePickerView, ExerciseReorderView, SwipeToDelete,
 │   │                              #   NumericKeyboardView, CustomInputTextField
 │   ├── Templates/                 # TemplateEditorView, TemplateExerciseRow
 │   ├── History/                   # HistoryListView, WorkoutCardView, WorkoutDetailView,

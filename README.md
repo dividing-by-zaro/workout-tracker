@@ -13,7 +13,8 @@ MVP implementation complete. Live Activity feature on branch `003-live-activity`
 - [x] One-tap workout start from templates
 - [x] Set logging with pre-filled previous data, tap-anywhere completion, flame/brick status icons
 - [x] Inline rest timer (appears below completed set, auto-hides, 120s default)
-- [x] Mid-workout modifications (add/swap/remove exercises and sets)
+- [x] Mid-workout modifications (add/swap/remove/reorder exercises and sets)
+- [x] "Finish & Update Template" — propagate exercise changes back to the source template
 - [x] Crash-safe workout recovery (zero data loss)
 - [x] Workout template creation and management
 - [x] Workout history with detail view

@@ -7,6 +7,7 @@ struct ActiveWorkoutView: View {
     @State private var showEndConfirmation = false
     @State private var showExercisePicker = false
     @State private var swappingExercise: WorkoutExercise?
+    @State private var showReorderSheet = false
 
     var body: some View {
         if let workout = sessionManager.activeWorkout {
@@ -56,6 +57,9 @@ struct ActiveWorkoutView: View {
                     swapExercise(workoutExercise, with: newExercise)
                 }
             }
+            .sheet(isPresented: $showReorderSheet) {
+                ExerciseReorderView(workout: workout)
+            }
             .overlay {
                 if showEndConfirmation {
                     endWorkoutOverlay
@@ -87,6 +91,16 @@ struct ActiveWorkoutView: View {
                     .clipShape(Circle())
             }
             Button {
+                showReorderSheet = true
+            } label: {
+                Image(systemName: "arrow.up.arrow.down")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(DesignSystem.Colors.textOnPrimary)
+                    .frame(width: 36, height: 36)
+                    .background(DesignSystem.Colors.secondary)
+                    .clipShape(Circle())
+            }
+            Button {
                 showEndConfirmation = true
             } label: {
                 HStack(spacing: DesignSystem.Spacing.xs) {
@@ -107,7 +121,9 @@ struct ActiveWorkoutView: View {
     }
 
     private var endWorkoutOverlay: some View {
-        ZStack {
+        let diff = sessionManager.computeTemplateDiff(context: modelContext)
+
+        return ZStack {
             Color.black.opacity(0.4)
                 .ignoresSafeArea()
                 .onTapGesture { showEndConfirmation = false }
@@ -128,6 +144,25 @@ struct ActiveWorkoutView: View {
                         .foregroundStyle(DesignSystem.Colors.textOnPrimary)
                         .background(DesignSystem.Colors.success)
                         .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
+                }
+
+                if let diff, diff.hasChanges {
+                    Button {
+                        showEndConfirmation = false
+                        sessionManager.finishAndUpdateTemplate(context: modelContext)
+                    } label: {
+                        VStack(spacing: DesignSystem.Spacing.xxs) {
+                            Text("Finish & Update Template")
+                                .font(DesignSystem.Typography.body.bold())
+                            Text(diff.description)
+                                .font(DesignSystem.Typography.caption)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, DesignSystem.Spacing.sm + 2)
+                        .foregroundStyle(DesignSystem.Colors.textOnPrimary)
+                        .background(DesignSystem.Colors.secondary)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
+                    }
                 }
 
                 Button {
@@ -182,6 +217,7 @@ struct ActiveWorkoutView: View {
             modelContext.insert(set)
         }
         try? modelContext.save()
+        sessionManager.syncLiveActivityState()
     }
 
     private func interruptedBanner(workout: Workout) -> some View {
@@ -227,11 +263,11 @@ struct ActiveWorkoutView: View {
             modelContext.insert(set)
         }
         try? modelContext.save()
+        sessionManager.syncLiveActivityState()
     }
 
     private func removeExercise(_ workoutExercise: WorkoutExercise) {
-        modelContext.delete(workoutExercise)
-        try? modelContext.save()
+        sessionManager.removeExercise(workoutExercise, context: modelContext)
     }
 
     private func buildPreFillData(for workoutExercise: WorkoutExercise) -> [PreFillData] {
