@@ -7,6 +7,7 @@ struct WorkoutEditView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showExercisePicker = false
     @State private var swappingExercise: WorkoutExercise?
+    @State private var preFillCache: [UUID: [PreFillData]] = [:]
 
     var body: some View {
         NavigationStack {
@@ -17,7 +18,7 @@ struct WorkoutEditView: View {
                     dateInfo
 
                     ForEach(workout.sortedExercises) { workoutExercise in
-                        let preFill = buildPreFillData(for: workoutExercise)
+                        let preFill = preFillCache[workoutExercise.id] ?? []
                         ExerciseCardView(
                             workoutExercise: workoutExercise,
                             preFillData: preFill,
@@ -66,10 +67,12 @@ struct WorkoutEditView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
+                        try? modelContext.save()
                         dismiss()
                     }
                 }
             }
+            .onAppear { refreshPreFillCache() }
             .sheet(isPresented: $showExercisePicker) {
                 ExercisePickerView { exercise in
                     addExercise(exercise)
@@ -137,6 +140,7 @@ struct WorkoutEditView: View {
             modelContext.insert(set)
         }
         try? modelContext.save()
+        refreshPreFillCache()
     }
 
     private func swapExercise(_ workoutExercise: WorkoutExercise, with newExercise: Exercise) {
@@ -158,15 +162,24 @@ struct WorkoutEditView: View {
             modelContext.insert(set)
         }
         try? modelContext.save()
+        refreshPreFillCache()
     }
 
     private func removeExercise(_ workoutExercise: WorkoutExercise) {
         modelContext.delete(workoutExercise)
+        for (i, ex) in workout.sortedExercises.enumerated() {
+            ex.order = i
+        }
         try? modelContext.save()
+        refreshPreFillCache()
     }
 
-    private func buildPreFillData(for workoutExercise: WorkoutExercise) -> [PreFillData] {
-        guard let exercise = workoutExercise.exercise else { return [] }
-        return PreFillService.preFillSets(for: exercise, setCount: workoutExercise.sets.count, in: modelContext)
+    private func refreshPreFillCache() {
+        var cache: [UUID: [PreFillData]] = [:]
+        for ex in workout.sortedExercises {
+            guard let exercise = ex.exercise else { continue }
+            cache[ex.id] = PreFillService.preFillSets(for: exercise, setCount: ex.sets.count, in: modelContext)
+        }
+        preFillCache = cache
     }
 }

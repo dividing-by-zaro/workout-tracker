@@ -5,6 +5,7 @@ import UIKit
 struct ContentView: View {
     @Environment(WorkoutSessionManager.self) private var sessionManager
     @Environment(\.modelContext) private var modelContext
+    @State private var selectedTab = 0
 
     init() {
         let tabBarAppearance = UITabBarAppearance()
@@ -17,7 +18,7 @@ struct ContentView: View {
     }
 
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             Group {
                 if sessionManager.isWorkoutInProgress {
                     ActiveWorkoutView()
@@ -28,6 +29,7 @@ struct ContentView: View {
             .tabItem {
                 Label("Workouts", systemImage: DesignSystem.Icon.workout)
             }
+            .tag(0)
 
             NavigationStack {
                 HistoryListView()
@@ -35,6 +37,7 @@ struct ContentView: View {
             .tabItem {
                 Label("History", systemImage: DesignSystem.Icon.history)
             }
+            .tag(1)
 
             NavigationStack {
                 ProfileView()
@@ -42,6 +45,7 @@ struct ContentView: View {
             .tabItem {
                 Label("Profile", systemImage: DesignSystem.Icon.profile)
             }
+            .tag(2)
         }
         .tint(DesignSystem.Colors.primary)
         .fullScreenCover(isPresented: Binding(
@@ -52,10 +56,18 @@ struct ContentView: View {
                 CelebrationView(data: data, onDismiss: {
                     sessionManager.celebrationData = nil
                 })
+            } else {
+                Color.clear.onAppear { sessionManager.celebrationData = nil }
             }
         }
         .onAppear {
             sessionManager.checkForInterruptedWorkout(context: modelContext)
+        }
+        .onChange(of: sessionManager.shouldSwitchToWorkoutTab) {
+            if sessionManager.shouldSwitchToWorkoutTab {
+                selectedTab = 0
+                sessionManager.shouldSwitchToWorkoutTab = false
+            }
         }
     }
 }

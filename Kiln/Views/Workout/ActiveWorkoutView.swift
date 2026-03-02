@@ -8,6 +8,8 @@ struct ActiveWorkoutView: View {
     @State private var showExercisePicker = false
     @State private var swappingExercise: WorkoutExercise?
     @State private var showReorderSheet = false
+    @State private var templateDiff: TemplateDiff?
+    @State private var preFillCache: [UUID: [PreFillData]] = [:]
 
     var body: some View {
         if let workout = sessionManager.activeWorkout {
@@ -21,7 +23,7 @@ struct ActiveWorkoutView: View {
                 ScrollView {
                     VStack(spacing: DesignSystem.Spacing.md) {
                         ForEach(workout.sortedExercises) { workoutExercise in
-                            let preFill = buildPreFillData(for: workoutExercise)
+                            let preFill = preFillCache[workoutExercise.id] ?? []
                             ExerciseCardView(
                                 workoutExercise: workoutExercise,
                                 preFillData: preFill,
@@ -68,6 +70,8 @@ struct ActiveWorkoutView: View {
                     endWorkoutOverlay
                 }
             }
+            .onAppear { refreshPreFillCache() }
+            .onChange(of: workout.exercises.count) { refreshPreFillCache() }
         }
     }
 
@@ -104,6 +108,7 @@ struct ActiveWorkoutView: View {
                     .clipShape(Circle())
             }
             Button {
+                templateDiff = sessionManager.computeTemplateDiff(context: modelContext)
                 showEndConfirmation = true
             } label: {
                 HStack(spacing: DesignSystem.Spacing.xs) {
@@ -124,7 +129,7 @@ struct ActiveWorkoutView: View {
     }
 
     private var endWorkoutOverlay: some View {
-        let diff = sessionManager.computeTemplateDiff(context: modelContext)
+        let diff = templateDiff
 
         return ZStack {
             Color.black.opacity(0.4)
@@ -221,6 +226,7 @@ struct ActiveWorkoutView: View {
         }
         try? modelContext.save()
         sessionManager.syncLiveActivityState()
+        refreshPreFillCache()
     }
 
     private func interruptedBanner(workout: Workout) -> some View {
@@ -267,14 +273,20 @@ struct ActiveWorkoutView: View {
         }
         try? modelContext.save()
         sessionManager.syncLiveActivityState()
+        refreshPreFillCache()
     }
 
     private func removeExercise(_ workoutExercise: WorkoutExercise) {
         sessionManager.removeExercise(workoutExercise, context: modelContext)
     }
 
-    private func buildPreFillData(for workoutExercise: WorkoutExercise) -> [PreFillData] {
-        guard let exercise = workoutExercise.exercise else { return [] }
-        return PreFillService.preFillSets(for: exercise, setCount: workoutExercise.sets.count, in: modelContext)
+    private func refreshPreFillCache() {
+        guard let workout = sessionManager.activeWorkout else { return }
+        var cache: [UUID: [PreFillData]] = [:]
+        for ex in workout.sortedExercises {
+            guard let exercise = ex.exercise else { continue }
+            cache[ex.id] = PreFillService.preFillSets(for: exercise, setCount: ex.sets.count, in: modelContext)
+        }
+        preFillCache = cache
     }
 }

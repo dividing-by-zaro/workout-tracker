@@ -8,11 +8,13 @@ struct WorkoutsPerWeekChart: View {
     private var weeklyData: [(week: String, count: Int)] {
         let calendar = Calendar.current
         let now = Date.now
+        guard let currentWeekInterval = calendar.dateInterval(of: .weekOfYear, for: now) else { return [] }
+        let currentWeekStart = currentWeekInterval.start
         var result: [(week: String, count: Int)] = []
 
         for weeksAgo in (0..<8).reversed() {
-            guard let weekStart = calendar.date(byAdding: .weekOfYear, value: -weeksAgo, to: now) else { continue }
-            let weekEnd = calendar.date(byAdding: .weekOfYear, value: 1, to: weekStart)!
+            guard let weekStart = calendar.date(byAdding: .weekOfYear, value: -weeksAgo, to: currentWeekStart),
+                  let weekEnd = calendar.date(byAdding: .weekOfYear, value: 1, to: weekStart) else { continue }
 
             let count = workouts.filter { workout in
                 guard let completed = workout.completedAt else { return false }

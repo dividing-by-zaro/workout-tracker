@@ -34,20 +34,30 @@ struct SwipeToDelete<Content: View>: View {
             content()
                 .offset(x: offset)
                 .simultaneousGesture(
-                    DragGesture(minimumDistance: 20)
+                    DragGesture(minimumDistance: 30)
                         .onChanged { value in
-                            let translation = value.translation.width
-                            if translation < 0 {
+                            let translation = value.translation
+                            // Only activate if gesture is predominantly horizontal
+                            guard abs(translation.width) > abs(translation.height) * 1.5 else { return }
+                            if translation.width < 0 {
                                 // Swiping left — rubber band at deleteWidth
-                                offset = max(translation, -deleteWidth * 1.2)
+                                offset = max(translation.width, -deleteWidth * 1.2)
                             } else if showingDelete {
                                 // Swiping right to dismiss
-                                offset = min(translation - deleteWidth, 0)
+                                offset = min(translation.width - deleteWidth, 0)
                             }
                         }
                         .onEnded { value in
+                            let translation = value.translation
+                            guard abs(translation.width) > abs(translation.height) * 1.5 else {
+                                withAnimation(.easeOut(duration: 0.2)) {
+                                    offset = 0
+                                    showingDelete = false
+                                }
+                                return
+                            }
                             withAnimation(.easeOut(duration: 0.2)) {
-                                if value.translation.width < -40 {
+                                if translation.width < -40 {
                                     offset = -deleteWidth
                                     showingDelete = true
                                 } else {

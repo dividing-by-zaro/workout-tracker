@@ -15,8 +15,7 @@ struct KilnApp: App {
                     // Crash recovery: check for interrupted workout on launch
                 }
                 .onOpenURL { url in
-                    // Handle kiln://active-workout deep link from Live Activity
-                    // The app is already showing the active workout in the Workout tab
+                    sessionManager.shouldSwitchToWorkoutTab = true
                 }
         }
         .modelContainer(for: [

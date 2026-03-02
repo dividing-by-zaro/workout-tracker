@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 
+@MainActor
 @Observable
 final class RestTimerService {
     var isRunning: Bool = false
@@ -69,11 +70,13 @@ final class RestTimerService {
 
     private func startDisplayTimer() {
         displayTimer?.invalidate()
-        displayTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+        let timer = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.tick()
             }
         }
+        RunLoop.main.add(timer, forMode: .common)
+        displayTimer = timer
     }
 
     @MainActor
