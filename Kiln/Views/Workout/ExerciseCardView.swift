@@ -11,6 +11,7 @@ struct ExerciseCardView: View {
     var onDeleteSet: ((WorkoutSet) -> Void)?
     var onSwapExercise: (() -> Void)?
     var onRemoveExercise: (() -> Void)?
+    var onSkipRest: (() -> Void)? = nil
 
     private var equipmentType: EquipmentType {
         workoutExercise.exercise?.resolvedEquipmentType ?? .barbell
@@ -61,7 +62,7 @@ struct ExerciseCardView: View {
                 }
 
                 if let timer = restTimer, timer.isRunning, workoutSet.id == lastCompletedSetId {
-                    RestTimerView(restTimer: timer)
+                    RestTimerView(restTimer: timer, onSkip: onSkipRest)
                         .transition(.asymmetric(
                             insertion: .scale(scale: 0.85).combined(with: .opacity),
                             removal: .scale(scale: 0.85).combined(with: .opacity).combined(with: .move(edge: .top))

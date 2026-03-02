@@ -38,6 +38,9 @@ struct ActiveWorkoutView: View {
                                 },
                                 onRemoveExercise: {
                                     removeExercise(workoutExercise)
+                                },
+                                onSkipRest: {
+                                    sessionManager.skipRestTimer()
                                 }
                             )
                             .padding(.horizontal, DesignSystem.Spacing.md)

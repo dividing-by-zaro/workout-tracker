@@ -3,6 +3,7 @@ import SwiftUI
 struct RestTimerView: View {
     let restTimer: RestTimerService
     var onAdjust: ((Int) -> Void)?
+    var onSkip: (() -> Void)? = nil
 
     var body: some View {
         if restTimer.isRunning {
@@ -31,7 +32,11 @@ struct RestTimerView: View {
                 Spacer()
 
                 Button("Skip") {
-                    restTimer.stop()
+                    if let onSkip {
+                        onSkip()
+                    } else {
+                        restTimer.stop()
+                    }
                 }
                 .font(DesignSystem.Typography.body)
                 .foregroundStyle(DesignSystem.Colors.primary)
