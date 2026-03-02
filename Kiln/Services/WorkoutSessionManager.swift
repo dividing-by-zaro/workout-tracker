@@ -283,6 +283,9 @@ final class WorkoutSessionManager {
         cachedState.isRestTimerActive = true
         cachedState.restTimerEndDate = restTimer.endDate ?? Date.now.addingTimeInterval(Double(restDuration))
         cachedState.restTotalSeconds = restDuration
+        // Advance setNumber to point to the NEXT set so TimerView
+        // (which displays "Set (setNumber-1) of N complete") shows correctly.
+        cachedState.setNumber += 1
 
         LiveActivityCache.state = cachedState
         LiveActivityCache.recordCompletion(setId: setId)
@@ -443,13 +446,19 @@ final class WorkoutSessionManager {
             }
         }
 
-        // Apply weight/reps adjustments from lock screen
+        // Apply weight/reps adjustments to the set that was actually adjusted
+        // (not findCurrentSet(), which may have shifted after completions)
         if pending.isDirty, let cachedState = pending.currentState,
-           let (_, currentSet) = findCurrentSet() {
-            currentSet.weight = cachedState.weight
-            currentSet.reps = cachedState.reps
-            currentSet.seconds = cachedState.duration
-            currentSet.distance = cachedState.distance
+           let dirtySetId = pending.dirtySetId {
+            let descriptor = FetchDescriptor<WorkoutSet>(
+                predicate: #Predicate<WorkoutSet> { $0.id == dirtySetId }
+            )
+            if let adjustedSet = try? context.fetch(descriptor).first {
+                adjustedSet.weight = cachedState.weight
+                adjustedSet.reps = cachedState.reps
+                adjustedSet.seconds = cachedState.duration
+                adjustedSet.distance = cachedState.distance
+            }
         }
 
         try? context.save()

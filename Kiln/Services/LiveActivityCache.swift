@@ -7,6 +7,7 @@ enum LiveActivityCache {
     private static let setIdKey = "la.setId"
     private static let restDurationKey = "la.restDuration"
     private static let dirtyKey = "la.dirty"
+    private static let dirtySetIdKey = "la.dirtySetId"
     private static let completedSetIdsKey = "la.completedSetIds"
 
     typealias ContentState = WorkoutActivityAttributes.ContentState
@@ -14,6 +15,7 @@ enum LiveActivityCache {
     struct PendingSync {
         var completedSetIds: [UUID]
         var isDirty: Bool
+        var dirtySetId: UUID?
         var currentState: ContentState?
     }
 
@@ -28,6 +30,7 @@ enum LiveActivityCache {
         }
         suite.set(restDuration, forKey: restDurationKey)
         suite.set(false, forKey: dirtyKey)
+        suite.removeObject(forKey: dirtySetIdKey)
     }
 
     // MARK: - Read cached state
@@ -70,7 +73,7 @@ enum LiveActivityCache {
             return nil
         }
         self.state = s
-        suite.set(true, forKey: dirtyKey)
+        markDirty()
         return s
     }
 
@@ -80,8 +83,18 @@ enum LiveActivityCache {
         guard var s = state else { return nil }
         s.reps = max(0, (s.reps ?? 0) + delta)
         self.state = s
-        suite.set(true, forKey: dirtyKey)
+        markDirty()
         return s
+    }
+
+    private static func markDirty() {
+        suite.set(true, forKey: dirtyKey)
+        // Snapshot which set is being adjusted so syncCacheToSwiftData
+        // applies changes to the correct set even after completions shift the current set.
+        if suite.string(forKey: dirtySetIdKey) == nil,
+           let currentSetId = suite.string(forKey: setIdKey) {
+            suite.set(currentSetId, forKey: dirtySetIdKey)
+        }
     }
 
     // MARK: - Record completion
@@ -107,13 +120,17 @@ enum LiveActivityCache {
 
         guard isDirty || !completedIds.isEmpty else { return nil }
 
+        let dirtySetId: UUID? = suite.string(forKey: dirtySetIdKey).flatMap { UUID(uuidString: $0) }
+
         // Clear pending data
         suite.set(false, forKey: dirtyKey)
+        suite.removeObject(forKey: dirtySetIdKey)
         suite.removeObject(forKey: completedSetIdsKey)
 
         return PendingSync(
             completedSetIds: completedIds,
             isDirty: isDirty,
+            dirtySetId: dirtySetId,
             currentState: state
         )
     }
@@ -125,6 +142,7 @@ enum LiveActivityCache {
         suite.removeObject(forKey: setIdKey)
         suite.removeObject(forKey: restDurationKey)
         suite.set(false, forKey: dirtyKey)
+        suite.removeObject(forKey: dirtySetIdKey)
         suite.removeObject(forKey: completedSetIdsKey)
     }
 }
