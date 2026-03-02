@@ -26,16 +26,17 @@ struct TimerView: View {
                 .buttonStyle(.plain)
             }
 
-            // Row 2: REST label + set progress
+            // Row 2: Set progress + next set preview
             HStack {
-                Text("REST")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(Color("WidgetTextSecondary"))
-                    .tracking(2)
                 Text(completedSetLabel)
                     .font(.system(size: 11))
                     .foregroundColor(Color("WidgetTextSecondary"))
+                    .layoutPriority(1)
                 Spacer()
+                Text(nextSetPreviewLabel)
+                    .font(.system(size: 11))
+                    .foregroundColor(Color("WidgetTextSecondary"))
+                    .lineLimit(1)
             }
 
             // Row 3: Large countdown timer
@@ -50,6 +51,8 @@ struct TimerView: View {
                 countsDown: false
             )
             .tint(Color("WidgetPrimary"))
+
+
         }
         .padding(14)
         .activityBackgroundTint(Color("WidgetBackground"))
@@ -62,6 +65,44 @@ struct TimerView: View {
             return "Set \(completed) of \(context.state.totalSetsInExercise) complete"
         }
         return "All sets complete"
+    }
+
+    private var nextSetPreviewLabel: String {
+        let state = context.state
+        // setNumber == 1 means the next set is from a new exercise
+        let prefix = state.setNumber == 1 ? "Next: \(state.exerciseName) " : "Next: "
+        let values: String
+        switch state.equipmentCategory {
+        case "weightReps":
+            if let w = state.weight, let r = state.reps {
+                values = "\(formatWeight(w)) lbs × \(r)"
+            } else { values = "—" }
+        case "repsOnly":
+            if let r = state.reps {
+                values = "× \(r)"
+            } else { values = "—" }
+        case "duration":
+            if let s = state.duration {
+                values = "\(Int(s))s"
+            } else { values = "—" }
+        case "distance":
+            if let d = state.distance {
+                values = String(format: "%.1f mi", d)
+            } else { values = "—" }
+        case "weightDistance":
+            if let w = state.weight, let d = state.distance {
+                values = "\(formatWeight(w)) lbs • \(String(format: "%.1f", d)) mi"
+            } else { values = "—" }
+        default:
+            values = "—"
+        }
+        return prefix + values
+    }
+
+    private func formatWeight(_ value: Double) -> String {
+        value.truncatingRemainder(dividingBy: 1) == 0
+            ? String(format: "%.0f", value)
+            : String(format: "%.1f", value)
     }
 
     private var timerStart: Date {
