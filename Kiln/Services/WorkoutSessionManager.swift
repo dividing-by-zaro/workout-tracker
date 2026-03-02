@@ -432,11 +432,20 @@ final class WorkoutSessionManager {
     }
 
     func skipRestTimerFromIntent() {
+        skipRestTimerInternal()
+    }
+
+    func skipRestTimer() {
+        skipRestTimerInternal()
+    }
+
+    private func skipRestTimerInternal() {
         if checkAndHandleExpiredTimer() { return }
         restTimer.stop()
         lastCompletedSetId = nil
         cancelBackgroundRestExpiry()
         applyPendingCompletionsInMemory()
+        LiveActivityCache.clearRest()
         updateLiveActivity()
         cacheCurrentState()
     }

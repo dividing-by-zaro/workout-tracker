@@ -33,6 +33,15 @@ enum LiveActivityCache {
         suite.removeObject(forKey: dirtySetIdKey)
     }
 
+    static func clearRest() {
+        guard var s = state else { return }
+        s.isRestTimerActive = false
+        s.restTimerEndDate = .distantPast
+        s.restTotalSeconds = 0
+        state = s
+        suite.set(0, forKey: restDurationKey)
+    }
+
     // MARK: - Read cached state
 
     static var state: ContentState? {
