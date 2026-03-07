@@ -13,6 +13,7 @@
 		177FFE5C58CC060ABECDB928 /* BackgroundAudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7D0654BAC7DD12DAA35C7E8 /* BackgroundAudioService.swift */; };
 		193516A01622F9DA2B15B9AE /* SetRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09E71B0F76C3D78DA87982FF /* SetRowView.swift */; };
 		1ACF46B8624F2F66D08852E0 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA496475B5378C23CA07E83 /* ContentView.swift */; };
+		1B986DF942399688FC9F09C4 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B705F94180BA1ABD9857C4A0 /* NotificationService.swift */; };
 		1FBDBA9C4E38F2011177E63D /* Exercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 720835ADDE84C7A63C01E9D1 /* Exercise.swift */; };
 		20FC097FBCDA7A7932EEA9DF /* EquipmentType.swift in Sources */ = {isa = PBXBuildFile; fileRef = C83673F8C74C51DBEA7C6D21 /* EquipmentType.swift */; };
 		220B6A8EF1737DA63EEAB3A7 /* PreFillService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D67B8481533CEAE0D365B0CE /* PreFillService.swift */; };
@@ -131,6 +132,7 @@
 		ADE7BB901CDDBF8055CA7D32 /* TemplateEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateEditorView.swift; sourceTree = "<group>"; };
 		AFA496475B5378C23CA07E83 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		B6ABFEC49D0E51B1D1EC789E /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
+		B705F94180BA1ABD9857C4A0 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		BD9B11F63D41118A72E86932 /* LiveActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityService.swift; sourceTree = "<group>"; };
 		C168611F11149FC65A4A1672 /* NumericKeyboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumericKeyboardView.swift; sourceTree = "<group>"; };
 		C5CF29394B83146F54454E30 /* KilnWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KilnWidgetBundle.swift; sourceTree = "<group>"; };
@@ -268,6 +270,7 @@
 				3B4B2EB0CEC527449D148C75 /* CSVImportService.swift */,
 				2CB6E886B03119DB56AAF29F /* LiveActivityCache.swift */,
 				BD9B11F63D41118A72E86932 /* LiveActivityService.swift */,
+				B705F94180BA1ABD9857C4A0 /* NotificationService.swift */,
 				D67B8481533CEAE0D365B0CE /* PreFillService.swift */,
 				95FD1C13168449520BC53044 /* RestTimerService.swift */,
 				33DD78D988B1619D49175217 /* WorkoutSessionManager.swift */,
@@ -441,6 +444,7 @@
 				6B5207262883677BC602DA50 /* KilnApp.swift in Sources */,
 				8480DD9CCAFEE5DBB95CBFDC /* LiveActivityCache.swift in Sources */,
 				687006283D6A528D6368B16A /* LiveActivityService.swift in Sources */,
+				1B986DF942399688FC9F09C4 /* NotificationService.swift in Sources */,
 				81D095C9092E0EAD3819E5CC /* NumericKeyboardView.swift in Sources */,
 				220B6A8EF1737DA63EEAB3A7 /* PreFillService.swift in Sources */,
 				878D16A0334795D84A3A12D9 /* ProfileView.swift in Sources */,

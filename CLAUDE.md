@@ -10,10 +10,11 @@
 
 ## Architecture
 
-- **@MainActor @Observable** `WorkoutSessionManager` injected via `.environment()` — owns active workout state, rest timer, live activity lifecycle; `static var shared` singleton for intent access. All four service classes (`WorkoutSessionManager`, `RestTimerService`, `LiveActivityService`, `BackgroundAudioService`) are `@MainActor`-isolated.
+- **@MainActor @Observable** `WorkoutSessionManager` injected via `.environment()` — owns active workout state, rest timer, live activity lifecycle; `static var shared` singleton for intent access. All five service classes (`WorkoutSessionManager`, `RestTimerService`, `LiveActivityService`, `BackgroundAudioService`, `NotificationService`) are `@MainActor`-isolated.
 - **SwiftData @Model** objects bound directly to views via `@Bindable` and `@Query` — no classical ViewModel layer. Periodic save (1s tick) in elapsed timer prevents data loss from in-flight `@Bindable` field edits.
 - **TabView** with `selection` binding and `.tag()` — supports deep link tab switching from Live Activity via `onOpenURL`
-- **Rest timer**: inline below completed set (auto-hides when done), `Date` end-time in UserDefaults + wall-clock-derived foreground countdown; `lastCompletedSetId` on `WorkoutSessionManager` tracks placement; `AlertConfiguration(sound: .default)` plays sound via Live Activity update on expiry. Display timer uses `RunLoop.common` mode so countdown updates during scroll.
+- **Rest timer**: inline below completed set (auto-hides when done), `Date` end-time in UserDefaults + wall-clock-derived foreground countdown; `lastCompletedSetId` on `WorkoutSessionManager` tracks placement. Display timer uses `RunLoop.common` mode so countdown updates during scroll. Local notification via `UNUserNotificationCenter` guarantees alert fires even when app is killed/backgrounded.
+- **NotificationService**: `@MainActor @Observable` class conforming to `UNUserNotificationCenterDelegate`. Schedules `UNTimeIntervalNotificationTrigger` with `alert_tone.caf` custom sound on set completion; cancels on skip/finish/discard. Foreground delegate (`willPresent`) suppresses system banner — the in-app `playAlertSound()` + haptic handle foreground alerts instead. Permission requested on app launch.
 - **Live Activity**: Lock screen widget for completing entire workout without unlocking. Three views: `SetView` (adjustable weight/reps + Complete button), `TimerView` (countdown + Skip button + next set preview), `CompleteView` (all sets done). Interactive buttons via `LiveActivityIntent` (runs in app process). TimerView shows "Next:" preview with weight/reps of upcoming set; includes exercise name when crossing exercise boundaries (detected via `setNumber == 1`).
 - **LiveActivityCache**: `enum` with static methods backed by App Group UserDefaults. Intent handlers read/write cached `ContentState` (zero SwiftData access — even in-memory reads trigger FaceID on lock screen). Cache keys: `la.state` (JSON-encoded ContentState), `la.setId`, `la.restDuration`, `la.dirty`, `la.dirtySetId`, `la.completedSetIds`. Pending completions applied to in-memory model on timer expiry (`applyPendingCompletionsInMemory`). Foreground resume syncs cache → SwiftData via `syncCacheToSwiftData()`.
 - **BackgroundAudioService**: Plays silent audio to keep the app process alive in background (required for rest timer expiry and Live Activity updates). Also plays `alert_tone.caf` via `playAlertSound()` on timer expiry — the active `.playback` session suppresses `AlertConfiguration(sound:)`, so the alert must go through `AVAudioPlayer` directly.
@@ -50,7 +51,8 @@ Kiln/
 │   │                              #   WorkoutEditView
 │   └── Profile/                   # ProfileView, WorkoutsPerWeekChart
 ├── Services/                      # WorkoutSessionManager, RestTimerService, LiveActivityService,
-│                                  #   LiveActivityCache, BackgroundAudioService, CSVImportService, PreFillService
+│                                  #   LiveActivityCache, BackgroundAudioService, NotificationService,
+│                                  #   CSVImportService, PreFillService
 ├── Shared/                        # WorkoutActivityAttributes, WorkoutLiveActivityIntents (shared with widget)
 ├── Intents/                       # WorkoutLiveActivityIntents+App (perform() bodies)
 ├── Assets.xcassets/               # App icon + body part icons + brick_icon + noise_tile
@@ -78,12 +80,13 @@ KilnWidgets/
 - **DesignSystem** expanded: 14 color tokens, Shadows (cardShadow, elevatedShadow), CornerRadius, GrainedBackground modifier (multiply blend, 0.12 opacity), CardGrainOverlay view (0.06 opacity)
 - Forced light mode via Info.plist `UIUserInterfaceStyle: Light` + `.preferredColorScheme(.light)`
 - **Live Activity timer display**: `Text(timerInterval:countsDown:)` shows "1:--" on Simulator (reduced fidelity mode) — works correctly on real device. `ProgressView(timerInterval:countsDown:)` for auto-updating progress bar.
-- **No push notifications**: Rest timer sound played via `AVAudioPlayer` in `BackgroundAudioService.playAlertSound()` (AlertConfiguration kept for visual banner only). No `UNUserNotificationCenter` usage.
+- **Local notifications for rest timer**: `NotificationService` schedules a `UNTimeIntervalNotificationTrigger` with `alert_tone.caf` when a set is completed. Fires reliably even when app is killed/backgrounded. `BackgroundAudioService.playAlertSound()` still used for foreground alert sound. No remote/push notifications yet (requires paid Apple Developer account for `aps-environment` entitlement).
 
 ## Spec Artifacts
 
-Feature specs, plans, and tasks live in `specs/001-workout-mvp/`, `specs/002-visual-redesign/`, `specs/003-live-activity/`, `specs/004-reliable-rest-timer/`, and `specs/005-celebration-screen/`.
+Feature specs, plans, and tasks live in `specs/001-workout-mvp/`, `specs/002-visual-redesign/`, `specs/003-live-activity/`, `specs/004-reliable-rest-timer/`, `specs/005-celebration-screen/`, and `specs/006-hybrid-timer-backend/`.
 Constitution at `.specify/memory/constitution.md`.
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
+
