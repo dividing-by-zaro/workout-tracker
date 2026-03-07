@@ -42,10 +42,11 @@ apns_client: APNSClient | None = None
 async def lifespan(app: FastAPI):
     global apns_client
     apns_client = APNSClient(
-        key_path=os.environ["APNS_KEY_PATH"],
         key_id=os.environ["APNS_KEY_ID"],
         team_id=os.environ["APNS_TEAM_ID"],
         environment=os.environ.get("APNS_ENVIRONMENT", "development"),
+        key_path=os.environ.get("APNS_KEY_PATH"),
+        key_base64=os.environ.get("APNS_KEY_BASE64"),
     )
     yield
     await apns_client.close()

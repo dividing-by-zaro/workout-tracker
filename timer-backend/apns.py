@@ -1,3 +1,4 @@
+import base64
 import time
 import jwt
 import httpx
@@ -10,9 +11,21 @@ class APNSClient:
     APNS_DEVELOPMENT = "https://api.development.push.apple.com"
     TOKEN_TTL = 3000  # Refresh JWT every 50 minutes (valid for 1 hour)
 
-    def __init__(self, key_path: str, key_id: str, team_id: str, environment: str = "development"):
-        with open(key_path) as f:
-            self._signing_key = f.read()
+    def __init__(
+        self,
+        key_id: str,
+        team_id: str,
+        environment: str = "development",
+        key_path: str | None = None,
+        key_base64: str | None = None,
+    ):
+        if key_base64:
+            self._signing_key = base64.b64decode(key_base64).decode()
+        elif key_path:
+            with open(key_path) as f:
+                self._signing_key = f.read()
+        else:
+            raise ValueError("Either key_path or key_base64 must be provided")
         self._key_id = key_id
         self._team_id = team_id
         self._base_url = self.APNS_PRODUCTION if environment == "production" else self.APNS_DEVELOPMENT

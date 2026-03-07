@@ -64,7 +64,7 @@ timer-backend/
 ├── apns.py              # APNSClient: ES256 JWT signing, HTTP/2 push to APNS
 ├── Dockerfile           # Multi-stage Python 3.12 + uv build for Coolify
 ├── pyproject.toml       # Dependencies managed by uv
-└── .env.example         # APNS_KEY_ID, APNS_TEAM_ID, APNS_KEY_PATH, API_KEY, APNS_ENVIRONMENT
+└── .env.example         # APNS_KEY_ID, APNS_TEAM_ID, APNS_KEY_PATH or APNS_KEY_BASE64, API_KEY, APNS_ENVIRONMENT
 
 KilnWidgets/
 ├── KilnWidgetBundle.swift         # @main WidgetBundle + ActivityConfiguration
