@@ -38,7 +38,7 @@ MVP implementation complete. Celebration screen on branch `005-celebration-scree
   - [x] Countdown timer with progress bar, Skip button, and next set preview
   - [x] Sound alert on timer expiry, auto-advance to next set
   - [x] No FaceID required — UserDefaults cache eliminates SwiftData access from lock screen
-  - [x] Background audio keeps app alive for reliable timer expiry (with audio interruption recovery)
+  - [x] Background audio keeps app alive for reliable timer expiry
 - [x] Celebration screen on workout completion
   - [x] Ordinal workout count ("Your 47th workout!")
   - [x] Adaptive stats: duration, weight lifted, sets, reps, distance (only relevant metrics shown)
