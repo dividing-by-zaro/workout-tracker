@@ -119,3 +119,8 @@ async def cancel_timer(req: CancelRequest):
         existing.task.cancel()
         return {"status": "cancelled"}
     return {"status": "no_pending_timer"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
