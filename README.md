@@ -2,7 +2,7 @@ Kiln is a personal workout tracker iOS app — custom software built as an upgra
 
 ## Status
 
-MVP implementation complete. Celebration screen on branch `005-celebration-screen`.
+MVP implementation complete. Timer backend for APNS Live Activity push on branch `006-hybrid-timer-backend`.
 
 ## Features (MVP)
 
@@ -53,13 +53,19 @@ MVP implementation complete. Celebration screen on branch `005-celebration-scree
 4. Build and run (Cmd+R)
 5. Import `strong_workouts.csv` from the Profile tab
 
+## Upcoming
+
+- APNS push-to-update Live Activity via timer backend (iOS integration pending)
+- Remove silent audio background workaround
+
 ## Future
 
-- Server sync via Railway backend
+- Server sync
 - Exercise progression graphs
 - Muscle group tracking
 - Export to CSV/JSON
 
 ## Tech Stack
 
-Swift 5.9+ / SwiftUI / SwiftData / Swift Charts / ActivityKit / WidgetKit / AppIntents / iOS 17+
+- **iOS**: Swift 5.9+ / SwiftUI / SwiftData / Swift Charts / ActivityKit / WidgetKit / AppIntents / iOS 17+
+- **Backend**: Python 3.12 / FastAPI / httpx / PyJWT (timer microservice on Coolify)

@@ -1,0 +1,120 @@
+import asyncio
+import os
+from contextlib import asynccontextmanager
+
+from dotenv import load_dotenv
+load_dotenv()
+from datetime import datetime, timezone, timedelta
+
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+
+from apns import APNSClient
+
+
+# --- Models ---
+
+class ScheduleRequest(BaseModel):
+    push_token: str
+    duration_seconds: int
+    content_state: dict
+    device_id: str
+
+
+class CancelRequest(BaseModel):
+    device_id: str
+
+
+class PendingTimer:
+    def __init__(self, task: asyncio.Task, fire_at: datetime):
+        self.task = task
+        self.fire_at = fire_at
+
+
+# --- App ---
+
+pending_timers: dict[str, PendingTimer] = {}
+apns_client: APNSClient | None = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global apns_client
+    apns_client = APNSClient(
+        key_path=os.environ["APNS_KEY_PATH"],
+        key_id=os.environ["APNS_KEY_ID"],
+        team_id=os.environ["APNS_TEAM_ID"],
+        environment=os.environ.get("APNS_ENVIRONMENT", "development"),
+    )
+    yield
+    await apns_client.close()
+
+
+app = FastAPI(lifespan=lifespan)
+
+
+# --- Middleware ---
+
+@app.middleware("http")
+async def verify_api_key(request: Request, call_next):
+    if request.url.path == "/health":
+        return await call_next(request)
+
+    api_key = os.environ.get("API_KEY", "")
+    auth_header = request.headers.get("authorization", "")
+    if not auth_header.startswith("Bearer ") or auth_header[7:] != api_key:
+        return JSONResponse(status_code=401, content={"error": "Invalid API key"})
+
+    return await call_next(request)
+
+
+# --- Endpoints ---
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
+@app.post("/api/timer/schedule")
+async def schedule_timer(req: ScheduleRequest):
+    # Cancel existing timer for this device
+    existing = pending_timers.pop(req.device_id, None)
+    if existing and not existing.task.done():
+        existing.task.cancel()
+
+    fire_at = datetime.now(timezone.utc) + timedelta(seconds=req.duration_seconds)
+
+    async def _fire():
+        await asyncio.sleep(req.duration_seconds)
+        alert = {
+            "title": "Rest Complete",
+            "body": "Time for your next set!",
+            "sound": "alert_tone.caf",
+        }
+        try:
+            response = await apns_client.send_live_activity_update(
+                push_token=req.push_token,
+                content_state=req.content_state,
+                alert=alert,
+            )
+            if response.status_code != 200:
+                print(f"APNS error {response.status_code}: {response.text}")
+        except Exception as e:
+            print(f"APNS send failed: {e}")
+        finally:
+            pending_timers.pop(req.device_id, None)
+
+    task = asyncio.create_task(_fire())
+    pending_timers[req.device_id] = PendingTimer(task=task, fire_at=fire_at)
+
+    return {"status": "scheduled", "fire_at": fire_at.isoformat()}
+
+
+@app.post("/api/timer/cancel")
+async def cancel_timer(req: CancelRequest):
+    existing = pending_timers.pop(req.device_id, None)
+    if existing and not existing.task.done():
+        existing.task.cancel()
+        return {"status": "cancelled"}
+    return {"status": "no_pending_timer"}

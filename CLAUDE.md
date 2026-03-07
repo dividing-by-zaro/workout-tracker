@@ -7,6 +7,7 @@
 - Swift Charts (workouts-per-week bar chart)
 - ActivityKit + WidgetKit + AppIntents (Live Activity on lock screen)
 - App Groups (`group.app.izaro.kiln`) for shared UserDefaults (rest timer persistence + Live Activity cache)
+- Python 3.12 / FastAPI / httpx[http2] / PyJWT (timer backend for APNS Live Activity push-to-update)
 
 ## Architecture
 
@@ -58,6 +59,13 @@ Kiln/
 ├── Assets.xcassets/               # App icon + body part icons + brick_icon + noise_tile
 └── Design/                        # DesignSystem (colors, shadows, grain, corner radius, typography, spacing, icons)
 
+timer-backend/
+├── main.py              # FastAPI app: /api/timer/schedule, /api/timer/cancel, /health
+├── apns.py              # APNSClient: ES256 JWT signing, HTTP/2 push to APNS
+├── Dockerfile           # Multi-stage Python 3.12 + uv build for Coolify
+├── pyproject.toml       # Dependencies managed by uv
+└── .env.example         # APNS_KEY_ID, APNS_TEAM_ID, APNS_KEY_PATH, API_KEY, APNS_ENVIRONMENT
+
 KilnWidgets/
 ├── KilnWidgetBundle.swift         # @main WidgetBundle + ActivityConfiguration
 ├── Views/                         # SetView, TimerView, CompleteView (lock screen presentations)
@@ -80,7 +88,8 @@ KilnWidgets/
 - **DesignSystem** expanded: 14 color tokens, Shadows (cardShadow, elevatedShadow), CornerRadius, GrainedBackground modifier (multiply blend, 0.12 opacity), CardGrainOverlay view (0.06 opacity)
 - Forced light mode via Info.plist `UIUserInterfaceStyle: Light` + `.preferredColorScheme(.light)`
 - **Live Activity timer display**: `Text(timerInterval:countsDown:)` shows "1:--" on Simulator (reduced fidelity mode) — works correctly on real device. `ProgressView(timerInterval:countsDown:)` for auto-updating progress bar.
-- **Local notifications for rest timer**: `NotificationService` schedules a `UNTimeIntervalNotificationTrigger` with `alert_tone.caf` when a set is completed. Fires reliably even when app is killed/backgrounded. `BackgroundAudioService.playAlertSound()` still used for foreground alert sound. No remote/push notifications yet (requires paid Apple Developer account for `aps-environment` entitlement).
+- **Local notifications for rest timer**: `NotificationService` schedules a `UNTimeIntervalNotificationTrigger` with `alert_tone.caf` when a set is completed. Fires reliably even when app is killed/backgrounded. `BackgroundAudioService.playAlertSound()` still used for foreground alert sound.
+- **Timer backend**: `timer-backend/` is a FastAPI microservice deployed on Coolify. Accepts timer schedule requests, sleeps for the duration, then sends APNS push-to-update to transition the Live Activity from timer view to next set view. In-memory timers (no database) — graceful degradation if backend is unavailable (local notification still fires). Single API key auth. API contract in `specs/006-hybrid-timer-backend/contracts/timer-api.md`.
 
 ## Spec Artifacts
 
