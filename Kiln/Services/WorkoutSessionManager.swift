@@ -34,6 +34,7 @@ final class WorkoutSessionManager {
     let restTimer = RestTimerService()
     let liveActivityService = LiveActivityService()
     let backgroundAudio = BackgroundAudioService()
+    let notificationService = NotificationService()
 
     private var currentActivity: Activity<WorkoutActivityAttributes>?
     private var modelContext: ModelContext?
@@ -154,6 +155,7 @@ final class WorkoutSessionManager {
                 restTimer.stop()
                 lastCompletedSetId = nil
                 cancelBackgroundRestExpiry()
+                notificationService.cancelRestTimer()
             }
             updateLiveActivity()
             cacheCurrentState()
@@ -166,7 +168,9 @@ final class WorkoutSessionManager {
 
         lastCompletedSetId = workoutSet.id
         let restDuration = workoutSet.workoutExercise?.exercise?.defaultRestSeconds ?? 120
+        notificationService.cancelRestTimer()
         restTimer.start(duration: restDuration)
+        notificationService.scheduleRestTimer(duration: restDuration)
         updateLiveActivity()
         cacheCurrentState()
         scheduleBackgroundRestExpiry(duration: restDuration)
@@ -203,6 +207,7 @@ final class WorkoutSessionManager {
             restTimer.stop()
             lastCompletedSetId = nil
             cancelBackgroundRestExpiry()
+            notificationService.cancelRestTimer()
         }
 
         context.delete(exercise)
@@ -241,6 +246,7 @@ final class WorkoutSessionManager {
 
     func reset() {
         restTimer.stop()
+        notificationService.cancelRestTimer()
         backgroundAudio.stopSilentAudio()
         stopElapsedTimer()
         endLiveActivity()
@@ -304,6 +310,7 @@ final class WorkoutSessionManager {
 
         restTimer.stop()
         cancelBackgroundRestExpiry()
+        notificationService.cancelRestTimer()
         lastCompletedSetId = nil
         backgroundAudio.stopSilentAudio()
         stopElapsedTimer()
@@ -322,6 +329,7 @@ final class WorkoutSessionManager {
 
         restTimer.stop()
         cancelBackgroundRestExpiry()
+        notificationService.cancelRestTimer()
         lastCompletedSetId = nil
         backgroundAudio.stopSilentAudio()
         stopElapsedTimer()
@@ -453,7 +461,9 @@ final class WorkoutSessionManager {
               !cachedState.isWorkoutComplete else { return }
 
         let restDuration = LiveActivityCache.restDuration > 0 ? LiveActivityCache.restDuration : 120
+        notificationService.cancelRestTimer()
         restTimer.start(duration: restDuration)
+        notificationService.scheduleRestTimer(duration: restDuration)
 
         cachedState.isRestTimerActive = true
         cachedState.restTimerEndDate = restTimer.endDate ?? Date.now.addingTimeInterval(Double(restDuration))
@@ -495,6 +505,7 @@ final class WorkoutSessionManager {
         restTimer.stop()
         lastCompletedSetId = nil
         cancelBackgroundRestExpiry()
+        notificationService.cancelRestTimer()
         applyPendingCompletionsInMemory()
         LiveActivityCache.clearRest()
         updateLiveActivity()
@@ -517,13 +528,14 @@ final class WorkoutSessionManager {
     private func handleTimerExpired() {
         lastCompletedSetId = nil
         cancelBackgroundRestExpiry()
+        notificationService.cancelRestTimer()
 
         // Apply any pending lock screen completions to in-memory SwiftData
         // so buildContentState finds the correct next set
         applyPendingCompletionsInMemory()
 
-        // Play alert sound directly through our audio session — the
-        // AlertConfiguration sound is suppressed by the active .playback session
+        // Play alert sound in foreground — the local notification handles
+        // background/locked alerts via its custom sound
         backgroundAudio.playAlertSound()
 
         let alert = AlertConfiguration(

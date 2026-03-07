@@ -12,7 +12,7 @@ struct KilnApp: App {
                 .environment(sessionManager)
                 .preferredColorScheme(.light)
                 .onAppear {
-                    // Crash recovery: check for interrupted workout on launch
+                    sessionManager.notificationService.requestPermission()
                 }
                 .onOpenURL { url in
                     sessionManager.shouldSwitchToWorkoutTab = true
