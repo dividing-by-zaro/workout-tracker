@@ -4,19 +4,34 @@ import SwiftData
 @main
 struct KilnApp: App {
     @State private var sessionManager = WorkoutSessionManager()
+    @State private var authService = AuthService()
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(sessionManager)
-                .preferredColorScheme(.light)
-                .onAppear {
-                    sessionManager.notificationService.requestPermission()
+            Group {
+                if authService.isAuthenticated {
+                    ContentView()
+                        .environment(sessionManager)
+                        .onAppear {
+                            sessionManager.notificationService.requestPermission()
+                        }
+                        .onOpenURL { url in
+                            sessionManager.shouldSwitchToWorkoutTab = true
+                        }
+                } else if authService.state == .checking {
+                    // Brief loading state while checking Keychain
+                    Color.clear
+                        .grainedBackground()
+                } else {
+                    LoginView()
                 }
-                .onOpenURL { url in
-                    sessionManager.shouldSwitchToWorkoutTab = true
-                }
+            }
+            .environment(authService)
+            .preferredColorScheme(.light)
+            .onAppear {
+                authService.checkStoredAuth()
+            }
         }
         .modelContainer(for: [
             Exercise.self,
@@ -28,7 +43,9 @@ struct KilnApp: App {
         ], isAutosaveEnabled: false)
         .onChange(of: scenePhase) {
             if scenePhase == .active {
-                sessionManager.handleForegroundResume()
+                if authService.isAuthenticated {
+                    sessionManager.handleForegroundResume()
+                }
             }
         }
     }

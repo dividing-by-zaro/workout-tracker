@@ -7,12 +7,14 @@ struct ProfileView: View {
     @Query(filter: #Predicate<Workout> { $0.isInProgress == false }) private var completedWorkouts: [Workout]
 
     @Environment(WorkoutSessionManager.self) private var sessionManager
+    @Environment(AuthService.self) private var authService
 
     @State private var isImporting = false
     @State private var importInProgress = false
     @State private var importResult: CSVImportResult?
     @State private var showImportResult = false
     @State private var showDeleteConfirmation = false
+    @State private var showLogoutConfirmation = false
 
     var body: some View {
         ScrollView {
@@ -23,7 +25,7 @@ struct ProfileView: View {
                         .font(.system(size: 80))
                         .foregroundStyle(DesignSystem.Colors.primary)
 
-                    Text("Isabel")
+                    Text(authService.userName ?? "User")
                         .font(DesignSystem.Typography.title)
                         .foregroundStyle(DesignSystem.Colors.textPrimary)
 
@@ -79,6 +81,24 @@ struct ProfileView: View {
                     .cardShadow()
                 }
                 .padding(.horizontal, DesignSystem.Spacing.md)
+
+                // Log out
+                Button {
+                    showLogoutConfirmation = true
+                } label: {
+                    HStack {
+                        Image(systemName: "rectangle.portrait.and.arrow.right")
+                        Text("Log Out")
+                    }
+                    .font(DesignSystem.Typography.body)
+                    .frame(maxWidth: .infinity)
+                    .padding(DesignSystem.Spacing.md)
+                    .background(DesignSystem.Colors.surface)
+                    .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
+                    .cardShadow()
+                }
+                .padding(.horizontal, DesignSystem.Spacing.md)
             }
         }
         .grainedBackground()
@@ -102,6 +122,21 @@ struct ProfileView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("This will permanently delete all workouts, exercises, and templates. This cannot be undone.")
+        }
+        .alert("Log out of Kiln?", isPresented: $showLogoutConfirmation) {
+            Button("Log Out", role: .destructive) {
+                if sessionManager.activeWorkout != nil {
+                    sessionManager.reset()
+                }
+                authService.logout()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            if sessionManager.activeWorkout != nil {
+                Text("Your active workout will be lost.")
+            } else {
+                Text("You'll need to enter your API key to log back in.")
+            }
         }
     }
 

@@ -1,16 +1,16 @@
 <!--
   Sync Impact Report
   ===========================================================================
-  Version change: 1.0.0 → 1.0.1
+  Version change: 1.0.1 → 1.1.0
 
   Modified principles:
-    - III. Timer Reliability: removed Dynamic Island reference (lock screen only)
-    - IV. Live Activity First: scoped to lock screen Live Activity only
-      (target device is iPhone 13, no Dynamic Island)
+    - VI. Single-User Simplicity → Household Simplicity: expanded from
+      1 user to 2 users (developer + wife). Per-user API keys, user
+      profiles in MongoDB. No RBAC, no signup, no general multi-tenancy.
 
   Modified sections:
-    - Technology Stack: added iPhone 13 target device note, removed
-      Dynamic Island references
+    - None (Technology Stack unchanged — MongoDB addition documented
+      in CLAUDE.md, not constitution)
 
   Templates requiring updates:
     - .specify/templates/plan-template.md          ✅ no changes needed
@@ -109,21 +109,24 @@ is a clear upgrade over Strong.
 - The interface MUST remain uncluttered; information density is controlled
   by progressive disclosure rather than cramming.
 
-### VI. Single-User Simplicity
+### VI. Household Simplicity
 
-This is custom software for a single user. All architecture decisions MUST
-reflect this constraint — no multi-tenancy, no user management, no auth
-flows.
+This is custom software for a household of two users (developer + wife).
+All architecture decisions MUST reflect this constraint — no general
+multi-tenancy, no user management UI, no signup flows.
 
-- Authentication MUST be a single API key stored in the iOS Keychain,
+- Authentication MUST use per-user API keys stored in the iOS Keychain,
   entered once during initial setup.
-- There is exactly one user; the backend MUST NOT implement user tables,
-  sessions, or role-based access control.
-- The Profile screen displays the owner's name, photo, workout count, and
-  personal metrics — these are not configurable by "other users" because
-  there are none.
+- There are exactly two users; the backend stores user profiles in a
+  simple document collection. No role-based access control, no sessions,
+  no signup endpoint.
+- API keys are generated server-side and shared out-of-band (e.g., text
+  message). No self-registration.
+- The Profile screen displays the authenticated user's name, workout
+  count, and personal metrics.
 - This simplicity MUST be preserved even as features are added; any
-  proposal that introduces multi-user complexity MUST be rejected.
+  proposal that introduces general multi-tenancy, RBAC, or user
+  management UI MUST be rejected.
 
 ### VII. Data Portability
 
@@ -189,4 +192,4 @@ constraints. It supersedes all other documentation when conflicts arise.
 - **Guidance file**: Use CLAUDE.md for runtime development guidance that
   supplements (but does not override) this constitution.
 
-**Version**: 1.0.1 | **Ratified**: 2026-02-22 | **Last Amended**: 2026-02-22
+**Version**: 1.1.0 | **Ratified**: 2026-02-22 | **Last Amended**: 2026-03-08

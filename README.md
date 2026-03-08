@@ -2,7 +2,7 @@ Kiln is a personal workout tracker iOS app — custom software built as an upgra
 
 ## Status
 
-MVP implementation complete. Timer backend for APNS Live Activity push on branch `006-hybrid-timer-backend`.
+MVP complete. User auth with per-user API keys on branch `007-user-auth`.
 
 ## Features (MVP)
 
@@ -45,10 +45,16 @@ MVP implementation complete. Timer backend for APNS Live Activity push on branch
   - [x] Ordinal workout count ("Your 47th workout!")
   - [x] Adaptive stats: duration, weight lifted, sets, reps, distance (only relevant metrics shown)
   - [x] Ember particle animation and staggered stat entrance
+- [x] User authentication (2 household users)
+  - [x] Per-user API keys stored in iOS Keychain
+  - [x] Branded login screen with fire light theme
+  - [x] Offline-tolerant — cached profile allows app use without backend
+  - [x] Logout from Profile tab with active workout warning
+  - [x] MongoDB backend for user profiles (flexible document schema)
 
 ## Getting Started
 
-1. Copy `Secrets.xcconfig.example` to `Secrets.xcconfig` and fill in backend URL + API key
+1. Copy `Secrets.xcconfig.example` to `Secrets.xcconfig` and fill in backend URL
 2. Run `xcodegen generate` (requires [xcodegen](https://github.com/yonaskolb/XcodeGen))
 3. Open `Kiln.xcodeproj` in Xcode
 4. Select iPhone 13 simulator (iOS 17+)
@@ -57,7 +63,7 @@ MVP implementation complete. Timer backend for APNS Live Activity push on branch
 
 ## Future
 
-- Server sync
+- Workout data sync (backend DB per user)
 - Exercise progression graphs
 - Muscle group tracking
 - Export to CSV/JSON
@@ -65,4 +71,4 @@ MVP implementation complete. Timer backend for APNS Live Activity push on branch
 ## Tech Stack
 
 - **iOS**: Swift 5.9+ / SwiftUI / SwiftData / Swift Charts / ActivityKit / WidgetKit / AppIntents / iOS 17+
-- **Backend**: Python 3.12 / FastAPI / httpx / PyJWT (timer microservice on Coolify)
+- **Backend**: Python 3.12 / FastAPI / MongoDB (motor) / httpx / PyJWT (Coolify)

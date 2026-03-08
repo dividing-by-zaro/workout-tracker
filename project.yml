@@ -58,7 +58,6 @@ targets:
               NSExceptionAllowsInsecureHTTPLoads: true
         NSSupportsLiveActivities: true
         TimerBackendURL: $(TIMER_BACKEND_URL)
-        TimerBackendAPIKey: $(TIMER_BACKEND_API_KEY)
     dependencies:
       - target: KilnWidgets
         embed: true

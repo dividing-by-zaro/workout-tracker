@@ -31,8 +31,6 @@
 	</dict>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
-	<key>TimerBackendAPIKey</key>
-	<string>$(TIMER_BACKEND_API_KEY)</string>
 	<key>TimerBackendURL</key>
 	<string>$(TIMER_BACKEND_URL)</string>
 	<key>UIBackgroundModes</key>

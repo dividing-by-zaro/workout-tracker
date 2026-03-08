@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from apns import APNSClient
+from db import get_db, seed_users, close_client
 
 
 # --- Models ---
@@ -48,8 +49,10 @@ async def lifespan(app: FastAPI):
         key_path=os.environ.get("APNS_KEY_PATH"),
         key_base64=os.environ.get("APNS_KEY_BASE64"),
     )
+    await seed_users()
     yield
     await apns_client.close()
+    close_client()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -62,11 +65,17 @@ async def verify_api_key(request: Request, call_next):
     if request.url.path == "/health":
         return await call_next(request)
 
-    api_key = os.environ.get("API_KEY", "")
     auth_header = request.headers.get("authorization", "")
-    if not auth_header.startswith("Bearer ") or auth_header[7:] != api_key:
+    if not auth_header.startswith("Bearer "):
         return JSONResponse(status_code=401, content={"error": "Invalid API key"})
 
+    key = auth_header[7:]
+    db = get_db()
+    user = await db["users"].find_one({"api_key": key})
+    if user is None:
+        return JSONResponse(status_code=401, content={"error": "Invalid API key"})
+
+    request.state.user = user
     return await call_next(request)
 
 
@@ -75,6 +84,15 @@ async def verify_api_key(request: Request, call_next):
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.get("/api/me")
+async def get_me(request: Request):
+    user = request.state.user
+    return {
+        "name": user["name"],
+        "created_at": user["created_at"].isoformat() if hasattr(user["created_at"], "isoformat") else str(user["created_at"]),
+    }
 
 
 @app.post("/api/timer/schedule")

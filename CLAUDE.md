@@ -7,11 +7,16 @@
 - Swift Charts (workouts-per-week bar chart)
 - ActivityKit + WidgetKit + AppIntents (Live Activity on lock screen)
 - App Groups (`group.app.izaro.kiln`) for shared UserDefaults (rest timer persistence + Live Activity cache)
-- Python 3.12 / FastAPI / httpx[http2] / PyJWT (timer backend for APNS Live Activity push-to-update)
+- Security framework (iOS Keychain for API key storage)
+- Python 3.12 / FastAPI / motor (async MongoDB driver) / httpx[http2] / PyJWT (backend)
+- MongoDB (user profiles, document-based flexible schema)
 
 ## Architecture
 
-- **@MainActor @Observable** `WorkoutSessionManager` injected via `.environment()` — owns active workout state, rest timer, live activity lifecycle; `static var shared` singleton for intent access. All service classes (`WorkoutSessionManager`, `RestTimerService`, `LiveActivityService`, `BackgroundAudioService`, `NotificationService`, `TimerBackendService`) are `@MainActor`-isolated.
+- **@MainActor @Observable** `WorkoutSessionManager` injected via `.environment()` — owns active workout state, rest timer, live activity lifecycle; `static var shared` singleton for intent access. All service classes (`WorkoutSessionManager`, `RestTimerService`, `LiveActivityService`, `BackgroundAudioService`, `NotificationService`, `TimerBackendService`, `AuthService`) are `@MainActor`-isolated.
+- **AuthService**: `@MainActor @Observable` class managing authentication state. Stores API key in iOS Keychain via `KeychainService`, caches user profile in UserDefaults. Auth gate in `KilnApp.swift` conditionally renders `LoginView` or `ContentView`. On launch, checks Keychain for stored key and silently validates with backend; falls back to cached profile if offline. Per-user API keys replace the shared build-time `TIMER_BACKEND_API_KEY`.
+- **KeychainService**: `enum` with static methods (`save`/`load`/`delete`) wrapping Security framework. Service name `app.izaro.kiln`, account-based key lookup.
+- **LoginView**: Branded splash/login screen with fire light theme (grain background, flame icon, API key text field, Connect button). Shown when no valid API key is stored.
 - **SwiftData @Model** objects bound directly to views via `@Bindable` and `@Query` — no classical ViewModel layer. Periodic save (1s tick) in elapsed timer prevents data loss from in-flight `@Bindable` field edits.
 - **TabView** with `selection` binding and `.tag()` — supports deep link tab switching from Live Activity via `onOpenURL`
 - **Rest timer**: inline below completed set (auto-hides when done), `Date` end-time in UserDefaults + wall-clock-derived foreground countdown; `lastCompletedSetId` on `WorkoutSessionManager` tracks placement. Display timer uses `RunLoop.common` mode so countdown updates during scroll. Local notification via `UNUserNotificationCenter` guarantees alert fires even when app is killed/backgrounded.
@@ -32,17 +37,18 @@
 - Open `Kiln.xcodeproj` in Xcode, build with Cmd+R
 - Bundle IDs: `app.izaro.kiln` (app), `app.izaro.kiln.kilnwidgets` (widget extension)
 - Development Team: `85S8MAN3A4`
-- **Secrets**: `Secrets.xcconfig` (gitignored) provides `TIMER_BACKEND_URL` and `TIMER_BACKEND_API_KEY` at build time via Info.plist. Copy `Secrets.xcconfig.example` to `Secrets.xcconfig` and fill in values.
+- **Secrets**: `Secrets.xcconfig` (gitignored) provides `TIMER_BACKEND_URL` at build time via Info.plist. Copy `Secrets.xcconfig.example` to `Secrets.xcconfig` and fill in values. API key is no longer build-time — it's entered at runtime via login screen and stored in iOS Keychain.
 
 ## Project Structure
 
 ```text
 Kiln/
-├── KilnApp.swift                  # App entry, ModelContainer (autosave off), environment, foreground resume
+├── KilnApp.swift                  # App entry, ModelContainer (autosave off), environment, auth gate, foreground resume
 ├── Models/                        # 10 files: ExerciseType, EquipmentType, BodyPart, Exercise,
 │                                  #   WorkoutTemplate, TemplateExercise, Workout, WorkoutExercise, WorkoutSet,
 │                                  #   CelebrationData
 ├── Views/
+│   ├── LoginView.swift             # API key login screen (shown when unauthenticated)
 │   ├── ContentView.swift          # 3-tab TabView with conditional Workout tab
 │   ├── Workout/                   # StartWorkoutView, ActiveWorkoutView, SetRowView,
 │   │                              #   ExerciseCardView, TemplateCardView, RestTimerView,
@@ -54,18 +60,20 @@ Kiln/
 │   └── Profile/                   # ProfileView, WorkoutsPerWeekChart
 ├── Services/                      # WorkoutSessionManager, RestTimerService, LiveActivityService,
 │                                  #   LiveActivityCache, BackgroundAudioService, NotificationService,
-│                                  #   TimerBackendService, CSVImportService, PreFillService
+│                                  #   TimerBackendService, CSVImportService, PreFillService,
+│                                  #   AuthService, KeychainService
 ├── Shared/                        # WorkoutActivityAttributes, WorkoutLiveActivityIntents (shared with widget)
 ├── Intents/                       # WorkoutLiveActivityIntents+App (perform() bodies)
 ├── Assets.xcassets/               # App icon + body part icons + brick_icon + noise_tile
 └── Design/                        # DesignSystem (colors, shadows, grain, corner radius, typography, spacing, icons)
 
 timer-backend/
-├── main.py              # FastAPI app: /api/timer/schedule, /api/timer/cancel, /health
+├── main.py              # FastAPI app: /api/me, /api/timer/schedule, /api/timer/cancel, /health
+├── db.py                # MongoDB client (motor), user seeding, get_db() helper
 ├── apns.py              # APNSClient: ES256 JWT signing, HTTP/2 push to APNS
 ├── Dockerfile           # Multi-stage Python 3.12 + uv build for Coolify
 ├── pyproject.toml       # Dependencies managed by uv
-└── .env.example         # APNS_KEY_ID, APNS_TEAM_ID, APNS_KEY_PATH or APNS_KEY_BASE64, API_KEY, APNS_ENVIRONMENT
+└── .env.example         # APNS_KEY_ID, APNS_TEAM_ID, APNS_KEY_PATH or APNS_KEY_BASE64, MONGODB_URL, APNS_ENVIRONMENT
 
 KilnWidgets/
 ├── KilnWidgetBundle.swift         # @main WidgetBundle + ActivityConfiguration
@@ -77,7 +85,9 @@ KilnWidgets/
 ## Key Decisions
 
 - All data local-first, no server sync in MVP
-- Single user — no auth, no user tables
+- Two household users (developer + wife) — per-user API key auth, no signup, no RBAC
+- **Authentication**: API keys stored in iOS Keychain (not UserDefaults). Keys are `kiln_`-prefixed random tokens generated server-side and shared out-of-band. Backend validates via MongoDB `users` collection lookup in auth middleware.
+- **Auth flow**: `AuthService` checks Keychain on launch → if key found, show main app immediately + silently validate with backend → if 401, force logout → if network error, proceed with cached profile. Login screen shown only when no key stored.
 - Exercises seeded from Strong CSV import + created on-the-fly
 - Weight in lbs only
 - Templates auto-created from import for "New Legs/full Body A" and "New Legs/full Body B" only
@@ -90,15 +100,14 @@ KilnWidgets/
 - Forced light mode via Info.plist `UIUserInterfaceStyle: Light` + `.preferredColorScheme(.light)`
 - **Live Activity timer display**: `Text(timerInterval:countsDown:)` shows "1:--" on Simulator (reduced fidelity mode) — works correctly on real device. `ProgressView(timerInterval:countsDown:)` for auto-updating progress bar.
 - **Local notifications for rest timer**: `NotificationService` schedules a `UNTimeIntervalNotificationTrigger` with `alert_tone.caf` when a set is completed. Fires reliably even when app is killed/backgrounded. `BackgroundAudioService.playAlertSound()` used for foreground alert sound.
-- **Timer backend**: `timer-backend/` is a FastAPI microservice deployed on Coolify. Accepts timer schedule requests, sleeps for the duration, then sends APNS push-to-update to transition the Live Activity from timer view to next set view. In-memory timers (no database) — graceful degradation if backend is unavailable (local notification still fires). Single API key auth. Backend URL and API key provided via `Secrets.xcconfig` → Info.plist → `Bundle.main`. API contract in `specs/006-hybrid-timer-backend/contracts/timer-api.md`.
-- **TimerBackendService**: `@MainActor` HTTP client in `Kiln/Services/TimerBackendService.swift`. Reads `TimerBackendURL` and `TimerBackendAPIKey` from Info.plist. Fire-and-forget `scheduleTimer()` and `cancelTimer()` calls. Called from `WorkoutSessionManager` on set completion (schedule) and skip/finish/discard (cancel).
+- **Timer backend**: `timer-backend/` is a FastAPI microservice deployed on Coolify. Accepts timer schedule requests, sleeps for the duration, then sends APNS push-to-update to transition the Live Activity from timer view to next set view. In-memory timers + MongoDB for user profiles. Per-user API key auth (keys stored in `users` collection). Backend URL provided via `Secrets.xcconfig` → Info.plist → `Bundle.main`. API contracts in `specs/006-hybrid-timer-backend/contracts/timer-api.md` and `specs/007-user-auth/contracts/auth-api.md`.
+- **TimerBackendService**: `@MainActor` HTTP client in `Kiln/Services/TimerBackendService.swift`. Reads `TimerBackendURL` from Info.plist and API key from Keychain. Fire-and-forget `scheduleTimer()` and `cancelTimer()` calls. Called from `WorkoutSessionManager` on set completion (schedule) and skip/finish/discard (cancel).
 - **Live Activity push token**: `LiveActivityService.startActivity()` tries `pushType: .token` first, falls back to `pushType: nil` if APNS entitlement isn't provisioned. `observePushToken(activity:onToken:)` iterates `activity.pushTokenUpdates` async sequence. Token stored in `WorkoutSessionManager.currentPushToken`, persisted to `LiveActivityCache.pushToken`, and sent to backend with each schedule request. On app restart, `reconnectLiveActivity()` restores the token from cache since `pushTokenUpdates` does not re-emit for existing activities.
 
 ## Spec Artifacts
 
-Feature specs, plans, and tasks live in `specs/001-workout-mvp/`, `specs/002-visual-redesign/`, `specs/003-live-activity/`, `specs/004-reliable-rest-timer/`, `specs/005-celebration-screen/`, and `specs/006-hybrid-timer-backend/`.
+Feature specs, plans, and tasks live in `specs/001-workout-mvp/`, `specs/002-visual-redesign/`, `specs/003-live-activity/`, `specs/004-reliable-rest-timer/`, `specs/005-celebration-screen/`, `specs/006-hybrid-timer-backend/`, and `specs/007-user-auth/`.
 Constitution at `.specify/memory/constitution.md`.
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
-
