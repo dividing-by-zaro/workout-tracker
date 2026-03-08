@@ -14,10 +14,6 @@ struct ActiveWorkoutView: View {
     var body: some View {
         if let workout = sessionManager.activeWorkout {
             VStack(spacing: 0) {
-                if sessionManager.hasInterruptedWorkout {
-                    interruptedBanner(workout: workout)
-                }
-
                 header(workout: workout)
 
                 ScrollView {
@@ -70,6 +66,24 @@ struct ActiveWorkoutView: View {
                     endWorkoutOverlay
                 }
             }
+            .overlay(alignment: .top) {
+                if sessionManager.showResumedToast {
+                    Text("Workout resumed")
+                        .font(DesignSystem.Typography.caption)
+                        .foregroundStyle(DesignSystem.Colors.textOnPrimary)
+                        .padding(.horizontal, DesignSystem.Spacing.md)
+                        .padding(.vertical, DesignSystem.Spacing.sm)
+                        .background(DesignSystem.Colors.secondary)
+                        .clipShape(Capsule())
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                withAnimation { sessionManager.showResumedToast = false }
+                            }
+                        }
+                }
+            }
+            .animation(.easeInOut(duration: 0.3), value: sessionManager.showResumedToast)
             .onAppear { refreshPreFillCache() }
             .onChange(of: workout.exercises.count) { refreshPreFillCache() }
         }
@@ -227,30 +241,6 @@ struct ActiveWorkoutView: View {
         try? modelContext.save()
         sessionManager.syncLiveActivityState()
         refreshPreFillCache()
-    }
-
-    private func interruptedBanner(workout: Workout) -> some View {
-        VStack(spacing: DesignSystem.Spacing.sm) {
-            Text("You have an unfinished workout")
-                .font(DesignSystem.Typography.body)
-                .foregroundStyle(DesignSystem.Colors.textPrimary)
-            HStack(spacing: DesignSystem.Spacing.md) {
-                Button("Resume") {
-                    sessionManager.resumeInterruptedWorkout()
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(DesignSystem.Colors.primary)
-
-                Button("Discard") {
-                    sessionManager.discardInterruptedWorkout(context: modelContext)
-                }
-                .buttonStyle(.bordered)
-                .tint(DesignSystem.Colors.destructive)
-            }
-        }
-        .padding(DesignSystem.Spacing.md)
-        .frame(maxWidth: .infinity)
-        .background(DesignSystem.Colors.surface)
     }
 
     private func swapExercise(_ workoutExercise: WorkoutExercise, with newExercise: Exercise) {

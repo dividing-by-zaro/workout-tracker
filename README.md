@@ -15,7 +15,7 @@ MVP implementation complete. Timer backend for APNS Live Activity push on branch
 - [x] Inline rest timer (appears below completed set, auto-hides, 120s default)
 - [x] Mid-workout modifications (add/swap/remove/reorder exercises and sets)
 - [x] "Finish & Update Template" — propagate exercise changes back to the source template
-- [x] Crash-safe workout recovery (zero data loss)
+- [x] Crash-safe workout recovery (auto-resume with toast, zero data loss)
 - [x] Workout template creation and management
 - [x] Workout history with detail view
 - [x] Profile with workout count and workouts-per-week chart

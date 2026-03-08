@@ -43,7 +43,7 @@ final class WorkoutSessionManager {
     private var modelContext: ModelContext?
     private var elapsedTimer: Timer?
 
-    var hasInterruptedWorkout: Bool = false
+    var showResumedToast: Bool = false
     var celebrationData: CelebrationData?
     var shouldSwitchToWorkoutTab: Bool = false
 
@@ -70,20 +70,11 @@ final class WorkoutSessionManager {
             return
         }
         activeWorkout = interrupted
-        hasInterruptedWorkout = true
         startElapsedTimer()
         restTimer.syncFromPersistedState()
         syncCacheToSwiftData()
-    }
-
-    func resumeInterruptedWorkout() {
-        hasInterruptedWorkout = false
         reconnectLiveActivity()
-    }
-
-    func discardInterruptedWorkout(context: ModelContext) {
-        hasInterruptedWorkout = false
-        discardWorkout(context: context)
+        showResumedToast = true
     }
 
     // MARK: - Start Workout from Template
@@ -248,7 +239,6 @@ final class WorkoutSessionManager {
         activeWorkout = nil
         elapsedSeconds = 0
         lastCompletedSetId = nil
-        hasInterruptedWorkout = false
     }
 
     // MARK: - Celebration Data
