@@ -7,7 +7,8 @@ final class RestTimerService {
     var isRunning: Bool = false
     var remainingSeconds: Int = 0
     var totalSeconds: Int = 120
-    var onTimerExpired: (() -> Void)?
+    /// Called when timer expires. Bool parameter: `true` = live expiry, `false` = found-expired on restore.
+    var onTimerExpired: ((_ playSound: Bool) -> Void)?
 
     private(set) var endDate: Date?
     private var displayTimer: Timer?
@@ -58,8 +59,8 @@ final class RestTimerService {
             startDisplayTimer()
         } else {
             stop()
-            fireInAppAlert()
-            onTimerExpired?()
+            // Timer expired while app was dead — local notification already alerted
+            onTimerExpired?(false)
         }
     }
 
@@ -86,7 +87,7 @@ final class RestTimerService {
         if remaining <= 0 {
             stop()
             fireInAppAlert()
-            onTimerExpired?()
+            onTimerExpired?(true)
         } else {
             remainingSeconds = Int(ceil(remaining))
         }

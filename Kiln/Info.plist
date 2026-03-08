@@ -24,6 +24,17 @@
 	<string>$(TIMER_BACKEND_API_KEY)</string>
 	<key>TimerBackendURL</key>
 	<string>$(TIMER_BACKEND_URL)</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>kiln.zaro.host</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

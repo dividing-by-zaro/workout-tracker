@@ -88,16 +88,10 @@ async def schedule_timer(req: ScheduleRequest):
 
     async def _fire():
         await asyncio.sleep(req.duration_seconds)
-        alert = {
-            "title": "Rest Complete",
-            "body": "Time for your next set!",
-            "sound": "alert_tone.caf",
-        }
         try:
             response = await apns_client.send_live_activity_update(
                 push_token=req.push_token,
                 content_state=req.content_state,
-                alert=alert,
             )
             if response.status_code != 200:
                 print(f"APNS error {response.status_code}: {response.text}")

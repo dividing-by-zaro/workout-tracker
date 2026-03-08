@@ -51,8 +51,8 @@ final class WorkoutSessionManager {
 
     init() {
         Self.shared = self
-        restTimer.onTimerExpired = { [weak self] in
-            self?.handleTimerExpired()
+        restTimer.onTimerExpired = { [weak self] playSound in
+            self?.handleTimerExpired(playSound: playSound)
         }
     }
 
@@ -539,13 +539,13 @@ final class WorkoutSessionManager {
               let endDate = restTimer.endDate,
               endDate.timeIntervalSinceNow <= 0 else { return false }
         restTimer.stop()
-        handleTimerExpired()
+        handleTimerExpired(playSound: true)
         return true
     }
 
     // MARK: - Timer Expiry Handler
 
-    private func handleTimerExpired() {
+    private func handleTimerExpired(playSound: Bool = true) {
         lastCompletedSetId = nil
         cancelBackgroundRestExpiry()
         notificationService.cancelRestTimer()
@@ -554,16 +554,21 @@ final class WorkoutSessionManager {
         // so buildContentState finds the correct next set
         applyPendingCompletionsInMemory()
 
-        // Play alert sound in foreground — the local notification handles
-        // background/locked alerts via its custom sound
-        backgroundAudio.playAlertSound()
+        if playSound {
+            // Play alert sound in foreground — the local notification handles
+            // background/locked alerts via its custom sound
+            backgroundAudio.playAlertSound()
 
-        let alert = AlertConfiguration(
-            title: "Rest Complete",
-            body: "Time for your next set!",
-            sound: .default
-        )
-        updateLiveActivity(alertConfiguration: alert)
+            let alert = AlertConfiguration(
+                title: "Rest Complete",
+                body: "Time for your next set!",
+                sound: .default
+            )
+            updateLiveActivity(alertConfiguration: alert)
+        } else {
+            // Timer expired while app was dead — just update state silently
+            updateLiveActivity()
+        }
         cacheCurrentState()
     }
 
@@ -598,7 +603,7 @@ final class WorkoutSessionManager {
             Task { @MainActor in
                 if self.restTimer.isRunning {
                     self.restTimer.stop()
-                    self.handleTimerExpired()
+                    self.handleTimerExpired(playSound: true)
                 }
                 self.endBackgroundTask()
             }
