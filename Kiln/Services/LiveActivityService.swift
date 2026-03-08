@@ -17,7 +17,7 @@ final class LiveActivityService {
         return try? Activity<WorkoutActivityAttributes>.request(
             attributes: attributes,
             content: content,
-            pushType: nil
+            pushType: .token
         )
     }
 
@@ -89,6 +89,15 @@ final class LiveActivityService {
             exerciseIndex: 0,
             totalExercises: sessionManager.activeWorkout?.sortedExercises.count ?? 0
         )
+    }
+
+    func observePushToken(activity: Activity<WorkoutActivityAttributes>, onToken: @escaping (String) -> Void) {
+        Task {
+            for await tokenData in activity.pushTokenUpdates {
+                let token = tokenData.map { String(format: "%02x", $0) }.joined()
+                onToken(token)
+            }
+        }
     }
 
     private func formatPreviousSetLabel(for set: WorkoutSet, equipmentType: EquipmentType) -> String {

@@ -39,6 +39,7 @@ MVP implementation complete. Timer backend for APNS Live Activity push on branch
   - [x] Sound alert on timer expiry, auto-advance to next set
   - [x] No FaceID required — UserDefaults cache eliminates SwiftData access from lock screen
   - [x] Local notification alert on timer expiry (works even when app is killed)
+  - [x] Backend-driven APNS push updates Live Activity when app is backgrounded/locked
   - [x] Background audio keeps app alive for reliable timer expiry
 - [x] Celebration screen on workout completion
   - [x] Ordinal workout count ("Your 47th workout!")
@@ -55,8 +56,7 @@ MVP implementation complete. Timer backend for APNS Live Activity push on branch
 
 ## Upcoming
 
-- APNS push-to-update Live Activity via timer backend (iOS integration pending)
-- Remove silent audio background workaround
+- Remove silent audio background workaround (pending US1+US2 verification)
 
 ## Future
 

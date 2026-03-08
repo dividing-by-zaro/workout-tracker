@@ -13,6 +13,7 @@ struct ProfileView: View {
     @State private var importResult: CSVImportResult?
     @State private var showImportResult = false
     @State private var showDeleteConfirmation = false
+    @AppStorage("timerBackendApiKey") private var backendApiKey = ""
 
     var body: some View {
         ScrollView {
@@ -59,6 +60,21 @@ struct ProfileView: View {
                         .cardShadow()
                     }
                     .disabled(importInProgress)
+                }
+                .padding(.horizontal, DesignSystem.Spacing.md)
+
+                // Backend API Key
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                    Text("Timer Backend API Key")
+                        .font(DesignSystem.Typography.caption)
+                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+
+                    SecureField("Enter API key", text: $backendApiKey)
+                        .font(DesignSystem.Typography.body)
+                        .padding(DesignSystem.Spacing.md)
+                        .background(DesignSystem.Colors.surface)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
+                        .cardShadow()
                 }
                 .padding(.horizontal, DesignSystem.Spacing.md)
 

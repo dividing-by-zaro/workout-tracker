@@ -11,7 +11,7 @@
 
 ## Architecture
 
-- **@MainActor @Observable** `WorkoutSessionManager` injected via `.environment()` — owns active workout state, rest timer, live activity lifecycle; `static var shared` singleton for intent access. All five service classes (`WorkoutSessionManager`, `RestTimerService`, `LiveActivityService`, `BackgroundAudioService`, `NotificationService`) are `@MainActor`-isolated.
+- **@MainActor @Observable** `WorkoutSessionManager` injected via `.environment()` — owns active workout state, rest timer, live activity lifecycle; `static var shared` singleton for intent access. All six service classes (`WorkoutSessionManager`, `RestTimerService`, `LiveActivityService`, `BackgroundAudioService`, `NotificationService`, `TimerBackendService`) are `@MainActor`-isolated.
 - **SwiftData @Model** objects bound directly to views via `@Bindable` and `@Query` — no classical ViewModel layer. Periodic save (1s tick) in elapsed timer prevents data loss from in-flight `@Bindable` field edits.
 - **TabView** with `selection` binding and `.tag()` — supports deep link tab switching from Live Activity via `onOpenURL`
 - **Rest timer**: inline below completed set (auto-hides when done), `Date` end-time in UserDefaults + wall-clock-derived foreground countdown; `lastCompletedSetId` on `WorkoutSessionManager` tracks placement. Display timer uses `RunLoop.common` mode so countdown updates during scroll. Local notification via `UNUserNotificationCenter` guarantees alert fires even when app is killed/backgrounded.
@@ -53,7 +53,7 @@ Kiln/
 │   └── Profile/                   # ProfileView, WorkoutsPerWeekChart
 ├── Services/                      # WorkoutSessionManager, RestTimerService, LiveActivityService,
 │                                  #   LiveActivityCache, BackgroundAudioService, NotificationService,
-│                                  #   CSVImportService, PreFillService
+│                                  #   TimerBackendService, CSVImportService, PreFillService
 ├── Shared/                        # WorkoutActivityAttributes, WorkoutLiveActivityIntents (shared with widget)
 ├── Intents/                       # WorkoutLiveActivityIntents+App (perform() bodies)
 ├── Assets.xcassets/               # App icon + body part icons + brick_icon + noise_tile
@@ -89,7 +89,9 @@ KilnWidgets/
 - Forced light mode via Info.plist `UIUserInterfaceStyle: Light` + `.preferredColorScheme(.light)`
 - **Live Activity timer display**: `Text(timerInterval:countsDown:)` shows "1:--" on Simulator (reduced fidelity mode) — works correctly on real device. `ProgressView(timerInterval:countsDown:)` for auto-updating progress bar.
 - **Local notifications for rest timer**: `NotificationService` schedules a `UNTimeIntervalNotificationTrigger` with `alert_tone.caf` when a set is completed. Fires reliably even when app is killed/backgrounded. `BackgroundAudioService.playAlertSound()` still used for foreground alert sound.
-- **Timer backend**: `timer-backend/` is a FastAPI microservice deployed on Coolify. Accepts timer schedule requests, sleeps for the duration, then sends APNS push-to-update to transition the Live Activity from timer view to next set view. In-memory timers (no database) — graceful degradation if backend is unavailable (local notification still fires). Single API key auth. API contract in `specs/006-hybrid-timer-backend/contracts/timer-api.md`.
+- **Timer backend**: `timer-backend/` is a FastAPI microservice deployed on Coolify at `YOUR_BACKEND_HOST`. Accepts timer schedule requests, sleeps for the duration, then sends APNS push-to-update to transition the Live Activity from timer view to next set view. In-memory timers (no database) — graceful degradation if backend is unavailable (local notification still fires). Single API key auth stored in `UserDefaults("timerBackendApiKey")`, configurable in Profile view. API contract in `specs/006-hybrid-timer-backend/contracts/timer-api.md`.
+- **TimerBackendService**: `@MainActor` HTTP client in `Kiln/Services/TimerBackendService.swift`. Fire-and-forget `scheduleTimer()` and `cancelTimer()` calls to `YOUR_BACKEND_HOST`. Called from `WorkoutSessionManager` on set completion (schedule) and skip/finish/discard (cancel).
+- **Live Activity push token**: `LiveActivityService.startActivity()` uses `pushType: .token`. `observePushToken(activity:onToken:)` iterates `activity.pushTokenUpdates` async sequence. Token stored in `WorkoutSessionManager.currentPushToken` and sent to backend with each schedule request.
 
 ## Spec Artifacts
 

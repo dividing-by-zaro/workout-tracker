@@ -35,8 +35,11 @@ final class WorkoutSessionManager {
     let liveActivityService = LiveActivityService()
     let backgroundAudio = BackgroundAudioService()
     let notificationService = NotificationService()
+    let timerBackend = TimerBackendService()
 
     private var currentActivity: Activity<WorkoutActivityAttributes>?
+    private var currentPushToken: String?
+    private var deviceId: String { UIDevice.current.identifierForVendor?.uuidString ?? "unknown" }
     private var modelContext: ModelContext?
     private var elapsedTimer: Timer?
     private var backgroundTaskId: UIBackgroundTaskIdentifier = .invalid
@@ -174,6 +177,7 @@ final class WorkoutSessionManager {
         updateLiveActivity()
         cacheCurrentState()
         scheduleBackgroundRestExpiry(duration: restDuration)
+        sendTimerScheduleToBackend(duration: restDuration)
     }
 
     // MARK: - Delete Set
@@ -311,6 +315,7 @@ final class WorkoutSessionManager {
         restTimer.stop()
         cancelBackgroundRestExpiry()
         notificationService.cancelRestTimer()
+        sendTimerCancelToBackend()
         lastCompletedSetId = nil
         backgroundAudio.stopSilentAudio()
         stopElapsedTimer()
@@ -330,6 +335,7 @@ final class WorkoutSessionManager {
         restTimer.stop()
         cancelBackgroundRestExpiry()
         notificationService.cancelRestTimer()
+        sendTimerCancelToBackend()
         lastCompletedSetId = nil
         backgroundAudio.stopSilentAudio()
         stopElapsedTimer()
@@ -411,6 +417,9 @@ final class WorkoutSessionManager {
             startedAt: workout.startedAt,
             initialState: state
         )
+        if let activity = currentActivity {
+            observePushToken(for: activity)
+        }
         cacheCurrentState()
     }
 
@@ -437,12 +446,21 @@ final class WorkoutSessionManager {
         guard activeWorkout != nil, currentActivity == nil else { return }
         for activity in Activity<WorkoutActivityAttributes>.activities {
             currentActivity = activity
+            observePushToken(for: activity)
             updateLiveActivity()
             cacheCurrentState()
             return
         }
         // No existing activity found — start a new one
         startLiveActivity()
+    }
+
+    private func observePushToken(for activity: Activity<WorkoutActivityAttributes>) {
+        liveActivityService.observePushToken(activity: activity) { [weak self] token in
+            Task { @MainActor in
+                self?.currentPushToken = token
+            }
+        }
     }
 
     private func cacheCurrentState() {
@@ -478,6 +496,7 @@ final class WorkoutSessionManager {
 
         updateLiveActivity(with: cachedState)
         scheduleBackgroundRestExpiry(duration: restDuration)
+        sendTimerScheduleToBackend(duration: restDuration)
     }
 
     func adjustWeightFromIntent(delta: Double) {
@@ -506,6 +525,7 @@ final class WorkoutSessionManager {
         lastCompletedSetId = nil
         cancelBackgroundRestExpiry()
         notificationService.cancelRestTimer()
+        sendTimerCancelToBackend()
         applyPendingCompletionsInMemory()
         LiveActivityCache.clearRest()
         updateLiveActivity()
@@ -659,6 +679,31 @@ final class WorkoutSessionManager {
 
         try? context.save()
         cacheCurrentState()
+    }
+
+    // MARK: - Timer Backend
+
+    private func sendTimerScheduleToBackend(duration: Int) {
+        guard let pushToken = currentPushToken else { return }
+        // Build the next-set content state (timer finished, show next set)
+        var nextState = liveActivityService.buildContentState(from: self)
+        nextState.isRestTimerActive = false
+        nextState.restTimerEndDate = .distantPast
+        nextState.restTotalSeconds = 0
+
+        guard let encoded = try? JSONEncoder().encode(nextState),
+              let dict = try? JSONSerialization.jsonObject(with: encoded) as? [String: Any] else { return }
+
+        timerBackend.scheduleTimer(
+            pushToken: pushToken,
+            duration: duration,
+            contentState: dict,
+            deviceId: deviceId
+        )
+    }
+
+    private func sendTimerCancelToBackend() {
+        timerBackend.cancelTimer(deviceId: deviceId)
     }
 
     // MARK: - Elapsed Timer

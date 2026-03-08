@@ -43,6 +43,7 @@
 		962E60897D1CD060B5473DF7 /* HistoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E5CB9B101930A5066A46EFD /* HistoryListView.swift */; };
 		99CF5FD2D8F220C60FCDE423 /* StartWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31CC9E43BBEA8BFFEA94D45E /* StartWorkoutView.swift */; };
 		9E344927992C72B4325D477D /* CelebrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7755EC330214DBE4A7CA959C /* CelebrationView.swift */; };
+		9EE3837481FD7BA417D92530 /* TimerBackendService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94D910AD4150811E81AAA835 /* TimerBackendService.swift */; };
 		A594C97AA0E620B2807BFF56 /* SwipeToDelete.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10BF05FE3E74B7B2CBE2E80E /* SwipeToDelete.swift */; };
 		A62A62E4FB795AE3E75B8FA4 /* ExerciseReorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 297F0B14E5E4296B50644C0A /* ExerciseReorderView.swift */; };
 		B5BDBE768E5C274B90DE8F72 /* CSVImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B4B2EB0CEC527449D148C75 /* CSVImportService.swift */; };
@@ -127,6 +128,7 @@
 		8EDE368D947FC4D8BCD2326A /* WorkoutCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutCardView.swift; sourceTree = "<group>"; };
 		8F6F852B668CC9ECD9B05BF8 /* WorkoutDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutDetailView.swift; sourceTree = "<group>"; };
 		901AFD8DEBB78926CF5E883A /* BodyPart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyPart.swift; sourceTree = "<group>"; };
+		94D910AD4150811E81AAA835 /* TimerBackendService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerBackendService.swift; sourceTree = "<group>"; };
 		95FD1C13168449520BC53044 /* RestTimerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimerService.swift; sourceTree = "<group>"; };
 		A09C3F8DD88510F3B54207F7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		ADE7BB901CDDBF8055CA7D32 /* TemplateEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateEditorView.swift; sourceTree = "<group>"; };
@@ -273,6 +275,7 @@
 				B705F94180BA1ABD9857C4A0 /* NotificationService.swift */,
 				D67B8481533CEAE0D365B0CE /* PreFillService.swift */,
 				95FD1C13168449520BC53044 /* RestTimerService.swift */,
+				94D910AD4150811E81AAA835 /* TimerBackendService.swift */,
 				33DD78D988B1619D49175217 /* WorkoutSessionManager.swift */,
 			);
 			path = Services;
@@ -457,6 +460,7 @@
 				B9411BD9C3CE3B9B3E85BF0B /* TemplateEditorView.swift in Sources */,
 				F20E9B1F34D6B835AD5DCC70 /* TemplateExercise.swift in Sources */,
 				6AB088FE56E5D59EAB91674B /* TemplateExerciseRow.swift in Sources */,
+				9EE3837481FD7BA417D92530 /* TimerBackendService.swift in Sources */,
 				894E1B36B1C3A6AFCA3D1D26 /* Workout.swift in Sources */,
 				6C8D1F9B00E23E824E5C6711 /* WorkoutActivityAttributes.swift in Sources */,
 				E5E3F22FC2A73F74C5AAF6CE /* WorkoutCardView.swift in Sources */,
