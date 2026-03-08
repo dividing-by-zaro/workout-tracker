@@ -14,10 +14,18 @@ final class LiveActivityService {
             workoutStartedAt: startedAt
         )
         let content = ActivityContent(state: initialState, staleDate: nil)
-        return try? Activity<WorkoutActivityAttributes>.request(
+        // Try with push token first; fall back to no push if entitlement isn't provisioned
+        if let activity = try? Activity<WorkoutActivityAttributes>.request(
             attributes: attributes,
             content: content,
             pushType: .token
+        ) {
+            return activity
+        }
+        return try? Activity<WorkoutActivityAttributes>.request(
+            attributes: attributes,
+            content: content,
+            pushType: nil
         )
     }
 

@@ -2,11 +2,12 @@ import Foundation
 
 @MainActor
 final class TimerBackendService {
-    private let baseURL = "https://YOUR_BACKEND_HOST"
+    private let baseURL: String
     private let apiKey: String
 
     init() {
-        self.apiKey = UserDefaults.standard.string(forKey: "timerBackendApiKey") ?? ""
+        self.baseURL = Bundle.main.object(forInfoDictionaryKey: "TimerBackendURL") as? String ?? ""
+        self.apiKey = Bundle.main.object(forInfoDictionaryKey: "TimerBackendAPIKey") as? String ?? ""
     }
 
     func scheduleTimer(

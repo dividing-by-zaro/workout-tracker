@@ -48,11 +48,12 @@ MVP implementation complete. Timer backend for APNS Live Activity push on branch
 
 ## Getting Started
 
-1. Run `xcodegen generate` (requires [xcodegen](https://github.com/yonaskolb/XcodeGen))
-2. Open `Kiln.xcodeproj` in Xcode
-3. Select iPhone 13 simulator (iOS 17+)
-4. Build and run (Cmd+R)
-5. Import `strong_workouts.csv` from the Profile tab
+1. Copy `Secrets.xcconfig.example` to `Secrets.xcconfig` and fill in backend URL + API key
+2. Run `xcodegen generate` (requires [xcodegen](https://github.com/yonaskolb/XcodeGen))
+3. Open `Kiln.xcodeproj` in Xcode
+4. Select iPhone 13 simulator (iOS 17+)
+5. Build and run (Cmd+R)
+6. Import `strong_workouts.csv` from the Profile tab
 
 ## Upcoming
 

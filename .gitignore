@@ -6,6 +6,9 @@
 # Workout data
 strong_workouts.csv
 
+# Secrets
+Secrets.xcconfig
+
 # Xcode
 DerivedData/
 *.xcuserdata

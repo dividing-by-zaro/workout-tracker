@@ -32,6 +32,7 @@
 - Open `Kiln.xcodeproj` in Xcode, build with Cmd+R
 - Bundle IDs: `app.izaro.kiln` (app), `app.izaro.kiln.kilnwidgets` (widget extension)
 - Development Team: `85S8MAN3A4`
+- **Secrets**: `Secrets.xcconfig` (gitignored) provides `TIMER_BACKEND_URL` and `TIMER_BACKEND_API_KEY` at build time via Info.plist. Copy `Secrets.xcconfig.example` to `Secrets.xcconfig` and fill in values.
 
 ## Project Structure
 
@@ -89,9 +90,9 @@ KilnWidgets/
 - Forced light mode via Info.plist `UIUserInterfaceStyle: Light` + `.preferredColorScheme(.light)`
 - **Live Activity timer display**: `Text(timerInterval:countsDown:)` shows "1:--" on Simulator (reduced fidelity mode) — works correctly on real device. `ProgressView(timerInterval:countsDown:)` for auto-updating progress bar.
 - **Local notifications for rest timer**: `NotificationService` schedules a `UNTimeIntervalNotificationTrigger` with `alert_tone.caf` when a set is completed. Fires reliably even when app is killed/backgrounded. `BackgroundAudioService.playAlertSound()` still used for foreground alert sound.
-- **Timer backend**: `timer-backend/` is a FastAPI microservice deployed on Coolify at `YOUR_BACKEND_HOST`. Accepts timer schedule requests, sleeps for the duration, then sends APNS push-to-update to transition the Live Activity from timer view to next set view. In-memory timers (no database) — graceful degradation if backend is unavailable (local notification still fires). Single API key auth stored in `UserDefaults("timerBackendApiKey")`, configurable in Profile view. API contract in `specs/006-hybrid-timer-backend/contracts/timer-api.md`.
-- **TimerBackendService**: `@MainActor` HTTP client in `Kiln/Services/TimerBackendService.swift`. Fire-and-forget `scheduleTimer()` and `cancelTimer()` calls to `YOUR_BACKEND_HOST`. Called from `WorkoutSessionManager` on set completion (schedule) and skip/finish/discard (cancel).
-- **Live Activity push token**: `LiveActivityService.startActivity()` uses `pushType: .token`. `observePushToken(activity:onToken:)` iterates `activity.pushTokenUpdates` async sequence. Token stored in `WorkoutSessionManager.currentPushToken` and sent to backend with each schedule request.
+- **Timer backend**: `timer-backend/` is a FastAPI microservice deployed on Coolify. Accepts timer schedule requests, sleeps for the duration, then sends APNS push-to-update to transition the Live Activity from timer view to next set view. In-memory timers (no database) — graceful degradation if backend is unavailable (local notification still fires). Single API key auth. Backend URL and API key provided via `Secrets.xcconfig` → Info.plist → `Bundle.main`. API contract in `specs/006-hybrid-timer-backend/contracts/timer-api.md`.
+- **TimerBackendService**: `@MainActor` HTTP client in `Kiln/Services/TimerBackendService.swift`. Reads `TimerBackendURL` and `TimerBackendAPIKey` from Info.plist. Fire-and-forget `scheduleTimer()` and `cancelTimer()` calls. Called from `WorkoutSessionManager` on set completion (schedule) and skip/finish/discard (cancel).
+- **Live Activity push token**: `LiveActivityService.startActivity()` tries `pushType: .token` first, falls back to `pushType: nil` if APNS entitlement isn't provisioned. `observePushToken(activity:onToken:)` iterates `activity.pushTokenUpdates` async sequence. Token stored in `WorkoutSessionManager.currentPushToken` and sent to backend with each schedule request.
 
 ## Spec Artifacts
 
