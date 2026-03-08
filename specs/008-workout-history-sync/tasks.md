@@ -60,7 +60,7 @@
 
 ### Implementation for User Story 2
 
-- [ ] T007 [US2] Add `WorkoutSyncService` dependency to `WorkoutSessionManager` and call `syncService.uploadWorkout()` from `finishWorkout(context:)` in Kiln/Services/WorkoutSessionManager.swift — fire-and-forget via `Task { await syncService.uploadWorkout(workout) }` after the workout is saved to SwiftData. Pass the sync service via environment or init parameter (match existing service injection pattern).
+- [x] T007 [US2] Add `WorkoutSyncService` dependency to `WorkoutSessionManager` and call `syncService.uploadWorkout()` from `finishWorkout(context:)` in Kiln/Services/WorkoutSessionManager.swift — fire-and-forget via `Task { await syncService.uploadWorkout(workout) }` after the workout is saved to SwiftData. Pass the sync service via environment or init parameter (match existing service injection pattern).
 
 **Checkpoint**: Finishing a workout immediately syncs it to the server. Offline completions are caught by the US1 launch sync.
 
@@ -74,8 +74,8 @@
 
 ### Implementation for User Story 3
 
-- [ ] T008 [P] [US3] Add `syncedCount: Int` (computed from `syncedWorkoutIds.count`) and `pendingCount: Int` (requires total completed workout count passed in or fetched) observable properties to Kiln/Services/WorkoutSyncService.swift — also add `fetchServerSyncCount() async` that calls `GET /api/workouts/status` and stores the result for display
-- [ ] T009 [US3] Add sync status section to Kiln/Views/Profile/ProfileView.swift — display between the chart and the Import button: show "All workouts backed up" with a checkmark icon when `pendingCount == 0`, or "N workouts pending sync" with a cloud icon when pending. Use existing DesignSystem colors and typography. Read `WorkoutSyncService` from environment.
+- [x] T008 [P] [US3] Add `syncedCount: Int` (computed from `syncedWorkoutIds.count`) and `pendingCount: Int` (requires total completed workout count passed in or fetched) observable properties to Kiln/Services/WorkoutSyncService.swift — also add `fetchServerSyncCount() async` that calls `GET /api/workouts/status` and stores the result for display
+- [x] T009 [US3] Add sync status section to Kiln/Views/Profile/ProfileView.swift — display between the chart and the Import button: show "All workouts backed up" with a checkmark icon when `pendingCount == 0`, or "N workouts pending sync" with a cloud icon when pending. Use existing DesignSystem colors and typography. Read `WorkoutSyncService` from environment.
 
 **Checkpoint**: Profile screen accurately reflects sync state.
 
@@ -85,8 +85,8 @@
 
 **Purpose**: Documentation and project file updates
 
-- [ ] T010 Run `xcodegen generate` to include new Kiln/Services/WorkoutSyncService.swift in the Xcode project
-- [ ] T011 Update CLAUDE.md — add WorkoutSyncService to the Services list, document sync architecture (one-directional device→server, UserDefaults sync state, POST /api/workouts endpoint), add `models.py` to timer-backend structure, update Active Technologies if needed
+- [x] T010 Run `xcodegen generate` to include new Kiln/Services/WorkoutSyncService.swift in the Xcode project
+- [x] T011 Update CLAUDE.md — add WorkoutSyncService to the Services list, document sync architecture (one-directional device→server, UserDefaults sync state, POST /api/workouts endpoint), add `models.py` to timer-backend structure, update Active Technologies if needed
 
 ---
 

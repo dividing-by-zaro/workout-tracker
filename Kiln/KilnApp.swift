@@ -16,6 +16,7 @@ struct KilnApp: App {
                         .environment(sessionManager)
                         .onAppear {
                             sessionManager.notificationService.requestPermission()
+                            sessionManager.syncService = syncService
                         }
                         .onOpenURL { url in
                             sessionManager.shouldSwitchToWorkoutTab = true

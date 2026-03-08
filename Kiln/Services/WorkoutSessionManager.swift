@@ -36,6 +36,7 @@ final class WorkoutSessionManager {
     let backgroundAudio = BackgroundAudioService()
     let notificationService = NotificationService()
     let timerBackend = TimerBackendService()
+    var syncService: WorkoutSyncService?
 
     private var currentActivity: Activity<WorkoutActivityAttributes>?
     private var currentPushToken: String?
@@ -292,6 +293,12 @@ final class WorkoutSessionManager {
         try? context.save()
 
         computeCelebrationData(for: workout, context: context)
+
+        // Fire-and-forget sync to backend
+        if let syncService {
+            let workoutToSync = workout
+            Task { await syncService.uploadWorkout(workoutToSync) }
+        }
 
         restTimer.stop()
         notificationService.cancelRestTimer()

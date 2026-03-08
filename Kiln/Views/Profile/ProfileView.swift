@@ -8,6 +8,7 @@ struct ProfileView: View {
 
     @Environment(WorkoutSessionManager.self) private var sessionManager
     @Environment(AuthService.self) private var authService
+    @Environment(WorkoutSyncService.self) private var syncService
 
     @State private var isImporting = false
     @State private var importInProgress = false
@@ -42,6 +43,35 @@ struct ProfileView: View {
                     .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
                     .cardShadow()
                     .padding(.horizontal, DesignSystem.Spacing.md)
+
+                // Sync status
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    if syncService.isSyncing {
+                        ProgressView()
+                            .tint(DesignSystem.Colors.primary)
+                        Text("Syncing workouts...")
+                            .font(DesignSystem.Typography.body)
+                            .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    } else if syncService.pendingCount == 0 {
+                        Image(systemName: "checkmark.icloud.fill")
+                            .foregroundStyle(DesignSystem.Colors.primary)
+                        Text("All workouts backed up")
+                            .font(DesignSystem.Typography.body)
+                            .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    } else {
+                        Image(systemName: "icloud.and.arrow.up")
+                            .foregroundStyle(DesignSystem.Colors.primary)
+                        Text("\(syncService.pendingCount) workout\(syncService.pendingCount == 1 ? "" : "s") pending sync")
+                            .font(DesignSystem.Typography.body)
+                            .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    }
+                    Spacer()
+                }
+                .padding(DesignSystem.Spacing.md)
+                .background(DesignSystem.Colors.surface)
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
+                .cardShadow()
+                .padding(.horizontal, DesignSystem.Spacing.md)
 
                 // Import section
                 VStack(spacing: DesignSystem.Spacing.sm) {
@@ -103,6 +133,9 @@ struct ProfileView: View {
         }
         .grainedBackground()
         .navigationTitle("Profile")
+        .onAppear {
+            syncService.totalCompletedCount = completedWorkouts.count
+        }
         .fileImporter(
             isPresented: $isImporting,
             allowedContentTypes: [UTType.commaSeparatedText],
