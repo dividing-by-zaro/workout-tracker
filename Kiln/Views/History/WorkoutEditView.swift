@@ -5,6 +5,7 @@ struct WorkoutEditView: View {
     @Bindable var workout: Workout
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(WorkoutSessionManager.self) private var sessionManager
     @State private var showExercisePicker = false
     @State private var swappingExercise: WorkoutExercise?
     @State private var preFillCache: [UUID: [PreFillData]] = [:]
@@ -68,6 +69,8 @@ struct WorkoutEditView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         try? modelContext.save()
+                        sessionManager.syncService.markWorkoutEdited(workout)
+                        Task { await sessionManager.syncService.updateWorkout(workout) }
                         dismiss()
                     }
                 }

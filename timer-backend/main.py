@@ -96,15 +96,8 @@ async def get_me(request: Request):
     }
 
 
-@app.post("/api/workouts", status_code=201)
-async def create_workout(req: WorkoutPayload, request: Request):
-    user = request.state.user
-    user_id = user["_id"]
-    db = get_db()
-    now = datetime.now(timezone.utc)
-
-    # Upsert each exercise into the exercises collection
-    for ex in req.exercises:
+async def _upsert_exercises(db, user_id, exercises, now):
+    for ex in exercises:
         await db["exercises"].update_one(
             {"user_id": user_id, "name": ex.exercise_name},
             {
@@ -123,7 +116,38 @@ async def create_workout(req: WorkoutPayload, request: Request):
             upsert=True,
         )
 
-    # Build workout document
+
+def _build_exercises_doc(exercises):
+    return [
+        {
+            "order": ex.order,
+            "exercise_name": ex.exercise_name,
+            "sets": [
+                {
+                    "order": s.order,
+                    "weight": s.weight,
+                    "reps": s.reps,
+                    "distance": s.distance,
+                    "seconds": s.seconds,
+                    "rpe": s.rpe,
+                    "completed_at": s.completed_at,
+                }
+                for s in ex.sets
+            ],
+        }
+        for ex in exercises
+    ]
+
+
+@app.post("/api/workouts", status_code=201)
+async def create_workout(req: WorkoutPayload, request: Request):
+    user = request.state.user
+    user_id = user["_id"]
+    db = get_db()
+    now = datetime.now(timezone.utc)
+
+    await _upsert_exercises(db, user_id, req.exercises, now)
+
     workout_doc = {
         "user_id": user_id,
         "local_id": req.local_id,
@@ -131,25 +155,7 @@ async def create_workout(req: WorkoutPayload, request: Request):
         "started_at": req.started_at,
         "completed_at": req.completed_at,
         "duration_seconds": req.duration_seconds,
-        "exercises": [
-            {
-                "order": ex.order,
-                "exercise_name": ex.exercise_name,
-                "sets": [
-                    {
-                        "order": s.order,
-                        "weight": s.weight,
-                        "reps": s.reps,
-                        "distance": s.distance,
-                        "seconds": s.seconds,
-                        "rpe": s.rpe,
-                        "completed_at": s.completed_at,
-                    }
-                    for s in ex.sets
-                ],
-            }
-            for ex in req.exercises
-        ],
+        "exercises": _build_exercises_doc(req.exercises),
         "synced_at": now,
     }
 
@@ -167,6 +173,56 @@ async def create_workout(req: WorkoutPayload, request: Request):
                 content={"status": "exists", "local_id": req.local_id},
             )
         raise
+
+
+@app.put("/api/workouts/{local_id}")
+async def update_workout(local_id: str, req: WorkoutPayload, request: Request):
+    user = request.state.user
+    user_id = user["_id"]
+    db = get_db()
+    now = datetime.now(timezone.utc)
+
+    await _upsert_exercises(db, user_id, req.exercises, now)
+
+    result = await db["workouts"].update_one(
+        {"user_id": user_id, "local_id": local_id},
+        {
+            "$set": {
+                "name": req.name,
+                "started_at": req.started_at,
+                "completed_at": req.completed_at,
+                "duration_seconds": req.duration_seconds,
+                "exercises": _build_exercises_doc(req.exercises),
+                "synced_at": now,
+            }
+        },
+    )
+
+    if result.matched_count == 0:
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Workout not found"},
+        )
+
+    return {"status": "updated", "local_id": local_id}
+
+
+@app.delete("/api/workouts/{local_id}")
+async def delete_workout(local_id: str, request: Request):
+    user = request.state.user
+    db = get_db()
+
+    result = await db["workouts"].delete_one(
+        {"user_id": user["_id"], "local_id": local_id}
+    )
+
+    if result.deleted_count == 0:
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Workout not found"},
+        )
+
+    return {"status": "deleted", "local_id": local_id}
 
 
 @app.get("/api/workouts/status")

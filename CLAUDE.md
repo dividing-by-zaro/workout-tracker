@@ -3,6 +3,8 @@
 ## Active Technologies
 - Swift 5.9+ (iOS client), Python 3.12 (backend) + SwiftUI, SwiftData (iOS); FastAPI, motor, Pydantic (backend) (008-workout-history-sync)
 - SwiftData (local, source of truth), MongoDB (server backup via motor async driver) (008-workout-history-sync)
+- Swift 5.9+ (iOS), Python 3.12 (backend) + SwiftUI, SwiftData (iOS); FastAPI, motor (backend) (009-workout-sync-updates)
+- SwiftData (local, source of truth), MongoDB (server backup via motor) (009-workout-sync-updates)
 
 - Swift 5.9+ / SwiftUI / iOS 17+ (iPhone 13 target)
 - SwiftData (local persistence, autosave disabled, explicit save on every set)
@@ -16,7 +18,7 @@
 ## Architecture
 
 - **@MainActor @Observable** `WorkoutSessionManager` injected via `.environment()` — owns active workout state, rest timer, live activity lifecycle; `static var shared` singleton for intent access. All service classes (`WorkoutSessionManager`, `RestTimerService`, `LiveActivityService`, `BackgroundAudioService`, `NotificationService`, `TimerBackendService`, `AuthService`) are `@MainActor`-isolated.
-- **WorkoutSyncService**: `@MainActor @Observable` class handling one-directional device→server workout sync. Uploads completed workouts via `POST /api/workouts` (idempotent, deduped by `local_id`). Tracks synced workout IDs in UserDefaults. Bulk sync on launch via `syncAllPending(context:)`, per-workout sync on finish via `WorkoutSessionManager.syncService`. Profile shows sync status (pending count vs backed up). Backend stores workouts in MongoDB `workouts` collection with embedded exercises/sets; exercises deduped in `exercises` collection.
+- **WorkoutSyncService**: `@MainActor @Observable` class handling device→server workout sync. Uploads completed workouts via `POST /api/workouts` (idempotent, deduped by `local_id`). Tracks synced workout IDs in UserDefaults (`syncedWorkoutIds`). Bulk sync on launch via `syncAllPending(context:)`, per-workout sync on finish via `WorkoutSessionManager.syncService`. Profile shows sync status (pending count vs backed up). Backend stores workouts in MongoDB `workouts` collection with embedded exercises/sets; exercises deduped in `exercises` collection. Edit sync: `markWorkoutEdited()` + `updateWorkout()` sends `PUT /api/workouts/{local_id}` on WorkoutEditView dismiss. Delete sync: `markWorkoutDeleted()` + `deleteWorkoutFromServer()` sends `DELETE /api/workouts/{local_id}` on HistoryListView delete. Pending edits/deletes tracked in UserDefaults (`pendingEditWorkoutIds`, `pendingDeleteWorkoutIds`) and retried in `syncAllPending()`. Delete supersedes edit (deduplication).
 - **AuthService**: `@MainActor @Observable` class managing authentication state. Stores API key in iOS Keychain via `KeychainService`, caches user profile in UserDefaults. Auth gate in `KilnApp.swift` conditionally renders `LoginView` or `ContentView`. On launch, checks Keychain for stored key and silently validates with backend; falls back to cached profile if offline. Per-user API keys replace the shared build-time `TIMER_BACKEND_API_KEY`.
 - **KeychainService**: `enum` with static methods (`save`/`load`/`delete`) wrapping Security framework. Service name `app.izaro.kiln`, account-based key lookup.
 - **LoginView**: Branded splash/login screen with fire light theme (grain background, flame icon, API key text field, Connect button). Shown when no valid API key is stored.
@@ -71,7 +73,7 @@ Kiln/
 └── Design/                        # DesignSystem (colors, shadows, grain, corner radius, typography, spacing, icons)
 
 timer-backend/
-├── main.py              # FastAPI app: /api/me, /api/timer/schedule, /api/timer/cancel, /api/workouts, /api/workouts/status, /health
+├── main.py              # FastAPI app: /api/me, /api/timer/schedule, /api/timer/cancel, /api/workouts (POST/PUT/DELETE), /api/workouts/status, /health
 ├── models.py            # Pydantic models for workout sync payloads (WorkoutPayload, WorkoutResponse, SyncStatusResponse)
 ├── db.py                # MongoDB client (motor), user seeding, ensure_indexes(), get_db() helper
 ├── apns.py              # APNSClient: ES256 JWT signing, HTTP/2 push to APNS
@@ -110,11 +112,12 @@ KilnWidgets/
 
 ## Spec Artifacts
 
-Feature specs, plans, and tasks live in `specs/001-workout-mvp/`, `specs/002-visual-redesign/`, `specs/003-live-activity/`, `specs/004-reliable-rest-timer/`, `specs/005-celebration-screen/`, `specs/006-hybrid-timer-backend/`, and `specs/007-user-auth/`.
+Feature specs, plans, and tasks live in `specs/001-workout-mvp/`, `specs/002-visual-redesign/`, `specs/003-live-activity/`, `specs/004-reliable-rest-timer/`, `specs/005-celebration-screen/`, `specs/006-hybrid-timer-backend/`, `specs/007-user-auth/`, `specs/008-workout-history-sync/`, and `specs/009-workout-sync-updates/`.
 Constitution at `.specify/memory/constitution.md`.
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
 
 ## Recent Changes
+- 009-workout-sync-updates: Added Swift 5.9+ (iOS), Python 3.12 (backend) + SwiftUI, SwiftData (iOS); FastAPI, motor (backend)
 - 008-workout-history-sync: Added Swift 5.9+ (iOS client), Python 3.12 (backend) + SwiftUI, SwiftData (iOS); FastAPI, motor, Pydantic (backend)

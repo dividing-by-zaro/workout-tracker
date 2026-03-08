@@ -3,6 +3,7 @@ import SwiftData
 
 struct HistoryListView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(WorkoutSessionManager.self) private var sessionManager
     @Query(
         filter: #Predicate<Workout> { $0.isInProgress == false },
         sort: \Workout.startedAt,
@@ -70,8 +71,11 @@ struct HistoryListView: View {
             }
             Button("Delete", role: .destructive) {
                 if let workout = workoutToDelete {
+                    let localId = workout.id.uuidString
                     modelContext.delete(workout)
                     try? modelContext.save()
+                    sessionManager.syncService.markWorkoutDeleted(localId: localId)
+                    Task { await sessionManager.syncService.deleteWorkoutFromServer(localId: localId) }
                     workoutToDelete = nil
                 }
             }

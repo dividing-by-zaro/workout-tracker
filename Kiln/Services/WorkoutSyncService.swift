@@ -7,7 +7,15 @@ final class WorkoutSyncService {
     var isSyncing: Bool = false
 
     private var syncedWorkoutIds: Set<String> {
-        didSet { persistSyncedIds() }
+        didSet { persistSet(syncedWorkoutIds, key: "syncedWorkoutIds") }
+    }
+
+    private var pendingEditWorkoutIds: Set<String> {
+        didSet { persistSet(pendingEditWorkoutIds, key: "pendingEditWorkoutIds") }
+    }
+
+    private var pendingDeleteWorkoutIds: Set<String> {
+        didSet { persistSet(pendingDeleteWorkoutIds, key: "pendingDeleteWorkoutIds") }
     }
 
     var syncedCount: Int { syncedWorkoutIds.count }
@@ -23,8 +31,9 @@ final class WorkoutSyncService {
     }
 
     init() {
-        let stored = UserDefaults.standard.stringArray(forKey: "syncedWorkoutIds") ?? []
-        self.syncedWorkoutIds = Set(stored)
+        self.syncedWorkoutIds = Self.loadSet(key: "syncedWorkoutIds")
+        self.pendingEditWorkoutIds = Self.loadSet(key: "pendingEditWorkoutIds")
+        self.pendingDeleteWorkoutIds = Self.loadSet(key: "pendingDeleteWorkoutIds")
     }
 
     // MARK: - Bulk Sync
@@ -48,6 +57,25 @@ final class WorkoutSyncService {
                 // Network/server error — stop bulk sync, retry next launch
                 break
             }
+        }
+
+        // Retry pending deletes (deletes before edits — delete supersedes edit)
+        for localId in pendingDeleteWorkoutIds {
+            let success = await deleteWorkoutFromServer(localId: localId)
+            if !success { break }
+        }
+
+        // Retry pending edits (skip if also pending delete)
+        for localId in pendingEditWorkoutIds {
+            if pendingDeleteWorkoutIds.contains(localId) { continue }
+            guard let workoutUUID = UUID(uuidString: localId),
+                  let workout = workouts.first(where: { $0.id == workoutUUID }) else {
+                // Workout no longer exists locally — clear the pending edit
+                pendingEditWorkoutIds.remove(localId)
+                continue
+            }
+            let success = await updateWorkout(workout)
+            if !success { break }
         }
     }
 
@@ -93,6 +121,81 @@ final class WorkoutSyncService {
             return false
         } catch {
             print("WorkoutSync: error for \(localId): \(error.localizedDescription)")
+            return false
+        }
+    }
+
+    // MARK: - Update Workout
+
+    func markWorkoutEdited(_ workout: Workout) {
+        let localId = workout.id.uuidString
+        guard syncedWorkoutIds.contains(localId) else { return }
+        pendingEditWorkoutIds.insert(localId)
+    }
+
+    @discardableResult
+    func updateWorkout(_ workout: Workout) async -> Bool {
+        let localId = workout.id.uuidString
+        guard !apiKey.isEmpty,
+              let url = URL(string: baseURL + "/api/workouts/\(localId)") else { return false }
+
+        let payload = buildPayload(from: workout)
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: payload) else { return false }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = jsonData
+
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse else { return false }
+
+            if http.statusCode == 200 || http.statusCode == 404 {
+                pendingEditWorkoutIds.remove(localId)
+                return true
+            }
+
+            print("WorkoutSync: update HTTP \(http.statusCode) for \(localId)")
+            return false
+        } catch {
+            print("WorkoutSync: update error for \(localId): \(error.localizedDescription)")
+            return false
+        }
+    }
+
+    // MARK: - Delete Workout
+
+    func markWorkoutDeleted(localId: String) {
+        guard syncedWorkoutIds.contains(localId) else { return }
+        pendingDeleteWorkoutIds.insert(localId)
+        syncedWorkoutIds.remove(localId)
+        pendingEditWorkoutIds.remove(localId)
+    }
+
+    @discardableResult
+    func deleteWorkoutFromServer(localId: String) async -> Bool {
+        guard !apiKey.isEmpty,
+              let url = URL(string: baseURL + "/api/workouts/\(localId)") else { return false }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse else { return false }
+
+            if http.statusCode == 200 || http.statusCode == 404 {
+                pendingDeleteWorkoutIds.remove(localId)
+                return true
+            }
+
+            print("WorkoutSync: delete HTTP \(http.statusCode) for \(localId)")
+            return false
+        } catch {
+            print("WorkoutSync: delete error for \(localId): \(error.localizedDescription)")
             return false
         }
     }
@@ -164,8 +267,12 @@ final class WorkoutSyncService {
 
     // MARK: - Persistence
 
-    private func persistSyncedIds() {
-        UserDefaults.standard.set(Array(syncedWorkoutIds), forKey: "syncedWorkoutIds")
+    private static func loadSet(key: String) -> Set<String> {
+        Set(UserDefaults.standard.stringArray(forKey: key) ?? [])
+    }
+
+    private func persistSet(_ set: Set<String>, key: String) {
+        UserDefaults.standard.set(Array(set), forKey: key)
     }
 
     // MARK: - ISO 8601 Formatter
