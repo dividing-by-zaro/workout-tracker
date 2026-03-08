@@ -69,8 +69,8 @@ struct WorkoutEditView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         try? modelContext.save()
-                        sessionManager.syncService.markWorkoutEdited(workout)
-                        Task { await sessionManager.syncService.updateWorkout(workout) }
+                        sessionManager.syncService?.markWorkoutEdited(workout)
+                        Task { await sessionManager.syncService?.updateWorkout(workout) }
                         dismiss()
                     }
                 }

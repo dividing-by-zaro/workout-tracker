@@ -49,12 +49,27 @@ final class WorkoutSyncService {
         guard let workouts = try? context.fetch(descriptor) else { return }
 
         totalCompletedCount = workouts.count
+        let localIds = Set(workouts.map { $0.id.uuidString })
 
+        // Reconcile with server: fetch server IDs, rebuild tracking, fix drift
+        let serverIds = await fetchServerWorkoutIds()
+        if let serverIds {
+            // Rebuild syncedWorkoutIds from server truth
+            syncedWorkoutIds = serverIds.intersection(localIds)
+
+            // Delete server-side orphans (on server but not on device)
+            let orphans = serverIds.subtracting(localIds)
+            for localId in orphans {
+                let success = await deleteWorkoutFromServer(localId: localId)
+                if !success { break }
+            }
+        }
+
+        // Upload workouts missing from server
         for workout in workouts {
             if syncedWorkoutIds.contains(workout.id.uuidString) { continue }
             let success = await uploadWorkout(workout)
             if !success {
-                // Network/server error — stop bulk sync, retry next launch
                 break
             }
         }
@@ -70,7 +85,6 @@ final class WorkoutSyncService {
             if pendingDeleteWorkoutIds.contains(localId) { continue }
             guard let workoutUUID = UUID(uuidString: localId),
                   let workout = workouts.first(where: { $0.id == workoutUUID }) else {
-                // Workout no longer exists locally — clear the pending edit
                 pendingEditWorkoutIds.remove(localId)
                 continue
             }
@@ -245,6 +259,27 @@ final class WorkoutSyncService {
     }
 
     // MARK: - Server Sync Status
+
+    private func fetchServerWorkoutIds() async -> Set<String>? {
+        guard !apiKey.isEmpty,
+              let url = URL(string: baseURL + "/api/workouts/ids") else { return nil }
+
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { return nil }
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let ids = json["local_ids"] as? [String] {
+                return Set(ids)
+            }
+            return nil
+        } catch {
+            print("WorkoutSync: ids fetch error: \(error.localizedDescription)")
+            return nil
+        }
+    }
 
     func fetchServerSyncCount() async {
         guard !apiKey.isEmpty,

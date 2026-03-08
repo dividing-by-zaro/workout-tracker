@@ -233,6 +233,18 @@ async def get_sync_status(request: Request):
     return {"synced_count": count}
 
 
+@app.get("/api/workouts/ids")
+async def get_workout_ids(request: Request):
+    user = request.state.user
+    db = get_db()
+    cursor = db["workouts"].find(
+        {"user_id": user["_id"]},
+        {"local_id": 1, "_id": 0},
+    )
+    ids = [doc["local_id"] async for doc in cursor]
+    return {"local_ids": ids}
+
+
 @app.post("/api/timer/schedule")
 async def schedule_timer(req: ScheduleRequest):
     # Cancel existing timer for this device

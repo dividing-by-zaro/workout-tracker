@@ -74,8 +74,8 @@ struct HistoryListView: View {
                     let localId = workout.id.uuidString
                     modelContext.delete(workout)
                     try? modelContext.save()
-                    sessionManager.syncService.markWorkoutDeleted(localId: localId)
-                    Task { await sessionManager.syncService.deleteWorkoutFromServer(localId: localId) }
+                    sessionManager.syncService?.markWorkoutDeleted(localId: localId)
+                    Task { await sessionManager.syncService?.deleteWorkoutFromServer(localId: localId) }
                     workoutToDelete = nil
                 }
             }
