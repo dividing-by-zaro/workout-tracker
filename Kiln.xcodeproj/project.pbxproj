@@ -147,7 +147,7 @@
 		E748F31F939B0EF1F118FB9D /* KilnApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KilnApp.swift; sourceTree = "<group>"; };
 		ED930F72F14339C0595891BB /* WorkoutLiveActivityIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutLiveActivityIntents.swift; sourceTree = "<group>"; };
 		FE83C57D250533B71E6B8FF5 /* WorkoutLiveActivityIntents+Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkoutLiveActivityIntents+Widget.swift"; sourceTree = "<group>"; };
-		"TEMP_F0D7FBAD-9370-4DF5-9672-22DD45041ED6" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_CA238581-0ECC-4656-BA0F-A57B2F12A529" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -327,10 +327,10 @@
 			);
 			sourceTree = "<group>";
 		};
-		"TEMP_5FAB8676-F7CB-480F-8AC5-1ED3A0BAA988" /* workout-tracker */ = {
+		"TEMP_DCFCB669-9BED-48F9-A258-F059D1A65F7A" /* workout-tracker */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_F0D7FBAD-9370-4DF5-9672-22DD45041ED6" /* Secrets.xcconfig */,
+				"TEMP_CA238581-0ECC-4656-BA0F-A57B2F12A529" /* Secrets.xcconfig */,
 			);
 			path = "workout-tracker";
 			sourceTree = "<group>";
@@ -512,7 +512,7 @@
 /* Begin XCBuildConfiguration section */
 		00819B2D95689EC0CA9D55F3 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_F0D7FBAD-9370-4DF5-9672-22DD45041ED6" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_CA238581-0ECC-4656-BA0F-A57B2F12A529" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -598,7 +598,7 @@
 		};
 		4B79A099121FCF4CBC38B849 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_F0D7FBAD-9370-4DF5-9672-22DD45041ED6" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_CA238581-0ECC-4656-BA0F-A57B2F12A529" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

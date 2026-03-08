@@ -85,9 +85,13 @@ final class RestTimerService {
         guard let endDate, isRunning else { return }
         let remaining = endDate.timeIntervalSinceNow
         if remaining <= 0 {
+            // If the timer expired more than 2 seconds ago, it happened while
+            // the app was suspended — the local notification already played the
+            // alert sound, so suppress the in-app sound.
+            let liveExpiry = remaining > -2
             stop()
-            fireInAppAlert()
-            onTimerExpired?(true)
+            if liveExpiry { fireInAppAlert() }
+            onTimerExpired?(liveExpiry)
         } else {
             remainingSeconds = Int(ceil(remaining))
         }
