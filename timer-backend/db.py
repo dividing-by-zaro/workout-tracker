@@ -13,7 +13,10 @@ def get_db():
     global _client
     if _client is None:
         _client = AsyncIOMotorClient(MONGODB_URL)
-    return _client.get_default_database()
+    try:
+        return _client.get_default_database()
+    except Exception:
+        return _client["kiln"]
 
 
 async def seed_users():
