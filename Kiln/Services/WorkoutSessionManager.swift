@@ -42,8 +42,6 @@ final class WorkoutSessionManager {
     private var deviceId: String { UIDevice.current.identifierForVendor?.uuidString ?? "unknown" }
     private var modelContext: ModelContext?
     private var elapsedTimer: Timer?
-    private var backgroundTaskId: UIBackgroundTaskIdentifier = .invalid
-    private var restExpiryWorkItem: DispatchWorkItem?
 
     var hasInterruptedWorkout: Bool = false
     var celebrationData: CelebrationData?
@@ -81,7 +79,6 @@ final class WorkoutSessionManager {
     func resumeInterruptedWorkout() {
         hasInterruptedWorkout = false
         reconnectLiveActivity()
-        backgroundAudio.startSilentAudio()
     }
 
     func discardInterruptedWorkout(context: ModelContext) {
@@ -126,7 +123,6 @@ final class WorkoutSessionManager {
         elapsedSeconds = 0
         startElapsedTimer()
         startLiveActivity()
-        backgroundAudio.startSilentAudio()
     }
 
     // MARK: - Start Empty Workout
@@ -143,7 +139,6 @@ final class WorkoutSessionManager {
         elapsedSeconds = 0
         startElapsedTimer()
         startLiveActivity()
-        backgroundAudio.startSilentAudio()
     }
 
     // MARK: - Complete Set
@@ -157,7 +152,6 @@ final class WorkoutSessionManager {
             if lastCompletedSetId == workoutSet.id {
                 restTimer.stop()
                 lastCompletedSetId = nil
-                cancelBackgroundRestExpiry()
                 notificationService.cancelRestTimer()
             }
             updateLiveActivity()
@@ -176,7 +170,6 @@ final class WorkoutSessionManager {
         notificationService.scheduleRestTimer(duration: restDuration)
         updateLiveActivity()
         cacheCurrentState()
-        scheduleBackgroundRestExpiry(duration: restDuration)
         sendTimerScheduleToBackend(duration: restDuration)
     }
 
@@ -210,7 +203,6 @@ final class WorkoutSessionManager {
            exercise.sets.contains(where: { $0.id == completedId }) {
             restTimer.stop()
             lastCompletedSetId = nil
-            cancelBackgroundRestExpiry()
             notificationService.cancelRestTimer()
         }
 
@@ -251,7 +243,6 @@ final class WorkoutSessionManager {
     func reset() {
         restTimer.stop()
         notificationService.cancelRestTimer()
-        backgroundAudio.stopSilentAudio()
         stopElapsedTimer()
         endLiveActivity()
         activeWorkout = nil
@@ -313,11 +304,9 @@ final class WorkoutSessionManager {
         computeCelebrationData(for: workout, context: context)
 
         restTimer.stop()
-        cancelBackgroundRestExpiry()
         notificationService.cancelRestTimer()
         sendTimerCancelToBackend()
         lastCompletedSetId = nil
-        backgroundAudio.stopSilentAudio()
         stopElapsedTimer()
         endLiveActivity()
         activeWorkout = nil
@@ -333,11 +322,9 @@ final class WorkoutSessionManager {
         try? context.save()
 
         restTimer.stop()
-        cancelBackgroundRestExpiry()
         notificationService.cancelRestTimer()
         sendTimerCancelToBackend()
         lastCompletedSetId = nil
-        backgroundAudio.stopSilentAudio()
         stopElapsedTimer()
         endLiveActivity()
         activeWorkout = nil
@@ -495,7 +482,6 @@ final class WorkoutSessionManager {
         lastCompletedSetId = setId
 
         updateLiveActivity(with: cachedState)
-        scheduleBackgroundRestExpiry(duration: restDuration)
         sendTimerScheduleToBackend(duration: restDuration)
     }
 
@@ -523,7 +509,6 @@ final class WorkoutSessionManager {
         if checkAndHandleExpiredTimer() { return }
         restTimer.stop()
         lastCompletedSetId = nil
-        cancelBackgroundRestExpiry()
         notificationService.cancelRestTimer()
         sendTimerCancelToBackend()
         applyPendingCompletionsInMemory()
@@ -547,7 +532,6 @@ final class WorkoutSessionManager {
 
     private func handleTimerExpired(playSound: Bool = true) {
         lastCompletedSetId = nil
-        cancelBackgroundRestExpiry()
         notificationService.cancelRestTimer()
 
         // Apply any pending lock screen completions to in-memory SwiftData
@@ -589,42 +573,6 @@ final class WorkoutSessionManager {
         }
     }
 
-    // MARK: - Background Rest Timer
-
-    private func scheduleBackgroundRestExpiry(duration: Int) {
-        cancelBackgroundRestExpiry()
-
-        backgroundTaskId = UIApplication.shared.beginBackgroundTask { [weak self] in
-            self?.endBackgroundTask()
-        }
-
-        let workItem = DispatchWorkItem { [weak self] in
-            guard let self else { return }
-            Task { @MainActor in
-                if self.restTimer.isRunning {
-                    self.restTimer.stop()
-                    self.handleTimerExpired(playSound: true)
-                }
-                self.endBackgroundTask()
-            }
-        }
-        restExpiryWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + Double(duration) + 0.5, execute: workItem)
-    }
-
-    private func cancelBackgroundRestExpiry() {
-        restExpiryWorkItem?.cancel()
-        restExpiryWorkItem = nil
-        endBackgroundTask()
-    }
-
-    private func endBackgroundTask() {
-        if backgroundTaskId != .invalid {
-            UIApplication.shared.endBackgroundTask(backgroundTaskId)
-            backgroundTaskId = .invalid
-        }
-    }
-
     // MARK: - Foreground Resume
 
     func handleForegroundResume() {
@@ -636,11 +584,6 @@ final class WorkoutSessionManager {
         }
 
         guard isWorkoutInProgress else { return }
-
-        // Ensure audio is alive — restart if iOS reclaimed it while backgrounded
-        if !backgroundAudio.isPlaying {
-            backgroundAudio.startSilentAudio()
-        }
 
         // Sync cached lock screen changes to SwiftData
         syncCacheToSwiftData()

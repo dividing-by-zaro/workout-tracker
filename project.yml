@@ -50,8 +50,12 @@ targets:
     info:
       path: Kiln/Info.plist
       properties:
-        UIBackgroundModes: [audio]
+        UIBackgroundModes: [remote-notification]
         UIUserInterfaceStyle: Light
+        NSAppTransportSecurity:
+          NSExceptionDomains:
+            kiln.zaro.host:
+              NSExceptionAllowsInsecureHTTPLoads: true
         NSSupportsLiveActivities: true
         TimerBackendURL: $(TIMER_BACKEND_URL)
         TimerBackendAPIKey: $(TIMER_BACKEND_API_KEY)
