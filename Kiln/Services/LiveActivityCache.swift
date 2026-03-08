@@ -9,6 +9,7 @@ enum LiveActivityCache {
     private static let dirtyKey = "la.dirty"
     private static let dirtySetIdKey = "la.dirtySetId"
     private static let completedSetIdsKey = "la.completedSetIds"
+    private static let pushTokenKey = "la.pushToken"
 
     typealias ContentState = WorkoutActivityAttributes.ContentState
 
@@ -65,6 +66,19 @@ enum LiveActivityCache {
 
     static var restDuration: Int {
         suite.integer(forKey: restDurationKey)
+    }
+
+    // MARK: - Push token persistence
+
+    static var pushToken: String? {
+        get { suite.string(forKey: pushTokenKey) }
+        set {
+            if let newValue {
+                suite.set(newValue, forKey: pushTokenKey)
+            } else {
+                suite.removeObject(forKey: pushTokenKey)
+            }
+        }
     }
 
     // MARK: - Adjust weight/duration/distance
@@ -153,5 +167,6 @@ enum LiveActivityCache {
         suite.set(false, forKey: dirtyKey)
         suite.removeObject(forKey: dirtySetIdKey)
         suite.removeObject(forKey: completedSetIdsKey)
+        suite.removeObject(forKey: pushTokenKey)
     }
 }

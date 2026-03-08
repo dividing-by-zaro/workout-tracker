@@ -423,6 +423,11 @@ final class WorkoutSessionManager {
         guard activeWorkout != nil, currentActivity == nil else { return }
         for activity in Activity<WorkoutActivityAttributes>.activities {
             currentActivity = activity
+            // Restore persisted push token immediately; also start observing
+            // in case iOS issues a new token for this activity.
+            if currentPushToken == nil, let cached = LiveActivityCache.pushToken {
+                currentPushToken = cached
+            }
             observePushToken(for: activity)
             updateLiveActivity()
             cacheCurrentState()
@@ -436,6 +441,7 @@ final class WorkoutSessionManager {
         liveActivityService.observePushToken(activity: activity) { [weak self] token in
             Task { @MainActor in
                 self?.currentPushToken = token
+                LiveActivityCache.pushToken = token
             }
         }
     }
