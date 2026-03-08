@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import UniformTypeIdentifiers
 
 struct ProfileView: View {
     @Environment(\.modelContext) private var modelContext
@@ -10,11 +9,6 @@ struct ProfileView: View {
     @Environment(AuthService.self) private var authService
     @Environment(WorkoutSyncService.self) private var syncService
 
-    @State private var isImporting = false
-    @State private var importInProgress = false
-    @State private var importResult: CSVImportResult?
-    @State private var showImportResult = false
-    @State private var showDeleteConfirmation = false
     @State private var showLogoutConfirmation = false
 
     var body: some View {
@@ -44,117 +38,61 @@ struct ProfileView: View {
                     .cardShadow()
                     .padding(.horizontal, DesignSystem.Spacing.md)
 
-                // Sync status
-                HStack(spacing: DesignSystem.Spacing.sm) {
-                    if syncService.isSyncing {
-                        ProgressView()
-                            .tint(DesignSystem.Colors.primary)
-                        Text("Syncing workouts...")
-                            .font(DesignSystem.Typography.body)
-                            .foregroundStyle(DesignSystem.Colors.textSecondary)
-                    } else if syncService.pendingCount == 0 {
-                        Image(systemName: "checkmark.icloud.fill")
-                            .foregroundStyle(DesignSystem.Colors.primary)
-                        Text("All workouts backed up")
-                            .font(DesignSystem.Typography.body)
-                            .foregroundStyle(DesignSystem.Colors.textSecondary)
-                    } else {
-                        Image(systemName: "icloud.and.arrow.up")
-                            .foregroundStyle(DesignSystem.Colors.primary)
-                        Text("\(syncService.pendingCount) workout\(syncService.pendingCount == 1 ? "" : "s") pending sync")
-                            .font(DesignSystem.Typography.body)
-                            .foregroundStyle(DesignSystem.Colors.textSecondary)
+                // Sync status & Log out grouped card
+                VStack(spacing: 0) {
+                    // Sync status row
+                    HStack(spacing: DesignSystem.Spacing.sm) {
+                        if syncService.isSyncing {
+                            ProgressView()
+                                .tint(DesignSystem.Colors.primary)
+                            Text("Syncing workouts...")
+                                .font(DesignSystem.Typography.body)
+                                .foregroundStyle(DesignSystem.Colors.textSecondary)
+                        } else if syncService.pendingCount == 0 {
+                            Image(systemName: "checkmark.icloud.fill")
+                                .foregroundStyle(DesignSystem.Colors.primary)
+                            Text("All workouts backed up")
+                                .font(DesignSystem.Typography.body)
+                                .foregroundStyle(DesignSystem.Colors.textSecondary)
+                        } else {
+                            Image(systemName: "icloud.and.arrow.up")
+                                .foregroundStyle(DesignSystem.Colors.primary)
+                            Text("\(syncService.pendingCount) workout\(syncService.pendingCount == 1 ? "" : "s") pending sync")
+                                .font(DesignSystem.Typography.body)
+                                .foregroundStyle(DesignSystem.Colors.textSecondary)
+                        }
+                        Spacer()
                     }
-                    Spacer()
+                    .padding(DesignSystem.Spacing.md)
+
+                    Divider()
+                        .foregroundStyle(DesignSystem.Colors.textSecondary.opacity(0.15))
+
+                    // Log out row
+                    Button {
+                        showLogoutConfirmation = true
+                    } label: {
+                        HStack(spacing: DesignSystem.Spacing.sm) {
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                                .foregroundStyle(DesignSystem.Colors.textSecondary)
+                            Text("Log Out")
+                                .font(DesignSystem.Typography.body)
+                                .foregroundStyle(DesignSystem.Colors.textSecondary)
+                            Spacer()
+                        }
+                        .padding(DesignSystem.Spacing.md)
+                    }
                 }
-                .padding(DesignSystem.Spacing.md)
                 .background(DesignSystem.Colors.surface)
                 .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
                 .cardShadow()
                 .padding(.horizontal, DesignSystem.Spacing.md)
-
-                // Import section
-                VStack(spacing: DesignSystem.Spacing.sm) {
-                    Button {
-                        isImporting = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "square.and.arrow.down")
-                            Text(importInProgress ? "Importing..." : "Import from Strong CSV")
-                        }
-                        .font(DesignSystem.Typography.body)
-                        .frame(maxWidth: .infinity)
-                        .padding(DesignSystem.Spacing.md)
-                        .background(DesignSystem.Colors.surface)
-                        .foregroundStyle(DesignSystem.Colors.primary)
-                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
-                        .cardShadow()
-                    }
-                    .disabled(importInProgress)
-                }
-                .padding(.horizontal, DesignSystem.Spacing.md)
-
-                // Delete all data
-                Button {
-                    showDeleteConfirmation = true
-                } label: {
-                    HStack {
-                        Image(systemName: "trash")
-                        Text("Delete All Data")
-                    }
-                    .font(DesignSystem.Typography.body)
-                    .frame(maxWidth: .infinity)
-                    .padding(DesignSystem.Spacing.md)
-                    .background(DesignSystem.Colors.surface)
-                    .foregroundStyle(DesignSystem.Colors.destructive)
-                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
-                    .cardShadow()
-                }
-                .padding(.horizontal, DesignSystem.Spacing.md)
-
-                // Log out
-                Button {
-                    showLogoutConfirmation = true
-                } label: {
-                    HStack {
-                        Image(systemName: "rectangle.portrait.and.arrow.right")
-                        Text("Log Out")
-                    }
-                    .font(DesignSystem.Typography.body)
-                    .frame(maxWidth: .infinity)
-                    .padding(DesignSystem.Spacing.md)
-                    .background(DesignSystem.Colors.surface)
-                    .foregroundStyle(DesignSystem.Colors.textSecondary)
-                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
-                    .cardShadow()
-                }
-                .padding(.horizontal, DesignSystem.Spacing.md)
             }
         }
         .grainedBackground()
-        .navigationTitle("Profile")
+        .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             syncService.totalCompletedCount = completedWorkouts.count
-        }
-        .fileImporter(
-            isPresented: $isImporting,
-            allowedContentTypes: [UTType.commaSeparatedText],
-            allowsMultipleSelection: false
-        ) { result in
-            handleImport(result)
-        }
-        .alert("Import Complete", isPresented: $showImportResult) {
-            Button("OK") {}
-        } message: {
-            if let r = importResult {
-                Text("Created \(r.workoutsCreated) workouts from \(r.rowsImported) rows. \(r.rowsSkipped) rows skipped. \(r.exercisesCreated) exercises created. \(r.templatesCreated) templates created.")
-            }
-        }
-        .alert("Delete All Data", isPresented: $showDeleteConfirmation) {
-            Button("Delete", role: .destructive) { deleteAllData() }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("This will permanently delete all workouts, exercises, and templates. This cannot be undone.")
         }
         .alert("Log out of Kiln?", isPresented: $showLogoutConfirmation) {
             Button("Log Out", role: .destructive) {
@@ -169,40 +107,6 @@ struct ProfileView: View {
                 Text("Your active workout will be lost.")
             } else {
                 Text("You'll need to enter your API key to log back in.")
-            }
-        }
-    }
-
-    private func deleteAllData() {
-        sessionManager.reset()
-
-        // Delete in dependency order (children before parents)
-        try? modelContext.delete(model: WorkoutSet.self)
-        try? modelContext.delete(model: WorkoutExercise.self)
-        try? modelContext.delete(model: Workout.self)
-        try? modelContext.delete(model: TemplateExercise.self)
-        try? modelContext.delete(model: WorkoutTemplate.self)
-        try? modelContext.delete(model: Exercise.self)
-        try? modelContext.save()
-    }
-
-    private func handleImport(_ result: Result<[URL], Error>) {
-        guard case .success(let urls) = result, let url = urls.first else { return }
-        guard url.startAccessingSecurityScopedResource() else { return }
-        defer { url.stopAccessingSecurityScopedResource() }
-
-        guard let data = try? String(contentsOf: url, encoding: .utf8) else { return }
-
-        importInProgress = true
-
-        Task {
-            let importService = CSVImportService(modelContainer: modelContext.container)
-            let importResult = await importService.importCSV(data)
-
-            await MainActor.run {
-                self.importResult = importResult
-                self.importInProgress = false
-                self.showImportResult = true
             }
         }
     }

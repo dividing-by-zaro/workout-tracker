@@ -26,7 +26,6 @@ MVP complete. User auth with per-user API keys on branch `007-user-auth`.
 - [x] Exercise picker with equipment type and body part selection
 - [x] Edit and delete completed workouts from history (long-press context menu)
 - [x] Tap completed set to uncomplete (toggle), swipe-left to delete sets
-- [x] Delete All Data utility in Profile (with confirmation)
 - [x] Set completion/uncomplete bounce animations, rest timer appear/dismiss transitions
 - [x] Custom app icon
 - [x] Fire light theme (warm cream, fire red accents, grain texture, warm shadows)
@@ -59,7 +58,7 @@ MVP complete. User auth with per-user API keys on branch `007-user-auth`.
 3. Open `Kiln.xcodeproj` in Xcode
 4. Select iPhone 13 simulator (iOS 17+)
 5. Build and run (Cmd+R)
-6. Import `strong_workouts.csv` from the Profile tab
+6. On first launch, enter your API key on the login screen
 
 ## Future
 
