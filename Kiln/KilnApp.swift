@@ -5,6 +5,7 @@ import SwiftData
 struct KilnApp: App {
     @State private var sessionManager = WorkoutSessionManager()
     @State private var authService = AuthService()
+    @State private var syncService = WorkoutSyncService()
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
@@ -28,6 +29,7 @@ struct KilnApp: App {
                 }
             }
             .environment(authService)
+            .environment(syncService)
             .preferredColorScheme(.light)
             .onAppear {
                 authService.checkStoredAuth()

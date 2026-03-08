@@ -4,6 +4,7 @@ import UIKit
 
 struct ContentView: View {
     @Environment(WorkoutSessionManager.self) private var sessionManager
+    @Environment(WorkoutSyncService.self) private var syncService
     @Environment(\.modelContext) private var modelContext
     @State private var selectedTab = 0
 
@@ -62,6 +63,9 @@ struct ContentView: View {
         }
         .onAppear {
             sessionManager.checkForInterruptedWorkout(context: modelContext)
+        }
+        .task {
+            await syncService.syncAllPending(context: modelContext)
         }
         .onChange(of: sessionManager.shouldSwitchToWorkoutTab) {
             if sessionManager.shouldSwitchToWorkoutTab {

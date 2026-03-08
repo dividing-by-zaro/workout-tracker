@@ -19,12 +19,23 @@ def get_db():
         return _client["kiln"]
 
 
+async def ensure_indexes():
+    db = get_db()
+
+    await db["users"].create_index("api_key", unique=True)
+    await db["exercises"].create_index(
+        [("user_id", 1), ("name", 1)], unique=True
+    )
+    await db["workouts"].create_index(
+        [("user_id", 1), ("local_id", 1)], unique=True
+    )
+
+
 async def seed_users():
     db = get_db()
     users = db["users"]
 
-    # Create unique index on api_key
-    await users.create_index("api_key", unique=True)
+    await ensure_indexes()
 
     count = await users.count_documents({})
     if count > 0:

@@ -12,6 +12,7 @@ from pydantic import BaseModel
 
 from apns import APNSClient
 from db import get_db, seed_users, close_client
+from models import WorkoutPayload
 
 
 # --- Models ---
@@ -93,6 +94,87 @@ async def get_me(request: Request):
         "name": user["name"],
         "created_at": user["created_at"].isoformat() if hasattr(user["created_at"], "isoformat") else str(user["created_at"]),
     }
+
+
+@app.post("/api/workouts", status_code=201)
+async def create_workout(req: WorkoutPayload, request: Request):
+    user = request.state.user
+    user_id = user["_id"]
+    db = get_db()
+    now = datetime.now(timezone.utc)
+
+    # Upsert each exercise into the exercises collection
+    for ex in req.exercises:
+        await db["exercises"].update_one(
+            {"user_id": user_id, "name": ex.exercise_name},
+            {
+                "$set": {
+                    "exercise_type": ex.exercise_type,
+                    "body_part": ex.body_part,
+                    "equipment_type": ex.equipment_type,
+                    "updated_at": now,
+                },
+                "$setOnInsert": {
+                    "user_id": user_id,
+                    "name": ex.exercise_name,
+                    "created_at": now,
+                },
+            },
+            upsert=True,
+        )
+
+    # Build workout document
+    workout_doc = {
+        "user_id": user_id,
+        "local_id": req.local_id,
+        "name": req.name,
+        "started_at": req.started_at,
+        "completed_at": req.completed_at,
+        "duration_seconds": req.duration_seconds,
+        "exercises": [
+            {
+                "order": ex.order,
+                "exercise_name": ex.exercise_name,
+                "sets": [
+                    {
+                        "order": s.order,
+                        "weight": s.weight,
+                        "reps": s.reps,
+                        "distance": s.distance,
+                        "seconds": s.seconds,
+                        "rpe": s.rpe,
+                        "completed_at": s.completed_at,
+                    }
+                    for s in ex.sets
+                ],
+            }
+            for ex in req.exercises
+        ],
+        "synced_at": now,
+    }
+
+    # Try insert; if duplicate (user_id + local_id), return 200 exists
+    try:
+        await db["workouts"].insert_one(workout_doc)
+        return JSONResponse(
+            status_code=201,
+            content={"status": "created", "local_id": req.local_id},
+        )
+    except Exception as e:
+        if "duplicate key" in str(e).lower() or "E11000" in str(e):
+            return JSONResponse(
+                status_code=200,
+                content={"status": "exists", "local_id": req.local_id},
+            )
+        raise
+
+
+@app.get("/api/workouts/status")
+async def get_sync_status(request: Request):
+    user = request.state.user
+    db = get_db()
+    count = await db["workouts"].count_documents({"user_id": user["_id"]})
+    return {"synced_count": count}
 
 
 @app.post("/api/timer/schedule")
