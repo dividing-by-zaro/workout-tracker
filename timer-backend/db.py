@@ -6,6 +6,10 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 MONGODB_URL = os.environ.get("MONGODB_URL", "mongodb://localhost:27017/kiln")
 
+# Names for seed users — change these to your own before first deploy.
+# Each name gets a unique API key printed to stdout on first launch.
+SEED_USER_NAMES = os.environ.get("SEED_USER_NAMES", "User1,User2").split(",")
+
 _client: AsyncIOMotorClient | None = None
 
 
@@ -42,7 +46,7 @@ async def seed_users():
         return
 
     seed_data = []
-    for name in ("Isabel", "Lakzhmy"):
+    for name in SEED_USER_NAMES:
         api_key = f"kiln_{secrets.token_urlsafe(32)}"
         seed_data.append({
             "name": name,

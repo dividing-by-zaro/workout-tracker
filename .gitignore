@@ -1,13 +1,16 @@
-# Images (except asset catalog icons)
+# Images (except asset catalog icons and screenshots)
 *.png
 *.PNG
 !Kiln/Assets.xcassets/**/*.png
+!screenshots/**/*.png
 
 # Workout data
 strong_workouts.csv
 
 # Secrets
 Secrets.xcconfig
+*.p8
+.env
 
 # Xcode
 DerivedData/
@@ -38,3 +41,6 @@ Packages/
 # IDE
 .vscode/
 .idea/
+
+# Node
+node_modules/

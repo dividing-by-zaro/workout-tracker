@@ -26,6 +26,7 @@ struct HistoryListView: View {
                         .font(DesignSystem.Typography.body)
                         .foregroundStyle(DesignSystem.Colors.textSecondary)
                 }
+                .frame(maxWidth: .infinity)
                 .padding(.top, DesignSystem.Spacing.xxl)
             } else {
                 LazyVStack(spacing: DesignSystem.Spacing.md) {

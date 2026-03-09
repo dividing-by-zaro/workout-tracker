@@ -75,11 +75,18 @@ Kiln/
 timer-backend/
 ├── main.py              # FastAPI app: /api/me, /api/timer/schedule, /api/timer/cancel, /api/workouts (POST/PUT/DELETE), /api/workouts/status, /api/workouts/ids, /health
 ├── models.py            # Pydantic models for workout sync payloads (WorkoutPayload, WorkoutResponse, SyncStatusResponse)
-├── db.py                # MongoDB client (motor), user seeding, ensure_indexes(), get_db() helper
+├── db.py                # MongoDB client (motor), user seeding (names via SEED_USER_NAMES env var), ensure_indexes(), get_db() helper
+├── seed_demo.py         # Script to seed a demo user + sample workouts (split approach: mongosh for user, API for workouts)
 ├── apns.py              # APNSClient: ES256 JWT signing, HTTP/2 push to APNS
 ├── Dockerfile           # Multi-stage Python 3.12 + uv build for Coolify
 ├── pyproject.toml       # Dependencies managed by uv
-└── .env.example         # APNS_KEY_ID, APNS_TEAM_ID, APNS_KEY_PATH or APNS_KEY_BASE64, MONGODB_URL, APNS_ENVIRONMENT
+└── .env.example         # APNS_KEY_ID, APNS_TEAM_ID, APNS_KEY_PATH or APNS_KEY_BASE64, MONGODB_URL, APNS_ENVIRONMENT, SEED_USER_NAMES
+
+scripts/
+├── frame_screenshots.py           # Adds iPhone device frames to PNG screenshots (Pillow)
+└── generate_banner.py             # Generates README banner with app icon, grain texture, title (Pillow + numpy)
+
+screenshots/                       # Framed screenshots + banner for README (committed, gitignore exception)
 
 KilnWidgets/
 ├── KilnWidgetBundle.swift         # @main WidgetBundle + ActivityConfiguration
