@@ -129,4 +129,4 @@ The backend is a FastAPI service in `timer-backend/`. It handles APNS push for L
 
 ## License
 
-MIT — do whatever you want with it.
+MIT
