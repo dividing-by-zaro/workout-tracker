@@ -6,6 +6,7 @@
 
 # Workout data
 strong_workouts.csv
+strong_workouts_old.csv
 
 # Secrets
 Secrets.xcconfig
