@@ -156,13 +156,24 @@ final class WorkoutSessionManager {
         try? context.save()
 
         lastCompletedSetId = workoutSet.id
-        let restDuration = workoutSet.workoutExercise?.exercise?.defaultRestSeconds ?? 120
-        notificationService.cancelRestTimer()
-        restTimer.start(duration: restDuration)
-        notificationService.scheduleRestTimer(duration: restDuration)
-        updateLiveActivity()
-        cacheCurrentState()
-        sendTimerScheduleToBackend(duration: restDuration)
+
+        // Skip rest timer on the last set of an exercise — no rest needed before the next exercise
+        let isLastSetInExercise = workoutSet.workoutExercise.map { exercise in
+            exercise.sortedSets.allSatisfy { $0.isCompleted }
+        } ?? false
+
+        if isLastSetInExercise {
+            updateLiveActivity()
+            cacheCurrentState()
+        } else {
+            let restDuration = workoutSet.workoutExercise?.exercise?.defaultRestSeconds ?? 120
+            notificationService.cancelRestTimer()
+            restTimer.start(duration: restDuration)
+            notificationService.scheduleRestTimer(duration: restDuration)
+            updateLiveActivity()
+            cacheCurrentState()
+            sendTimerScheduleToBackend(duration: restDuration)
+        }
     }
 
     // MARK: - Delete Set
@@ -468,19 +479,9 @@ final class WorkoutSessionManager {
               let setId = LiveActivityCache.setId,
               !cachedState.isWorkoutComplete else { return }
 
-        let restDuration = LiveActivityCache.restDuration > 0 ? LiveActivityCache.restDuration : 120
-        notificationService.cancelRestTimer()
-        restTimer.start(duration: restDuration)
-        notificationService.scheduleRestTimer(duration: restDuration)
+        // Skip rest timer on the last set of an exercise
+        let isLastSetInExercise = cachedState.setNumber == cachedState.totalSetsInExercise
 
-        cachedState.isRestTimerActive = true
-        cachedState.restTimerEndDate = restTimer.endDate ?? Date.now.addingTimeInterval(Double(restDuration))
-        cachedState.restTotalSeconds = restDuration
-        // Advance setNumber to point to the NEXT set so TimerView
-        // (which displays "Set (setNumber-1) of N complete") shows correctly.
-        cachedState.setNumber += 1
-
-        LiveActivityCache.state = cachedState
         LiveActivityCache.recordCompletion(setId: setId)
         lastCompletedSetId = setId
 
@@ -488,8 +489,26 @@ final class WorkoutSessionManager {
         // to the next set when buildContentState() is called by the backend scheduler
         applyPendingCompletionsInMemory()
 
-        updateLiveActivity(with: cachedState)
-        sendTimerScheduleToBackend(duration: restDuration)
+        if isLastSetInExercise {
+            updateLiveActivity()
+            cacheCurrentState()
+        } else {
+            let restDuration = LiveActivityCache.restDuration > 0 ? LiveActivityCache.restDuration : 120
+            notificationService.cancelRestTimer()
+            restTimer.start(duration: restDuration)
+            notificationService.scheduleRestTimer(duration: restDuration)
+
+            cachedState.isRestTimerActive = true
+            cachedState.restTimerEndDate = restTimer.endDate ?? Date.now.addingTimeInterval(Double(restDuration))
+            cachedState.restTotalSeconds = restDuration
+            // Advance setNumber to point to the NEXT set so TimerView
+            // (which displays "Set (setNumber-1) of N complete") shows correctly.
+            cachedState.setNumber += 1
+
+            LiveActivityCache.state = cachedState
+            updateLiveActivity(with: cachedState)
+            sendTimerScheduleToBackend(duration: restDuration)
+        }
     }
 
     func adjustWeightFromIntent(delta: Double) {
