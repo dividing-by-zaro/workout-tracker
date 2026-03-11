@@ -36,8 +36,8 @@ struct NumericKeyboardView: View {
                 // Right action column
                 VStack(spacing: spacing) {
                     dismissButton
-                    decrementButton
                     incrementButton
+                    decrementButton
                 }
                 .frame(width: 80)
             }
