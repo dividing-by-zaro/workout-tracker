@@ -484,6 +484,10 @@ final class WorkoutSessionManager {
         LiveActivityCache.recordCompletion(setId: setId)
         lastCompletedSetId = setId
 
+        // Mark the set completed in-memory so findCurrentSet() advances
+        // to the next set when buildContentState() is called by the backend scheduler
+        applyPendingCompletionsInMemory()
+
         updateLiveActivity(with: cachedState)
         sendTimerScheduleToBackend(duration: restDuration)
     }
