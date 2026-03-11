@@ -46,6 +46,7 @@ See your full workout history and weekly trends at a glance.
 </p>
 
 - Browse, edit, and delete past workouts
+- Dedicated Exercises tab — browse all exercises alphabetically, tap any to see your full history with set details
 - Workouts-per-week chart on your profile
 - Celebration screen when you finish a workout
 

@@ -41,12 +41,20 @@ struct ContentView: View {
             .tag(1)
 
             NavigationStack {
+                ExerciseListView()
+            }
+            .tabItem {
+                Label("Exercises", systemImage: DesignSystem.Icon.exercises)
+            }
+            .tag(2)
+
+            NavigationStack {
                 ProfileView()
             }
             .tabItem {
                 Label("Profile", systemImage: DesignSystem.Icon.profile)
             }
-            .tag(2)
+            .tag(3)
         }
         .tint(DesignSystem.Colors.primary)
         .fullScreenCover(isPresented: Binding(
