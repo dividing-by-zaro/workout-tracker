@@ -5,6 +5,8 @@
 - SwiftData (local, source of truth), MongoDB (server backup via motor async driver) (008-workout-history-sync)
 - Swift 5.9+ (iOS), Python 3.12 (backend) + SwiftUI, SwiftData (iOS); FastAPI, motor (backend) (009-workout-sync-updates)
 - SwiftData (local, source of truth), MongoDB (server backup via motor) (009-workout-sync-updates)
+- Swift 5.9+ + SwiftUI, SwiftData (010-exercise-history)
+- SwiftData (local, existing models — no new entities) (010-exercise-history)
 
 - Swift 5.9+ / SwiftUI / iOS 17+ (iPhone 13 target)
 - SwiftData (local persistence, autosave disabled, explicit save on every set)
@@ -23,7 +25,8 @@
 - **KeychainService**: `enum` with static methods (`save`/`load`/`delete`) wrapping Security framework. Service name `app.izaro.kiln`, account-based key lookup.
 - **LoginView**: Branded splash/login screen with fire light theme (grain background, flame icon, API key text field, Connect button). Shown when no valid API key is stored.
 - **SwiftData @Model** objects bound directly to views via `@Bindable` and `@Query` — no classical ViewModel layer. Periodic save (1s tick) in elapsed timer prevents data loss from in-flight `@Bindable` field edits.
-- **TabView** with `selection` binding and `.tag()` — supports deep link tab switching from Live Activity via `onOpenURL`
+- **TabView** with `selection` binding and `.tag()` — 4 tabs: Workouts (0), History (1), Exercises (2), Profile (3). Supports deep link tab switching from Live Activity via `onOpenURL`.
+- **Exercise History Browser**: `ExerciseListView` shows all exercises alphabetically via `@Query(sort: \Exercise.name)` with `.searchable()` filtering. `ExerciseHistoryView` queries all finished workouts and filters in-memory by `exercise.id` (UUID) to find matching `WorkoutExercise` entries — avoids SwiftData `#Predicate` limitations with relationship traversal. Displays workout session cards with equipment-type-aware set formatting (mirrors `WorkoutDetailView.setDetailLabel` logic).
 - **Rest timer**: inline below completed set (auto-hides when done), `Date` end-time in UserDefaults + wall-clock-derived foreground countdown; `lastCompletedSetId` on `WorkoutSessionManager` tracks placement. Display timer uses `RunLoop.common` mode so countdown updates during scroll. Local notification via `UNUserNotificationCenter` guarantees alert fires even when app is killed/backgrounded.
 - **NotificationService**: `@MainActor @Observable` class conforming to `UNUserNotificationCenterDelegate`. Schedules `UNTimeIntervalNotificationTrigger` with `alert_tone.caf` custom sound on set completion; cancels on skip/finish/discard. Foreground delegate (`willPresent`) suppresses system banner — the in-app `playAlertSound()` + haptic handle foreground alerts instead. Permission requested on app launch.
 - **Live Activity**: Lock screen widget for completing entire workout without unlocking. Three views: `SetView` (adjustable weight/reps + Complete button), `TimerView` (countdown + Skip button + next set preview), `CompleteView` (all sets done). Interactive buttons via `LiveActivityIntent` (runs in app process). TimerView shows "Next:" preview with weight/reps of upcoming set; includes exercise name when crossing exercise boundaries (detected via `setNumber == 1`).
@@ -54,7 +57,8 @@ Kiln/
 │                                  #   CelebrationData
 ├── Views/
 │   ├── LoginView.swift             # API key login screen (shown when unauthenticated)
-│   ├── ContentView.swift          # 3-tab TabView with conditional Workout tab
+│   ├── ContentView.swift          # 4-tab TabView with conditional Workout tab
+│   ├── Exercises/                 # ExerciseListView, ExerciseHistoryView
 │   ├── Workout/                   # StartWorkoutView, ActiveWorkoutView, SetRowView,
 │   │                              #   ExerciseCardView, TemplateCardView, RestTimerView,
 │   │                              #   ExercisePickerView, ExerciseReorderView, SwipeToDelete,
@@ -119,12 +123,13 @@ KilnWidgets/
 
 ## Spec Artifacts
 
-Feature specs, plans, and tasks live in `specs/001-workout-mvp/`, `specs/002-visual-redesign/`, `specs/003-live-activity/`, `specs/004-reliable-rest-timer/`, `specs/005-celebration-screen/`, `specs/006-hybrid-timer-backend/`, `specs/007-user-auth/`, `specs/008-workout-history-sync/`, and `specs/009-workout-sync-updates/`.
+Feature specs, plans, and tasks live in `specs/001-workout-mvp/`, `specs/002-visual-redesign/`, `specs/003-live-activity/`, `specs/004-reliable-rest-timer/`, `specs/005-celebration-screen/`, `specs/006-hybrid-timer-backend/`, `specs/007-user-auth/`, `specs/008-workout-history-sync/`, `specs/009-workout-sync-updates/`, and `specs/010-exercise-history/`.
 Constitution at `.specify/memory/constitution.md`.
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
 
 ## Recent Changes
+- 010-exercise-history: Added Swift 5.9+ + SwiftUI, SwiftData
 - 009-workout-sync-updates: Added Swift 5.9+ (iOS), Python 3.12 (backend) + SwiftUI, SwiftData (iOS); FastAPI, motor (backend)
 - 008-workout-history-sync: Added Swift 5.9+ (iOS client), Python 3.12 (backend) + SwiftUI, SwiftData (iOS); FastAPI, motor, Pydantic (backend)

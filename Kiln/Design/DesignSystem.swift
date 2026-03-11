@@ -74,6 +74,7 @@ enum DesignSystem {
         static let close = "xmark"
         static let edit = "pencil"
         static let delete = "trash"
+        static let exercises = "list.bullet"
     }
 }
 
