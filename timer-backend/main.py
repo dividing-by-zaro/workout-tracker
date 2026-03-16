@@ -12,6 +12,13 @@ from pydantic import BaseModel
 
 from apns import APNSClient
 from db import get_db, seed_users, close_client
+from glade_sync import (
+    backfill_to_glade,
+    delete_workout_from_glade,
+    is_sync_user,
+    sync_workout_to_glade,
+    update_workout_in_glade,
+)
 from models import WorkoutPayload
 
 
@@ -51,6 +58,7 @@ async def lifespan(app: FastAPI):
         key_base64=os.environ.get("APNS_KEY_BASE64"),
     )
     await seed_users()
+    asyncio.create_task(backfill_to_glade())
     yield
     await apns_client.close()
     close_client()
@@ -162,6 +170,8 @@ async def create_workout(req: WorkoutPayload, request: Request):
     # Try insert; if duplicate (user_id + local_id), return 200 exists
     try:
         await db["workouts"].insert_one(workout_doc)
+        if await is_sync_user(user_id):
+            asyncio.create_task(sync_workout_to_glade(workout_doc))
         return JSONResponse(
             status_code=201,
             content={"status": "created", "local_id": req.local_id},
@@ -204,6 +214,13 @@ async def update_workout(local_id: str, req: WorkoutPayload, request: Request):
             content={"error": "Workout not found"},
         )
 
+    if await is_sync_user(user_id):
+        updated_doc = await db["workouts"].find_one(
+            {"user_id": user_id, "local_id": local_id}
+        )
+        if updated_doc:
+            asyncio.create_task(update_workout_in_glade(updated_doc))
+
     return {"status": "updated", "local_id": local_id}
 
 
@@ -221,6 +238,9 @@ async def delete_workout(local_id: str, request: Request):
             status_code=404,
             content={"error": "Workout not found"},
         )
+
+    if await is_sync_user(user["_id"]):
+        asyncio.create_task(delete_workout_from_glade(local_id))
 
     return {"status": "deleted", "local_id": local_id}
 
@@ -243,6 +263,12 @@ async def get_workout_ids(request: Request):
     )
     ids = [doc["local_id"] async for doc in cursor]
     return {"local_ids": ids}
+
+
+@app.post("/api/sync-glade")
+async def trigger_glade_sync():
+    asyncio.create_task(backfill_to_glade())
+    return {"status": "sync_started"}
 
 
 @app.post("/api/timer/schedule")

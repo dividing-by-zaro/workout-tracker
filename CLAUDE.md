@@ -77,14 +77,15 @@ Kiln/
 └── Design/                        # DesignSystem (colors, shadows, grain, corner radius, typography, spacing, icons)
 
 timer-backend/
-├── main.py              # FastAPI app: /api/me, /api/timer/schedule, /api/timer/cancel, /api/workouts (POST/PUT/DELETE), /api/workouts/status, /api/workouts/ids, /health
+├── main.py              # FastAPI app: /api/me, /api/timer/schedule, /api/timer/cancel, /api/workouts (POST/PUT/DELETE), /api/workouts/status, /api/workouts/ids, /api/sync-glade, /health
+├── glade_sync.py        # Glade exercise sync: backfill on startup, inline sync on create/update/delete, fire-and-forget via httpx
 ├── models.py            # Pydantic models for workout sync payloads (WorkoutPayload, WorkoutResponse, SyncStatusResponse)
 ├── db.py                # MongoDB client (motor), user seeding (names via SEED_USER_NAMES env var), ensure_indexes(), get_db() helper
 ├── seed_demo.py         # Script to seed a demo user + sample workouts (split approach: mongosh for user, API for workouts)
 ├── apns.py              # APNSClient: ES256 JWT signing, HTTP/2 push to APNS
 ├── Dockerfile           # Multi-stage Python 3.12 + uv build for Coolify
 ├── pyproject.toml       # Dependencies managed by uv
-└── .env.example         # APNS_KEY_ID, APNS_TEAM_ID, APNS_KEY_PATH or APNS_KEY_BASE64, MONGODB_URL, APNS_ENVIRONMENT, SEED_USER_NAMES
+└── .env.example         # APNS_KEY_ID, APNS_TEAM_ID, APNS_KEY_PATH or APNS_KEY_BASE64, MONGODB_URL, APNS_ENVIRONMENT, SEED_USER_NAMES, GLADE_*
 
 scripts/
 ├── frame_screenshots.py           # Adds iPhone device frames to PNG screenshots (Pillow)
@@ -119,6 +120,7 @@ KilnWidgets/
 - **Local notifications for rest timer**: `NotificationService` schedules a `UNTimeIntervalNotificationTrigger` with `alert_tone.caf` when a set is completed. Fires reliably even when app is killed/backgrounded. `BackgroundAudioService.playAlertSound()` used for foreground alert sound.
 - **Timer backend**: `timer-backend/` is a FastAPI microservice deployed on Coolify. Accepts timer schedule requests, sleeps for the duration, then sends APNS push-to-update to transition the Live Activity from timer view to next set view. In-memory timers + MongoDB for user profiles. Per-user API key auth (keys stored in `users` collection). Backend URL provided via `Secrets.xcconfig` → Info.plist → `Bundle.main`. API contracts in `specs/006-hybrid-timer-backend/contracts/timer-api.md` and `specs/007-user-auth/contracts/auth-api.md`.
 - **TimerBackendService**: `@MainActor` HTTP client in `Kiln/Services/TimerBackendService.swift`. Reads `TimerBackendURL` from Info.plist and API key from Keychain. Fire-and-forget `scheduleTimer()` and `cancelTimer()` calls. Called from `WorkoutSessionManager` on set completion (schedule) and skip/finish/discard (cancel).
+- **Glade exercise sync**: `glade_sync.py` pushes completed workouts to Glade (external personal data aggregation system) via its REST API. Configured via env vars (`GLADE_API_URL`, `GLADE_API_KEY`, `GLADE_CF_CLIENT_ID`, `GLADE_CF_CLIENT_SECRET`, `GLADE_SYNC_USER`). Only syncs workouts for the configured user with `started_at >= 2026-03-16`. Backfills all eligible workouts on server startup (dedup-safe via `source_id`). Inline sync on `POST /api/workouts` (create), `PUT /api/workouts/{local_id}` (update with PUT-then-POST fallback), `DELETE /api/workouts/{local_id}` (delete). All Glade calls are fire-and-forget `asyncio.create_task` — failures are logged but never block Kiln operations. Manual trigger via `POST /api/sync-glade`. Disabled when env vars are blank.
 - **Live Activity push token**: `LiveActivityService.startActivity()` tries `pushType: .token` first, falls back to `pushType: nil` if APNS entitlement isn't provisioned. `observePushToken(activity:onToken:)` iterates `activity.pushTokenUpdates` async sequence. Token stored in `WorkoutSessionManager.currentPushToken`, persisted to `LiveActivityCache.pushToken`, and sent to backend with each schedule request. On app restart, `reconnectLiveActivity()` restores the token from cache since `pushTokenUpdates` does not re-emit for existing activities.
 
 ## Spec Artifacts

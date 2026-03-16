@@ -56,6 +56,7 @@ See your full workout history and weekly trends at a glance.
 - Per-user API keys stored in iOS Keychain
 - Offline-tolerant — cached profile allows app use without the backend (rest timer notifications may be unreliable, though)
 - Workout history syncs to the server (client-authoritative)
+- Optional Glade integration — automatically push completed workouts to an external data aggregation system
 
 ## Getting Started
 
