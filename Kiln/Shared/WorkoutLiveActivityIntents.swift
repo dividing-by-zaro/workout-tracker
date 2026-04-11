@@ -1,15 +1,17 @@
 import AppIntents
 
-struct CompleteSetIntent: AppIntent {
+struct CompleteSetIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Complete Set"
     static var isDiscoverable: Bool = false
     static var openAppWhenRun: Bool = false
+    static var authenticationPolicy: IntentAuthenticationPolicy = .alwaysAllowed
 }
 
-struct AdjustWeightIntent: AppIntent {
+struct AdjustWeightIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Adjust Weight"
     static var isDiscoverable: Bool = false
     static var openAppWhenRun: Bool = false
+    static var authenticationPolicy: IntentAuthenticationPolicy = .alwaysAllowed
 
     @Parameter(title: "Delta")
     var delta: Double
@@ -23,10 +25,11 @@ struct AdjustWeightIntent: AppIntent {
     }
 }
 
-struct AdjustRepsIntent: AppIntent {
+struct AdjustRepsIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Adjust Reps"
     static var isDiscoverable: Bool = false
     static var openAppWhenRun: Bool = false
+    static var authenticationPolicy: IntentAuthenticationPolicy = .alwaysAllowed
 
     @Parameter(title: "Delta")
     var delta: Int
@@ -40,8 +43,9 @@ struct AdjustRepsIntent: AppIntent {
     }
 }
 
-struct SkipRestIntent: AppIntent {
+struct SkipRestIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Skip Rest"
     static var isDiscoverable: Bool = false
     static var openAppWhenRun: Bool = false
+    static var authenticationPolicy: IntentAuthenticationPolicy = .alwaysAllowed
 }
