@@ -15,47 +15,26 @@ struct SetView: View {
                     .lineLimit(1)
                 Spacer()
                 Button(intent: CompleteSetIntent()) {
-                    HStack(spacing: 3) {
-                        Image(systemName: "flame.fill")
-                            .font(.system(size: 11))
-                        Text("Complete")
-                            .font(.system(size: 12, weight: .bold))
+                    HStack(spacing: 5) {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 13, weight: .heavy))
+                        Text("Done")
+                            .font(.system(size: 14, weight: .bold))
                     }
                     .foregroundColor(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
                     .background(Color("WidgetPrimary"))
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
             }
 
-            // Row 2: Set position + elapsed time
-            HStack {
-                Text("Set \(context.state.setNumber) of \(context.state.totalSetsInExercise)")
-                    .font(.system(size: 11))
-                    .foregroundColor(Color("WidgetTextSecondary"))
-                Spacer()
-                HStack(spacing: 2) {
-                    Image(systemName: "timer")
-                        .font(.system(size: 10))
-                    Text(context.attributes.workoutStartedAt, style: .timer)
-                        .font(.system(size: 11).monospacedDigit())
-                }
-                .foregroundColor(Color("WidgetTextSecondary"))
-            }
-
-            // Row 3: Previous set label
-            HStack {
-                Text("PREVIOUS")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(Color("WidgetTextSecondary"))
-                Text(context.state.previousSetLabel)
-                    .font(.system(size: 12))
-                    .foregroundColor(Color("WidgetTextSecondary"))
+            // Row 2: Inline set summaries
+            HStack(spacing: 0) {
+                setSummariesRow
                 Spacer()
             }
-            .padding(.top, 2)
 
             // Row 4: Input fields with +/- buttons
             inputFieldsRow
@@ -63,6 +42,28 @@ struct SetView: View {
         .padding(14)
         .activityBackgroundTint(Color("WidgetBackground"))
         .activitySystemActionForegroundColor(Color("WidgetPrimary"))
+    }
+
+    @ViewBuilder
+    private var setSummariesRow: some View {
+        let currentIndex = context.state.setNumber - 1
+        HStack(spacing: 6) {
+            ForEach(Array(context.state.setSummaries.enumerated()), id: \.offset) { index, summary in
+                if summary.isCompleted {
+                    Text("✓\(summary.label)")
+                        .font(.system(size: 16).monospacedDigit())
+                        .foregroundColor(Color("WidgetTextSecondary").opacity(0.6))
+                } else if index == currentIndex {
+                    Text(summary.label)
+                        .font(.system(size: 16, weight: .bold).monospacedDigit())
+                        .foregroundColor(Color("WidgetPrimary"))
+                } else {
+                    Text(summary.label)
+                        .font(.system(size: 16).monospacedDigit())
+                        .foregroundColor(Color("WidgetTextSecondary"))
+                }
+            }
+        }
     }
 
     @ViewBuilder

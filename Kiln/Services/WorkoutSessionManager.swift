@@ -207,6 +207,7 @@ final class WorkoutSessionManager {
             restTimer.stop()
             lastCompletedSetId = nil
             notificationService.cancelRestTimer()
+            sendTimerCancelToBackend()
         }
 
         context.delete(exercise)
@@ -232,6 +233,7 @@ final class WorkoutSessionManager {
         try? context.save()
         updateLiveActivity()
         cacheCurrentState()
+        rescheduleBackendTimerIfNeeded()
     }
 
     // MARK: - Sync Live Activity State
@@ -239,6 +241,7 @@ final class WorkoutSessionManager {
     func syncLiveActivityState() {
         updateLiveActivity()
         cacheCurrentState()
+        rescheduleBackendTimerIfNeeded()
     }
 
     // MARK: - Reset
@@ -501,8 +504,12 @@ final class WorkoutSessionManager {
             cachedState.isRestTimerActive = true
             cachedState.restTimerEndDate = restTimer.endDate ?? Date.now.addingTimeInterval(Double(restDuration))
             cachedState.restTotalSeconds = restDuration
-            // Advance setNumber to point to the NEXT set so TimerView
-            // (which displays "Set (setNumber-1) of N complete") shows correctly.
+            // Mark the just-completed set in setSummaries
+            let completedIndex = cachedState.setNumber - 1
+            if completedIndex >= 0 && completedIndex < cachedState.setSummaries.count {
+                cachedState.setSummaries[completedIndex].isCompleted = true
+            }
+            // Advance setNumber to point to the NEXT set
             cachedState.setNumber += 1
 
             LiveActivityCache.state = cachedState
@@ -678,6 +685,17 @@ final class WorkoutSessionManager {
 
     private func sendTimerCancelToBackend() {
         timerBackend.cancelTimer(deviceId: deviceId)
+    }
+
+    /// Re-schedules the backend timer with updated content state when exercises
+    /// are modified (swap/add/reorder) while a rest timer is actively running.
+    /// Without this, the backend push would deliver stale exercise data.
+    private func rescheduleBackendTimerIfNeeded() {
+        guard restTimer.isRunning,
+              let endDate = restTimer.endDate else { return }
+        let remaining = Int(endDate.timeIntervalSinceNow)
+        guard remaining > 0 else { return }
+        sendTimerScheduleToBackend(duration: remaining)
     }
 
     // MARK: - Elapsed Timer

@@ -1,6 +1,11 @@
 import ActivityKit
 import Foundation
 
+struct SetSummary: Codable, Hashable {
+    var label: String
+    var isCompleted: Bool
+}
+
 struct WorkoutActivityAttributes: ActivityAttributes {
     let workoutName: String
     let workoutStartedAt: Date
@@ -10,6 +15,7 @@ struct WorkoutActivityAttributes: ActivityAttributes {
         var setNumber: Int
         var totalSetsInExercise: Int
         var previousSetLabel: String
+        var setSummaries: [SetSummary]
         var weight: Double?
         var reps: Int?
         var duration: Double?

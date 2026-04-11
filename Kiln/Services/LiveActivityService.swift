@@ -60,11 +60,19 @@ final class LiveActivityService {
             let totalExercises = sessionManager.activeWorkout?.sortedExercises.count ?? 0
             let setIndex = exercise.sortedSets.firstIndex(where: { $0.id == set.id }) ?? 0
 
+            let summaries = exercise.sortedSets.map { s in
+                SetSummary(
+                    label: formatSetSummaryLabel(for: s, category: category),
+                    isCompleted: s.isCompleted
+                )
+            }
+
             return WorkoutActivityAttributes.ContentState(
                 exerciseName: exercise.exercise?.name ?? "Exercise",
                 setNumber: setIndex + 1,
                 totalSetsInExercise: exercise.sortedSets.count,
                 previousSetLabel: previousLabel,
+                setSummaries: summaries,
                 weight: set.weight,
                 reps: set.reps,
                 duration: set.seconds,
@@ -85,6 +93,7 @@ final class LiveActivityService {
             setNumber: 0,
             totalSetsInExercise: 0,
             previousSetLabel: "",
+            setSummaries: [],
             weight: nil,
             reps: nil,
             duration: nil,
@@ -105,6 +114,26 @@ final class LiveActivityService {
                 let token = tokenData.map { String(format: "%02x", $0) }.joined()
                 onToken(token)
             }
+        }
+    }
+
+    func formatSetSummaryLabel(for set: WorkoutSet, category: String) -> String {
+        switch category {
+        case "weightReps":
+            let r = set.reps ?? 0
+            let w = formatWeight(set.weight ?? 0)
+            return "\(r)×\(w)"
+        case "repsOnly":
+            return "×\(set.reps ?? 0)"
+        case "duration":
+            return "\(Int(set.seconds ?? 0))s"
+        case "distance":
+            return "\(formatDistance(set.distance ?? 0))mi"
+        case "weightDistance":
+            let w = formatWeight(set.weight ?? 0)
+            return "\(w)•\(formatDistance(set.distance ?? 0))mi"
+        default:
+            return "—"
         }
     }
 
