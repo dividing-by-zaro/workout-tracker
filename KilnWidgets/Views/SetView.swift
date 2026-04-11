@@ -16,8 +16,8 @@ struct SetView: View {
                 Spacer()
                 Button(intent: CompleteSetIntent()) {
                     HStack(spacing: 5) {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 13, weight: .heavy))
+                        Image(systemName: "flame.fill")
+                            .font(.system(size: 13))
                         Text("Done")
                             .font(.system(size: 14, weight: .bold))
                     }
@@ -50,12 +50,18 @@ struct SetView: View {
         HStack(spacing: 6) {
             ForEach(Array(context.state.setSummaries.enumerated()), id: \.offset) { index, summary in
                 if summary.isCompleted {
-                    Text("✓\(summary.label)")
-                        .font(.system(size: 16).monospacedDigit())
-                        .foregroundColor(Color("WidgetTextSecondary").opacity(0.6))
+                    HStack(spacing: 2) {
+                        Image("brick_icon")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 12, height: 12)
+                        Text(summary.label)
+                            .font(.system(size: 16).monospacedDigit())
+                    }
+                    .foregroundColor(Color("WidgetTextSecondary").opacity(0.6))
                 } else if index == currentIndex {
                     Text(summary.label)
-                        .font(.system(size: 16, weight: .bold).monospacedDigit())
+                        .font(.system(size: 18, weight: .bold).monospacedDigit())
                         .foregroundColor(Color("WidgetPrimary"))
                 } else {
                     Text(summary.label)
@@ -134,7 +140,7 @@ struct SetView: View {
 
                 HStack(spacing: 1) {
                     Text(value)
-                        .font(.system(size: 16, weight: .bold).monospacedDigit())
+                        .font(.system(size: 18, weight: .bold).monospacedDigit())
                         .foregroundColor(Color("WidgetTextPrimary"))
                     if let unit {
                         Text(unit)
