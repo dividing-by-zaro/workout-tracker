@@ -7,8 +7,10 @@ final class BackgroundAudioService {
     private var alertPlayer: AVAudioPlayer?
 
     func playAlertSound() {
-        guard let url = Bundle.main.url(forResource: "alert_tone", withExtension: "caf") else {
-            print("BackgroundAudioService: alert_tone.caf not found in bundle")
+        let soundName = UserDefaults.standard.string(forKey: "selectedAlertSound") ?? "alert_tone"
+        guard let url = Bundle.main.url(forResource: soundName, withExtension: "caf")
+            ?? Bundle.main.url(forResource: "alert_tone", withExtension: "caf") else {
+            print("BackgroundAudioService: alert sound not found in bundle")
             return
         }
         do {

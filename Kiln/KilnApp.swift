@@ -6,6 +6,7 @@ struct KilnApp: App {
     @State private var sessionManager = WorkoutSessionManager()
     @State private var authService = AuthService()
     @State private var syncService = WorkoutSyncService()
+    @State private var alertSoundService = AlertSoundService()
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
@@ -31,6 +32,7 @@ struct KilnApp: App {
             }
             .environment(authService)
             .environment(syncService)
+            .environment(alertSoundService)
             .preferredColorScheme(.light)
             .onAppear {
                 authService.checkStoredAuth()

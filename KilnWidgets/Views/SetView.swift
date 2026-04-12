@@ -47,8 +47,11 @@ struct SetView: View {
     @ViewBuilder
     private var setSummariesRow: some View {
         let currentIndex = context.state.setNumber - 1
-        HStack(spacing: 6) {
+        HStack(spacing: 0) {
             ForEach(Array(context.state.setSummaries.enumerated()), id: \.offset) { index, summary in
+                if index > 0 {
+                    Spacer(minLength: 6)
+                }
                 if summary.isCompleted {
                     HStack(spacing: 2) {
                         Image("brick_icon")

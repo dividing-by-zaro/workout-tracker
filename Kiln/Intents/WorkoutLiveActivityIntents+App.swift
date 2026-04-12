@@ -1,7 +1,7 @@
 import AppIntents
 import ActivityKit
 
-extension CompleteSetIntent: LiveActivityIntent {
+extension CompleteSetIntent {
     func perform() async throws -> some IntentResult {
         await MainActor.run {
             WorkoutSessionManager.shared?.completeCurrentSetFromIntent()
@@ -10,7 +10,7 @@ extension CompleteSetIntent: LiveActivityIntent {
     }
 }
 
-extension AdjustWeightIntent: LiveActivityIntent {
+extension AdjustWeightIntent {
     func perform() async throws -> some IntentResult {
         await MainActor.run {
             WorkoutSessionManager.shared?.adjustWeightFromIntent(delta: delta)
@@ -19,7 +19,7 @@ extension AdjustWeightIntent: LiveActivityIntent {
     }
 }
 
-extension AdjustRepsIntent: LiveActivityIntent {
+extension AdjustRepsIntent {
     func perform() async throws -> some IntentResult {
         await MainActor.run {
             WorkoutSessionManager.shared?.adjustRepsFromIntent(delta: delta)
@@ -28,7 +28,7 @@ extension AdjustRepsIntent: LiveActivityIntent {
     }
 }
 
-extension SkipRestIntent: LiveActivityIntent {
+extension SkipRestIntent {
     func perform() async throws -> some IntentResult {
         await MainActor.run {
             WorkoutSessionManager.shared?.skipRestTimerFromIntent()

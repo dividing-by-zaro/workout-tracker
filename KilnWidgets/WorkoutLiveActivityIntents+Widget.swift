@@ -1,24 +1,24 @@
 import AppIntents
 
-extension CompleteSetIntent: LiveActivityIntent {
+extension CompleteSetIntent {
     func perform() async throws -> some IntentResult {
         .result()
     }
 }
 
-extension AdjustWeightIntent: LiveActivityIntent {
+extension AdjustWeightIntent {
     func perform() async throws -> some IntentResult {
         .result()
     }
 }
 
-extension AdjustRepsIntent: LiveActivityIntent {
+extension AdjustRepsIntent {
     func perform() async throws -> some IntentResult {
         .result()
     }
 }
 
-extension SkipRestIntent: LiveActivityIntent {
+extension SkipRestIntent {
     func perform() async throws -> some IntentResult {
         .result()
     }

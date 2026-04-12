@@ -24,7 +24,8 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         let content = UNMutableNotificationContent()
         content.title = "Rest Complete"
         content.body = "Time for your next set!"
-        content.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: "alert_tone.caf"))
+        let soundName = UserDefaults.standard.string(forKey: "selectedAlertSound") ?? "alert_tone"
+        content.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: "\(soundName).caf"))
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(duration), repeats: false)
         let request = UNNotificationRequest(identifier: Self.restTimerIdentifier, content: content, trigger: trigger)

@@ -8,6 +8,7 @@ struct ProfileView: View {
     @Environment(WorkoutSessionManager.self) private var sessionManager
     @Environment(AuthService.self) private var authService
     @Environment(WorkoutSyncService.self) private var syncService
+    @Environment(AlertSoundService.self) private var alertSoundService
 
     @State private var showLogoutConfirmation = false
 
@@ -37,6 +38,54 @@ struct ProfileView: View {
                     .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
                     .cardShadow()
                     .padding(.horizontal, DesignSystem.Spacing.md)
+
+                // Alert sound picker card
+                VStack(spacing: 0) {
+                    HStack(spacing: DesignSystem.Spacing.sm) {
+                        Image(systemName: "speaker.wave.2.fill")
+                            .foregroundStyle(DesignSystem.Colors.primary)
+                        Text("Rest Timer Sound")
+                            .font(DesignSystem.Typography.body)
+                            .foregroundStyle(DesignSystem.Colors.textPrimary)
+                        Spacer()
+                    }
+                    .padding(DesignSystem.Spacing.md)
+
+                    Divider()
+                        .foregroundStyle(DesignSystem.Colors.textSecondary.opacity(0.15))
+
+                    ForEach(Array(AlertSound.allCases.enumerated()), id: \.element.id) { index, sound in
+                        Button {
+                            alertSoundService.selected = sound
+                            alertSoundService.preview(sound)
+                        } label: {
+                            HStack(spacing: DesignSystem.Spacing.sm) {
+                                Image(systemName: alertSoundService.selected == sound ? "checkmark.circle.fill" : "circle")
+                                    .foregroundStyle(alertSoundService.selected == sound ? DesignSystem.Colors.primary : DesignSystem.Colors.textSecondary.opacity(0.4))
+                                Text(sound.displayName)
+                                    .font(DesignSystem.Typography.body)
+                                    .foregroundStyle(DesignSystem.Colors.textPrimary)
+                                Spacer()
+                                Image(systemName: "play.circle")
+                                    .foregroundStyle(DesignSystem.Colors.textSecondary.opacity(0.5))
+                            }
+                            .padding(.horizontal, DesignSystem.Spacing.md)
+                            .padding(.vertical, DesignSystem.Spacing.sm)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        if index < AlertSound.allCases.count - 1 {
+                            Divider()
+                                .foregroundStyle(DesignSystem.Colors.textSecondary.opacity(0.1))
+                                .padding(.leading, DesignSystem.Spacing.md)
+                        }
+                    }
+                    .padding(.vertical, DesignSystem.Spacing.xs)
+                }
+                .background(DesignSystem.Colors.surface)
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
+                .cardShadow()
+                .padding(.horizontal, DesignSystem.Spacing.md)
 
                 // Sync status & Log out grouped card
                 VStack(spacing: 0) {
