@@ -49,8 +49,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        // Suppress banner/sound in foreground — the in-app timer expiry handler
-        // already plays alert_tone.caf and fires haptic
-        completionHandler([])
+        // Foreground: play sound, suppress banner (user is looking at the active workout UI)
+        completionHandler([.sound])
     }
 }

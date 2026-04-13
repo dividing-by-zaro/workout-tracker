@@ -33,7 +33,6 @@ final class WorkoutSessionManager {
 
     let restTimer = RestTimerService()
     let liveActivityService = LiveActivityService()
-    let backgroundAudio = BackgroundAudioService()
     let notificationService = NotificationService()
     let timerBackend = TimerBackendService()
     var syncService: WorkoutSyncService?
@@ -565,17 +564,10 @@ final class WorkoutSessionManager {
 
     private func handleTimerExpired(playSound: Bool = true) {
         lastCompletedSetId = nil
-        notificationService.cancelRestTimer()
 
-        // Apply any pending lock screen completions to in-memory SwiftData
-        // so buildContentState finds the correct next set
         applyPendingCompletionsInMemory()
 
         if playSound {
-            // Play alert sound in foreground — the local notification handles
-            // background/locked alerts via its custom sound
-            backgroundAudio.playAlertSound()
-
             let alert = AlertConfiguration(
                 title: "Rest Complete",
                 body: "Time for your next set!",
@@ -583,7 +575,7 @@ final class WorkoutSessionManager {
             )
             updateLiveActivity(alertConfiguration: alert)
         } else {
-            // Timer expired while app was dead — just update state silently
+            notificationService.cancelRestTimer()
             updateLiveActivity()
         }
         cacheCurrentState()
