@@ -130,7 +130,8 @@ struct WorkoutEditView: View {
         let workoutExercise = WorkoutExercise(order: order, exercise: exercise, workout: workout)
         modelContext.insert(workoutExercise)
 
-        let preFill = PreFillService.preFillSets(for: exercise, setCount: 3, in: modelContext)
+        let setCount = PreFillService.recommendedSetCount(for: exercise, in: modelContext)
+        let preFill = PreFillService.preFillSets(for: exercise, setCount: setCount, in: modelContext)
         for (i, data) in preFill.enumerated() {
             let set = WorkoutSet(
                 order: i,
@@ -152,7 +153,8 @@ struct WorkoutEditView: View {
         }
         workoutExercise.exercise = newExercise
 
-        let preFill = PreFillService.preFillSets(for: newExercise, setCount: 3, in: modelContext)
+        let setCount = PreFillService.recommendedSetCount(for: newExercise, in: modelContext)
+        let preFill = PreFillService.preFillSets(for: newExercise, setCount: setCount, in: modelContext)
         for (i, data) in preFill.enumerated() {
             let set = WorkoutSet(
                 order: i,

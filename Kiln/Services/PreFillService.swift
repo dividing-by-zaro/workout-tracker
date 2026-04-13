@@ -9,6 +9,37 @@ struct PreFillData {
 }
 
 struct PreFillService {
+    static func recommendedSetCount(for exercise: Exercise, in context: ModelContext, defaultCount: Int = 3) -> Int {
+        let exerciseName = exercise.name
+        let descriptor = FetchDescriptor<Workout>(
+            predicate: #Predicate<Workout> { workout in
+                workout.isInProgress == false
+            },
+            sortBy: [SortDescriptor(\Workout.startedAt, order: .reverse)]
+        )
+
+        guard let workouts = try? context.fetch(descriptor) else {
+            return defaultCount
+        }
+
+        for workout in workouts {
+            guard let workoutExercise = workout.exercises.first(where: { $0.exercise?.name == exerciseName }) else {
+                continue
+            }
+
+            let completedSetCount = workoutExercise.sortedSets.filter(\.isCompleted).count
+            if completedSetCount > 0 {
+                return completedSetCount
+            }
+
+            if !workoutExercise.sortedSets.isEmpty {
+                return workoutExercise.sortedSets.count
+            }
+        }
+
+        return defaultCount
+    }
+
     static func preFillSets(for exercise: Exercise, setCount: Int, in context: ModelContext) -> [PreFillData] {
         let exerciseName = exercise.name
         let descriptor = FetchDescriptor<Workout>(
