@@ -7,6 +7,7 @@ struct SetRowView: View {
     let previousData: PreFillData?
     var onComplete: () -> Void
 
+    @Environment(WorkoutSessionManager.self) private var sessionManager
     @State private var bounceScale: CGFloat = 1.0
 
     var body: some View {
@@ -58,6 +59,11 @@ struct SetRowView: View {
         .animation(.easeInOut(duration: 0.15), value: workoutSet.isCompleted)
         .frame(maxWidth: .infinity, minHeight: 44)
         .opacity(workoutSet.isCompleted ? 0.7 : 1.0)
+    }
+
+    private func syncLiveActivityIfCurrent() {
+        guard sessionManager.findCurrentSet()?.1.id == workoutSet.id else { return }
+        sessionManager.syncLiveActivityState()
     }
 
     @ViewBuilder
@@ -115,6 +121,7 @@ struct SetRowView: View {
 
     @ViewBuilder
     private var inputFields: some View {
+        let sync: () -> Void = { syncLiveActivityIfCurrent() }
         if equipmentType.tracksWeight && equipmentType.tracksReps && equipmentType == .weightedBodyweight {
             HStack(spacing: DesignSystem.Spacing.xs) {
                 Text("+BW")
@@ -122,21 +129,21 @@ struct SetRowView: View {
                     .foregroundStyle(DesignSystem.Colors.textSecondary)
                     .frame(width: 30)
                     .allowsHitTesting(false)
-                NumericInputField(value: $workoutSet.weight, placeholder: "lbs", incrementStep: 1.0)
+                NumericInputField(value: $workoutSet.weight, placeholder: "lbs", incrementStep: 1.0, onValueChanged: sync)
                 Text("x")
                     .foregroundStyle(DesignSystem.Colors.textSecondary)
                     .frame(width: 14)
                     .allowsHitTesting(false)
-                IntInputField(value: $workoutSet.reps, placeholder: "reps", incrementStep: 1.0)
+                IntInputField(value: $workoutSet.reps, placeholder: "reps", incrementStep: 1.0, onValueChanged: sync)
             }
         } else if equipmentType.tracksWeight && equipmentType.tracksReps {
             HStack(spacing: DesignSystem.Spacing.xs) {
-                NumericInputField(value: $workoutSet.weight, placeholder: "lbs", incrementStep: 1.0)
+                NumericInputField(value: $workoutSet.weight, placeholder: "lbs", incrementStep: 1.0, onValueChanged: sync)
                 Text("x")
                     .foregroundStyle(DesignSystem.Colors.textSecondary)
                     .frame(width: 14)
                     .allowsHitTesting(false)
-                IntInputField(value: $workoutSet.reps, placeholder: "reps", incrementStep: 1.0)
+                IntInputField(value: $workoutSet.reps, placeholder: "reps", incrementStep: 1.0, onValueChanged: sync)
             }
         } else if equipmentType == .repsOnly {
             HStack(spacing: DesignSystem.Spacing.xs) {
@@ -149,20 +156,20 @@ struct SetRowView: View {
                     .foregroundStyle(DesignSystem.Colors.textSecondary)
                     .frame(width: 14)
                     .allowsHitTesting(false)
-                IntInputField(value: $workoutSet.reps, placeholder: "reps", incrementStep: 1.0)
+                IntInputField(value: $workoutSet.reps, placeholder: "reps", incrementStep: 1.0, onValueChanged: sync)
             }
         } else if equipmentType == .weightedDistance {
             HStack(spacing: DesignSystem.Spacing.xs) {
-                NumericInputField(value: $workoutSet.weight, placeholder: "lbs", incrementStep: 1.0)
-                NumericInputField(value: $workoutSet.distance, placeholder: "mi", incrementStep: 0.1)
+                NumericInputField(value: $workoutSet.weight, placeholder: "lbs", incrementStep: 1.0, onValueChanged: sync)
+                NumericInputField(value: $workoutSet.distance, placeholder: "mi", incrementStep: 0.1, onValueChanged: sync)
             }
         } else if equipmentType == .distance {
             HStack(spacing: DesignSystem.Spacing.xs) {
-                NumericInputField(value: $workoutSet.distance, placeholder: "mi", incrementStep: 0.1)
+                NumericInputField(value: $workoutSet.distance, placeholder: "mi", incrementStep: 0.1, onValueChanged: sync)
             }
         } else if equipmentType == .duration {
             HStack(spacing: DesignSystem.Spacing.xs) {
-                NumericInputField(value: $workoutSet.seconds, placeholder: "sec", incrementStep: 5.0)
+                NumericInputField(value: $workoutSet.seconds, placeholder: "sec", incrementStep: 5.0, onValueChanged: sync)
             }
         }
     }

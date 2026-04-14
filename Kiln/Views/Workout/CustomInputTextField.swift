@@ -5,9 +5,10 @@ struct CustomInputTextField: UIViewRepresentable {
     @Binding var value: Double?
     let placeholder: String
     let config: NumericKeyboardConfig
+    var onValueChanged: (() -> Void)? = nil
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(value: $value, config: config)
+        Coordinator(value: $value, config: config, onValueChanged: onValueChanged)
     }
 
     func makeUIView(context: Context) -> UITextField {
@@ -98,13 +99,15 @@ struct CustomInputTextField: UIViewRepresentable {
     class Coordinator: NSObject, UITextFieldDelegate {
         var value: Binding<Double?>
         var config: NumericKeyboardConfig
+        var onValueChanged: (() -> Void)?
         weak var textField: UITextField?
         var hostingController: UIHostingController<NumericKeyboardView>?
         var pendingReplace = true
 
-        init(value: Binding<Double?>, config: NumericKeyboardConfig) {
+        init(value: Binding<Double?>, config: NumericKeyboardConfig, onValueChanged: (() -> Void)? = nil) {
             self.value = value
             self.config = config
+            self.onValueChanged = onValueChanged
         }
 
         func textFieldDidBeginEditing(_ textField: UITextField) {
@@ -157,6 +160,7 @@ struct CustomInputTextField: UIViewRepresentable {
             value.wrappedValue = newVal
             textField.text = format(newVal)
             pendingReplace = true
+            onValueChanged?()
         }
 
         func decrement(in textField: UITextField) {
@@ -165,6 +169,7 @@ struct CustomInputTextField: UIViewRepresentable {
             value.wrappedValue = newVal
             textField.text = format(newVal)
             pendingReplace = true
+            onValueChanged?()
         }
 
         private func syncValue(from text: String) {
@@ -173,6 +178,7 @@ struct CustomInputTextField: UIViewRepresentable {
             } else if let parsed = Double(text) {
                 value.wrappedValue = parsed
             }
+            onValueChanged?()
         }
 
         func textFieldDidEndEditing(_ textField: UITextField) {
@@ -198,6 +204,7 @@ struct NumericInputField: View {
     @Binding var value: Double?
     let placeholder: String
     var incrementStep: Double = 1.0
+    var onValueChanged: (() -> Void)? = nil
 
     var body: some View {
         CustomInputTextField(
@@ -206,7 +213,8 @@ struct NumericInputField: View {
             config: NumericKeyboardConfig(
                 showDecimalKey: true,
                 incrementStep: incrementStep
-            )
+            ),
+            onValueChanged: onValueChanged
         )
         .frame(width: 60, height: 34)
     }
@@ -216,6 +224,7 @@ struct IntInputField: View {
     @Binding var value: Int?
     let placeholder: String
     var incrementStep: Double = 1.0
+    var onValueChanged: (() -> Void)? = nil
 
     private var doubleBinding: Binding<Double?> {
         Binding<Double?>(
@@ -231,7 +240,8 @@ struct IntInputField: View {
             config: NumericKeyboardConfig(
                 showDecimalKey: false,
                 incrementStep: incrementStep
-            )
+            ),
+            onValueChanged: onValueChanged
         )
         .frame(width: 60, height: 34)
     }

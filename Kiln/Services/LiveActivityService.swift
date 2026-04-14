@@ -1,5 +1,6 @@
 import ActivityKit
 import Foundation
+import UIKit
 
 @MainActor
 final class LiveActivityService {
@@ -35,8 +36,21 @@ final class LiveActivityService {
         alertConfiguration: AlertConfiguration? = nil
     ) {
         let content = ActivityContent(state: state, staleDate: nil)
-        Task {
+        var bgTask: UIBackgroundTaskIdentifier = .invalid
+        bgTask = UIApplication.shared.beginBackgroundTask(withName: "live-activity-update") {
+            if bgTask != .invalid {
+                UIApplication.shared.endBackgroundTask(bgTask)
+                bgTask = .invalid
+            }
+        }
+        Task.detached(priority: .userInitiated) {
             await activity.update(content, alertConfiguration: alertConfiguration)
+            await MainActor.run {
+                if bgTask != .invalid {
+                    UIApplication.shared.endBackgroundTask(bgTask)
+                    bgTask = .invalid
+                }
+            }
         }
     }
 

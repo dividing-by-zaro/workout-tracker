@@ -2,6 +2,7 @@ import ActivityKit
 import Foundation
 import SwiftData
 import SwiftUI
+import UIKit
 
 struct TemplateDiff {
     var moved: Int
@@ -52,6 +53,21 @@ final class WorkoutSessionManager {
         restTimer.onTimerExpired = { [weak self] playSound in
             self?.handleTimerExpired(playSound: playSound)
         }
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.willResignActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.flushLiveActivityOnResignActive()
+            }
+        }
+    }
+
+    private func flushLiveActivityOnResignActive() {
+        guard activeWorkout != nil, currentActivity != nil else { return }
+        updateLiveActivity()
+        cacheCurrentState()
     }
 
     func setModelContext(_ context: ModelContext) {
