@@ -45,23 +45,9 @@ def main():
     # Base canvas
     canvas = Image.new("RGBA", (WIDTH, HEIGHT), BG_COLOR + (255,))
 
-    # Apply grain texture (multiply blend, subtle)
-    noise = tile_noise(WIDTH, HEIGHT, NOISE_PATH)
-    noise_rgba = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
-    for x in range(WIDTH):
-        for y in range(HEIGHT):
-            v = noise.getpixel((x, y))
-            # Multiply blend: darken the background slightly based on noise
-            noise_rgba.putpixel((x, y), (v, v, v, 30))
-    canvas = Image.alpha_composite(canvas, noise_rgba)
-
-    # This pixel-by-pixel approach is slow, use numpy instead
-    pass  # we'll do it differently below
-
-    # Actually, let's redo with a faster approach
+    # Apply grain texture (multiply blend, subtle) via numpy
     import numpy as np
 
-    canvas = Image.new("RGBA", (WIDTH, HEIGHT), BG_COLOR + (255,))
     canvas_arr = np.array(canvas, dtype=np.float32)
 
     noise = tile_noise(WIDTH, HEIGHT, NOISE_PATH)

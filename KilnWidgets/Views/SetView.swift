@@ -82,7 +82,7 @@ struct SetView: View {
             if category == "weightReps" || category == "weightDistance" {
                 adjustableField(
                     label: "WEIGHT",
-                    value: formatWeight(context.state.weight),
+                    value: (context.state.weight ?? 0).formattedWeight,
                     unit: "lbs",
                     decrementIntent: AdjustWeightIntent(delta: -1),
                     incrementIntent: AdjustWeightIntent(delta: 1)
@@ -163,10 +163,4 @@ struct SetView: View {
         .frame(maxWidth: .infinity)
     }
 
-    private func formatWeight(_ value: Double?) -> String {
-        guard let value else { return "0" }
-        return value.truncatingRemainder(dividingBy: 1) == 0
-            ? String(format: "%.0f", value)
-            : String(format: "%.1f", value)
-    }
 }

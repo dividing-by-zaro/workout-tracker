@@ -11,14 +11,7 @@ struct PreFillData {
 struct PreFillService {
     static func recommendedSetCount(for exercise: Exercise, in context: ModelContext, defaultCount: Int = 3) -> Int {
         let exerciseName = exercise.name
-        let descriptor = FetchDescriptor<Workout>(
-            predicate: #Predicate<Workout> { workout in
-                workout.isInProgress == false
-            },
-            sortBy: [SortDescriptor(\Workout.startedAt, order: .reverse)]
-        )
-
-        guard let workouts = try? context.fetch(descriptor) else {
+        guard let workouts = fetchCompletedWorkouts(context: context) else {
             return defaultCount
         }
 
@@ -42,14 +35,7 @@ struct PreFillService {
 
     static func preFillSets(for exercise: Exercise, setCount: Int, in context: ModelContext) -> [PreFillData] {
         let exerciseName = exercise.name
-        let descriptor = FetchDescriptor<Workout>(
-            predicate: #Predicate<Workout> { workout in
-                workout.isInProgress == false
-            },
-            sortBy: [SortDescriptor(\Workout.startedAt, order: .reverse)]
-        )
-
-        guard let workouts = try? context.fetch(descriptor) else {
+        guard let workouts = fetchCompletedWorkouts(context: context) else {
             return defaultPreFill(count: setCount)
         }
 
@@ -77,6 +63,16 @@ struct PreFillService {
         }
 
         return defaultPreFill(count: setCount)
+    }
+
+    private static func fetchCompletedWorkouts(context: ModelContext) -> [Workout]? {
+        let descriptor = FetchDescriptor<Workout>(
+            predicate: #Predicate<Workout> { workout in
+                workout.isInProgress == false
+            },
+            sortBy: [SortDescriptor(\Workout.startedAt, order: .reverse)]
+        )
+        return try? context.fetch(descriptor)
     }
 
     private static func defaultPreFill(count: Int) -> [PreFillData] {

@@ -101,35 +101,7 @@ struct ExerciseCardView: View {
             Color.clear.frame(width: 16)
             Text("PREVIOUS")
                 .frame(maxWidth: .infinity, alignment: .center)
-            if equipmentType.tracksWeight && equipmentType.tracksReps && equipmentType == .weightedBodyweight {
-                HStack(spacing: DesignSystem.Spacing.xs) {
-                    Text("").frame(width: 30)
-                    Text("WEIGHT").frame(width: 60)
-                    Text("").frame(width: 14)
-                    Text("REPS").frame(width: 60)
-                }
-            } else if equipmentType.tracksWeight && equipmentType.tracksReps {
-                HStack(spacing: DesignSystem.Spacing.xs) {
-                    Text("WEIGHT").frame(width: 60)
-                    Text("").frame(width: 14)
-                    Text("REPS").frame(width: 60)
-                }
-            } else if equipmentType == .repsOnly {
-                HStack(spacing: DesignSystem.Spacing.xs) {
-                    Text("").frame(width: 60)
-                    Text("").frame(width: 14)
-                    Text("REPS").frame(width: 60)
-                }
-            } else if equipmentType == .weightedDistance {
-                HStack(spacing: DesignSystem.Spacing.xs) {
-                    Text("WEIGHT").frame(width: 60)
-                    Text("DIST").frame(width: 60)
-                }
-            } else if equipmentType == .distance {
-                Text("DIST").frame(width: 60)
-            } else if equipmentType == .duration {
-                Text("TIME").frame(width: 60)
-            }
+            equipmentType.columnHeaderView
         }
         .padding(.horizontal, DesignSystem.Spacing.xs)
         .font(DesignSystem.Typography.caption)
@@ -159,6 +131,41 @@ struct ExerciseCardView: View {
         } else {
             modelContext.delete(workoutSet)
             try? modelContext.save()
+        }
+    }
+}
+
+extension EquipmentType {
+    @ViewBuilder
+    var columnHeaderView: some View {
+        if self == .weightedBodyweight {
+            HStack(spacing: DesignSystem.Spacing.xs) {
+                Text("").frame(width: 30)
+                Text("WEIGHT").frame(width: 60)
+                Text("").frame(width: 14)
+                Text("REPS").frame(width: 60)
+            }
+        } else if tracksWeight && tracksReps {
+            HStack(spacing: DesignSystem.Spacing.xs) {
+                Text("WEIGHT").frame(width: 60)
+                Text("").frame(width: 14)
+                Text("REPS").frame(width: 60)
+            }
+        } else if self == .repsOnly {
+            HStack(spacing: DesignSystem.Spacing.xs) {
+                Text("").frame(width: 60)
+                Text("").frame(width: 14)
+                Text("REPS").frame(width: 60)
+            }
+        } else if self == .weightedDistance {
+            HStack(spacing: DesignSystem.Spacing.xs) {
+                Text("WEIGHT").frame(width: 60)
+                Text("DIST").frame(width: 60)
+            }
+        } else if self == .distance {
+            Text("DIST").frame(width: 60)
+        } else if self == .duration {
+            Text("TIME").frame(width: 60)
         }
     }
 }

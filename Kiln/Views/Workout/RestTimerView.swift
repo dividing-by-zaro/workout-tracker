@@ -2,7 +2,6 @@ import SwiftUI
 
 struct RestTimerView: View {
     let restTimer: RestTimerService
-    var onAdjust: ((Int) -> Void)?
     var onSkip: (() -> Void)? = nil
 
     var body: some View {
@@ -44,9 +43,6 @@ struct RestTimerView: View {
             .padding(DesignSystem.Spacing.md)
             .background(DesignSystem.Colors.timerBackground)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
-            .onTapGesture {
-                onAdjust?(restTimer.totalSeconds)
-            }
         }
     }
 

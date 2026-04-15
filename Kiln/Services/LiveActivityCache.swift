@@ -115,39 +115,13 @@ enum LiveActivityCache {
     private static func updateCurrentSetSummary(_ s: inout ContentState) {
         let idx = s.setNumber - 1
         guard idx >= 0 && idx < s.setSummaries.count else { return }
-        s.setSummaries[idx].label = formatSummaryLabel(
+        s.setSummaries[idx].label = SetFormatter.summaryLabel(
             equipmentCategory: s.equipmentCategory,
             weight: s.weight,
             reps: s.reps,
-            duration: s.duration,
+            seconds: s.duration,
             distance: s.distance
         )
-    }
-
-    private static func formatSummaryLabel(equipmentCategory: String, weight: Double?, reps: Int?, duration: Double?, distance: Double?) -> String {
-        switch equipmentCategory {
-        case "weightReps":
-            let r = reps ?? 0
-            let w = formatWeightValue(weight ?? 0)
-            return "\(r)×\(w)"
-        case "repsOnly":
-            return "×\(reps ?? 0)"
-        case "duration":
-            return "\(Int(duration ?? 0))s"
-        case "distance":
-            return String(format: "%.1fmi", distance ?? 0)
-        case "weightDistance":
-            let w = formatWeightValue(weight ?? 0)
-            return "\(w)•\(String(format: "%.1f", distance ?? 0))mi"
-        default:
-            return "—"
-        }
-    }
-
-    private static func formatWeightValue(_ value: Double) -> String {
-        value.truncatingRemainder(dividingBy: 1) == 0
-            ? String(format: "%.0f", value)
-            : String(format: "%.1f", value)
     }
 
     private static func markDirty() {

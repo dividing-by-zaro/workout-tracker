@@ -29,12 +29,3 @@ class WorkoutPayload(BaseModel):
     completed_at: datetime
     duration_seconds: int | None = None
     exercises: list[WorkoutExercisePayload]
-
-
-class WorkoutResponse(BaseModel):
-    status: str
-    local_id: str
-
-
-class SyncStatusResponse(BaseModel):
-    synced_count: int

@@ -132,23 +132,13 @@ final class LiveActivityService {
     }
 
     func formatSetSummaryLabel(for set: WorkoutSet, category: String) -> String {
-        switch category {
-        case "weightReps":
-            let r = set.reps ?? 0
-            let w = formatWeight(set.weight ?? 0)
-            return "\(r)×\(w)"
-        case "repsOnly":
-            return "×\(set.reps ?? 0)"
-        case "duration":
-            return "\(Int(set.seconds ?? 0))s"
-        case "distance":
-            return "\(formatDistance(set.distance ?? 0))mi"
-        case "weightDistance":
-            let w = formatWeight(set.weight ?? 0)
-            return "\(w)•\(formatDistance(set.distance ?? 0))mi"
-        default:
-            return "—"
-        }
+        SetFormatter.summaryLabel(
+            equipmentCategory: category,
+            weight: set.weight,
+            reps: set.reps,
+            seconds: set.seconds,
+            distance: set.distance
+        )
     }
 
     private func formatPreviousSetLabel(for set: WorkoutSet, equipmentType: EquipmentType) -> String {
@@ -157,7 +147,7 @@ final class LiveActivityService {
         switch equipmentType.equipmentCategory {
         case "weightReps":
             if let w = set.weight, let r = set.reps {
-                return "\(formatWeight(w)) lbs x \(r)"
+                return "\(w.formattedWeight) lbs x \(r)"
             }
         case "repsOnly":
             if let r = set.reps {
@@ -173,18 +163,12 @@ final class LiveActivityService {
             }
         case "weightDistance":
             if let w = set.weight, let d = set.distance {
-                return "\(formatWeight(w)) lbs • \(formatDistance(d)) mi"
+                return "\(w.formattedWeight) lbs • \(formatDistance(d)) mi"
             }
         default:
             break
         }
         return "—"
-    }
-
-    private func formatWeight(_ value: Double) -> String {
-        value.truncatingRemainder(dividingBy: 1) == 0
-            ? String(format: "%.0f", value)
-            : String(format: "%.1f", value)
     }
 
     private func formatDistance(_ value: Double) -> String {

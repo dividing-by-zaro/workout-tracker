@@ -80,14 +80,14 @@ struct ExerciseHistoryView: View {
         if equipmentType.tracksWeight && equipmentType.tracksReps && equipmentType == .weightedBodyweight {
             HStack(spacing: DesignSystem.Spacing.sm) {
                 Text("+BW").font(bodyStyle).foregroundStyle(DesignSystem.Colors.textSecondary)
-                if let w = set.weight { Text("\(formatWeight(w)) lb").font(bodyStyle) }
+                if let w = set.weight { Text("\(w.formattedWeight) lb").font(bodyStyle) }
                 if let r = set.reps { Text("x \(r)").font(bodyStyle) }
                 if let rpe = set.rpe { Text("RPE \(String(format: "%.0f", rpe))").font(captionStyle).foregroundStyle(DesignSystem.Colors.textSecondary) }
             }
             .foregroundStyle(DesignSystem.Colors.textPrimary)
         } else if equipmentType.tracksWeight && equipmentType.tracksReps {
             HStack(spacing: DesignSystem.Spacing.sm) {
-                if let w = set.weight { Text("\(formatWeight(w)) lb").font(bodyStyle) }
+                if let w = set.weight { Text("\(w.formattedWeight) lb").font(bodyStyle) }
                 if let r = set.reps { Text("x \(r)").font(bodyStyle) }
                 if let rpe = set.rpe { Text("RPE \(String(format: "%.0f", rpe))").font(captionStyle).foregroundStyle(DesignSystem.Colors.textSecondary) }
             }
@@ -100,7 +100,7 @@ struct ExerciseHistoryView: View {
             .foregroundStyle(DesignSystem.Colors.textPrimary)
         } else if equipmentType == .weightedDistance {
             HStack(spacing: DesignSystem.Spacing.sm) {
-                if let w = set.weight { Text("\(formatWeight(w)) lb").font(bodyStyle) }
+                if let w = set.weight { Text("\(w.formattedWeight) lb").font(bodyStyle) }
                 if let d = set.distance { Text(String(format: "%.1f mi", d)).font(bodyStyle) }
             }
             .foregroundStyle(DesignSystem.Colors.textPrimary)
@@ -117,9 +117,4 @@ struct ExerciseHistoryView: View {
         }
     }
 
-    private func formatWeight(_ value: Double) -> String {
-        value.truncatingRemainder(dividingBy: 1) == 0
-            ? String(format: "%.0f", value)
-            : String(format: "%.1f", value)
-    }
 }

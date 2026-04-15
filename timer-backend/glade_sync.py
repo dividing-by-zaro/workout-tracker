@@ -61,22 +61,28 @@ def _is_syncable(doc: dict) -> bool:
     )
 
 
-def _build_payload(doc: dict) -> dict:
-    return {
+def _source_id(local_id: str) -> str:
+    return f"kiln_{local_id}"
+
+
+def _build_glade_payload(doc: dict, include_activity_type: bool) -> dict:
+    payload = {
         "date": doc["started_at"].astimezone(PACIFIC).strftime("%Y-%m-%d"),
-        "activity_type": "strength",
         "duration_minutes": round(doc["duration_seconds"] / 60),
-        "source": "kiln",
-        "source_id": f"kiln_{doc['local_id']}",
         "description": doc.get("name", ""),
     }
+    if include_activity_type:
+        payload["activity_type"] = "strength"
+        payload["source"] = "kiln"
+        payload["source_id"] = _source_id(doc["local_id"])
+    return payload
 
 
 async def sync_workout_to_glade(doc: dict):
     """POST a single workout to Glade. Idempotent via source_id dedup."""
     if not _enabled() or not _is_syncable(doc):
         return
-    payload = _build_payload(doc)
+    payload = _build_glade_payload(doc, include_activity_type=True)
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.post(
@@ -94,12 +100,8 @@ async def update_workout_in_glade(doc: dict):
     """PUT updated workout fields to Glade. Falls back to POST if 404."""
     if not _enabled() or not _is_syncable(doc):
         return
-    source_id = f"kiln_{doc['local_id']}"
-    payload = {
-        "date": doc["started_at"].astimezone(PACIFIC).strftime("%Y-%m-%d"),
-        "duration_minutes": round(doc["duration_seconds"] / 60),
-        "description": doc.get("name", ""),
-    }
+    source_id = _source_id(doc["local_id"])
+    payload = _build_glade_payload(doc, include_activity_type=False)
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.put(
@@ -119,7 +121,7 @@ async def delete_workout_from_glade(local_id: str):
     """DELETE a workout from Glade by source_id. Ignores 404."""
     if not _enabled():
         return
-    source_id = f"kiln_{local_id}"
+    source_id = _source_id(local_id)
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.delete(

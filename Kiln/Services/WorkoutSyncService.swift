@@ -281,25 +281,6 @@ final class WorkoutSyncService {
         }
     }
 
-    func fetchServerSyncCount() async {
-        guard !apiKey.isEmpty,
-              let url = URL(string: baseURL + "/api/workouts/status") else { return }
-
-        var request = URLRequest(url: url)
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { return }
-            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let count = json["synced_count"] as? Int {
-                _ = count // Server count available if needed
-            }
-        } catch {
-            print("WorkoutSync: status fetch error: \(error.localizedDescription)")
-        }
-    }
-
     // MARK: - Persistence
 
     private static func loadSet(key: String) -> Set<String> {
