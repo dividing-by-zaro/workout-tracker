@@ -39,6 +39,9 @@ struct ProfileView: View {
                     .cardShadow()
                     .padding(.horizontal, DesignSystem.Spacing.md)
 
+                // Customizable per-exercise graphs
+                ProfileChartsSection(workouts: completedWorkouts)
+
                 // Alert sound picker card
                 VStack(spacing: 0) {
                     HStack(spacing: DesignSystem.Spacing.sm) {

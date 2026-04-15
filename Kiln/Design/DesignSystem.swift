@@ -19,6 +19,11 @@ enum DesignSystem {
         static let timerBackground = Color(red: 0.99, green: 0.91, blue: 0.85)  // Warm peach #FDE8D8
         static let tabBar = Color(red: 0.17, green: 0.09, blue: 0.06)           // Dark warm brown #2C1810
         static let tabInactive = Color(red: 0.62, green: 0.56, blue: 0.51)      // Muted warm gray #9E8E82
+
+        // Charts
+        static let chartLine = Color(red: 0.75, green: 0.20, blue: 0.15)        // = primary
+        static let chartArea = Color(red: 0.75, green: 0.20, blue: 0.15).opacity(0.14)
+        static let chartGrid = Color(red: 0.42, green: 0.36, blue: 0.31).opacity(0.12)
     }
 
     // MARK: - Shadows
@@ -47,6 +52,7 @@ enum DesignSystem {
         static let title: Font = .system(size: 28, weight: .bold)
         static let headline: Font = .system(size: 20, weight: .bold)
         static let body: Font = .system(size: 16, weight: .regular)
+        static let label: Font = .system(size: 14, weight: .semibold)
         static let caption: Font = .system(size: 12, weight: .regular)
     }
 

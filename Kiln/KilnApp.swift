@@ -44,7 +44,8 @@ struct KilnApp: App {
             TemplateExercise.self,
             Workout.self,
             WorkoutExercise.self,
-            WorkoutSet.self
+            WorkoutSet.self,
+            ProfileChartConfig.self
         ], isAutosaveEnabled: false)
         .onChange(of: scenePhase) {
             if scenePhase == .active {
