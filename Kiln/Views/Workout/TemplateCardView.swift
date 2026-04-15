@@ -92,36 +92,14 @@ struct TemplateCardView: View {
 
     private var metadataRow: some View {
         HStack(spacing: DesignSystem.Spacing.sm) {
-            metadataPill("\(template.exercises.count) exercises")
+            TemplateMetadataPill("\(template.exercises.count) exercises")
             if let avg = averageDuration {
-                metadataPill(avg)
+                TemplateMetadataPill(avg)
             }
             if let lastUsed = template.lastUsedAt {
-                metadataPill(lastUsedLabel(lastUsed))
+                TemplateMetadataPill(relativeUsageLabel(lastUsed))
             }
         }
-    }
-
-    private func lastUsedLabel(_ date: Date) -> String {
-        let calendar = Calendar.current
-        let startOfToday = calendar.startOfDay(for: .now)
-        let startOfDate = calendar.startOfDay(for: date)
-        let days = calendar.dateComponents([.day], from: startOfDate, to: startOfToday).day ?? 0
-        if days == 0 { return "Today" }
-        if days == 1 { return "Yesterday" }
-        if days < 30 { return "\(days)d ago" }
-        let months = days / 30
-        return months == 1 ? "1mo ago" : "\(months)mo ago"
-    }
-
-    private func metadataPill(_ text: String) -> some View {
-        Text(text)
-            .font(DesignSystem.Typography.caption)
-            .foregroundStyle(DesignSystem.Colors.textSecondary)
-            .padding(.horizontal, DesignSystem.Spacing.sm)
-            .padding(.vertical, DesignSystem.Spacing.xxs)
-            .background(DesignSystem.Colors.surfaceSecondary)
-            .clipShape(Capsule())
     }
 }
 
@@ -143,15 +121,15 @@ private struct TemplateDetailSheet: View {
                         .foregroundStyle(DesignSystem.Colors.textPrimary)
 
                     HStack(spacing: DesignSystem.Spacing.sm) {
-                        metadataPill("\(template.exercises.count) exercises")
+                        TemplateMetadataPill("\(template.exercises.count) exercises")
                         if let avg = averageDuration {
-                            metadataPill(avg)
+                            TemplateMetadataPill(avg)
                         }
                         if timesCompleted > 0 {
-                            metadataPill("\(timesCompleted)x done")
+                            TemplateMetadataPill("\(timesCompleted)x done")
                         }
                         if let lastUsed = template.lastUsedAt {
-                            metadataPill(lastUsedLabel(lastUsed))
+                            TemplateMetadataPill(relativeUsageLabel(lastUsed))
                         }
                     }
 
@@ -195,8 +173,16 @@ private struct TemplateDetailSheet: View {
         }
         .grainedBackground()
     }
+}
 
-    private func metadataPill(_ text: String) -> some View {
+private struct TemplateMetadataPill: View {
+    let text: String
+
+    init(_ text: String) {
+        self.text = text
+    }
+
+    var body: some View {
         Text(text)
             .font(DesignSystem.Typography.caption)
             .foregroundStyle(DesignSystem.Colors.textSecondary)
@@ -205,16 +191,16 @@ private struct TemplateDetailSheet: View {
             .background(DesignSystem.Colors.surfaceSecondary)
             .clipShape(Capsule())
     }
+}
 
-    private func lastUsedLabel(_ date: Date) -> String {
-        let calendar = Calendar.current
-        let startOfToday = calendar.startOfDay(for: .now)
-        let startOfDate = calendar.startOfDay(for: date)
-        let days = calendar.dateComponents([.day], from: startOfDate, to: startOfToday).day ?? 0
-        if days == 0 { return "Today" }
-        if days == 1 { return "Yesterday" }
-        if days < 30 { return "\(days)d ago" }
-        let months = days / 30
-        return months == 1 ? "1mo ago" : "\(months)mo ago"
-    }
+private func relativeUsageLabel(_ date: Date) -> String {
+    let calendar = Calendar.current
+    let startOfToday = calendar.startOfDay(for: .now)
+    let startOfDate = calendar.startOfDay(for: date)
+    let days = calendar.dateComponents([.day], from: startOfDate, to: startOfToday).day ?? 0
+    if days == 0 { return "Today" }
+    if days == 1 { return "Yesterday" }
+    if days < 30 { return "\(days)d ago" }
+    let months = days / 30
+    return months == 1 ? "1mo ago" : "\(months)mo ago"
 }

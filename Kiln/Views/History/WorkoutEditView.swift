@@ -126,46 +126,13 @@ struct WorkoutEditView: View {
     }
 
     private func addExercise(_ exercise: Exercise) {
-        let order = workout.exercises.count
-        let workoutExercise = WorkoutExercise(order: order, exercise: exercise, workout: workout)
-        modelContext.insert(workoutExercise)
-
-        let setCount = PreFillService.recommendedSetCount(for: exercise, in: modelContext)
-        let preFill = PreFillService.preFillSets(for: exercise, setCount: setCount, in: modelContext)
-        for (i, data) in preFill.enumerated() {
-            let set = WorkoutSet(
-                order: i,
-                weight: data.weight,
-                reps: data.reps,
-                distance: data.distance,
-                seconds: data.seconds,
-                workoutExercise: workoutExercise
-            )
-            modelContext.insert(set)
-        }
+        PreFillService.insertPrefilledExercise(exercise, into: workout, in: modelContext)
         try? modelContext.save()
         refreshPreFillCache()
     }
 
     private func swapExercise(_ workoutExercise: WorkoutExercise, with newExercise: Exercise) {
-        for set in workoutExercise.sets {
-            modelContext.delete(set)
-        }
-        workoutExercise.exercise = newExercise
-
-        let setCount = PreFillService.recommendedSetCount(for: newExercise, in: modelContext)
-        let preFill = PreFillService.preFillSets(for: newExercise, setCount: setCount, in: modelContext)
-        for (i, data) in preFill.enumerated() {
-            let set = WorkoutSet(
-                order: i,
-                weight: data.weight,
-                reps: data.reps,
-                distance: data.distance,
-                seconds: data.seconds,
-                workoutExercise: workoutExercise
-            )
-            modelContext.insert(set)
-        }
+        PreFillService.replacePrefilledExercise(workoutExercise, with: newExercise, in: modelContext)
         try? modelContext.save()
         refreshPreFillCache()
     }

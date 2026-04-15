@@ -2,7 +2,6 @@ import SwiftUI
 import SwiftData
 
 struct ProfileView: View {
-    @Environment(\.modelContext) private var modelContext
     @Query(filter: #Predicate<Workout> { $0.isInProgress == false }) private var completedWorkouts: [Workout]
 
     @Environment(WorkoutSessionManager.self) private var sessionManager

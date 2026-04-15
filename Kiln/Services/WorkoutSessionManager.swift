@@ -298,7 +298,6 @@ final class WorkoutSessionManager {
         celebrationData = CelebrationData(
             workoutName: workout.name,
             duration: workout.formattedDuration,
-            durationSeconds: workout.durationSeconds ?? 0,
             totalVolume: workout.totalVolume,
             totalSets: totalSets,
             totalReps: totalReps,
@@ -737,11 +736,6 @@ final class WorkoutSessionManager {
             }
         }
         return nil
-    }
-
-    var hasCompletedSets: Bool {
-        guard let workout = activeWorkout else { return false }
-        return workout.exercises.flatMap(\.sets).contains { $0.isCompleted }
     }
 
     var formattedElapsedTime: String {

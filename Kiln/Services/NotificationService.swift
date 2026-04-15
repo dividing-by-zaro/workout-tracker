@@ -5,7 +5,6 @@ import UserNotifications
 @Observable
 final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     private static let restTimerIdentifier = "restTimer"
-    private(set) var isPermissionGranted = false
 
     override init() {
         super.init()
@@ -13,11 +12,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     }
 
     func requestPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, _ in
-            Task { @MainActor in
-                self.isPermissionGranted = granted
-            }
-        }
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
     }
 
     func scheduleRestTimer(duration: Int) {

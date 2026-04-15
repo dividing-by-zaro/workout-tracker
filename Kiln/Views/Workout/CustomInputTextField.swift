@@ -20,31 +20,9 @@ struct CustomInputTextField: UIViewRepresentable {
         textField.delegate = context.coordinator
         textField.setContentHuggingPriority(.defaultHigh, for: .horizontal)
 
-        let keyboardView = NumericKeyboardView(
-            config: config,
-            onKeyTap: { [weak textField] key in
-                guard let tf = textField else { return }
-                context.coordinator.handleKey(key, in: tf)
-            },
-            onDismiss: { [weak textField] in
-                textField?.resignFirstResponder()
-            },
-            onIncrement: { [weak textField] in
-                guard let tf = textField else { return }
-                context.coordinator.increment(in: tf)
-            },
-            onDecrement: { [weak textField] in
-                guard let tf = textField else { return }
-                context.coordinator.decrement(in: tf)
-            }
-        )
-
-        let hostingController = UIHostingController(rootView: keyboardView)
-        hostingController.view.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 260)
-        hostingController.view.autoresizingMask = [.flexibleWidth]
+        let hostingController = makeKeyboardHostingController(for: textField, coordinator: context.coordinator)
         textField.inputView = hostingController.view
 
-        context.coordinator.textField = textField
         context.coordinator.hostingController = hostingController
 
         // Sync initial value
@@ -68,30 +46,39 @@ struct CustomInputTextField: UIViewRepresentable {
         if context.coordinator.config.incrementStep != config.incrementStep ||
            context.coordinator.config.showDecimalKey != config.showDecimalKey {
             context.coordinator.config = config
-            let keyboardView = NumericKeyboardView(
-                config: config,
-                onKeyTap: { [weak textField] key in
-                    guard let tf = textField else { return }
-                    context.coordinator.handleKey(key, in: tf)
-                },
-                onDismiss: { [weak textField] in
-                    textField?.resignFirstResponder()
-                },
-                onIncrement: { [weak textField] in
-                    guard let tf = textField else { return }
-                    context.coordinator.increment(in: tf)
-                },
-                onDecrement: { [weak textField] in
-                    guard let tf = textField else { return }
-                    context.coordinator.decrement(in: tf)
-                }
-            )
-            let hc = UIHostingController(rootView: keyboardView)
-            hc.view.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 260)
-            hc.view.autoresizingMask = [.flexibleWidth]
+            let hc = makeKeyboardHostingController(for: textField, coordinator: context.coordinator)
             textField.inputView = hc.view
             context.coordinator.hostingController = hc
         }
+    }
+
+    private func makeKeyboardHostingController(
+        for textField: UITextField,
+        coordinator: Coordinator
+    ) -> UIHostingController<NumericKeyboardView> {
+        let keyboardView = NumericKeyboardView(
+            config: config,
+            onKeyTap: { [weak textField] key in
+                guard let textField else { return }
+                coordinator.handleKey(key, in: textField)
+            },
+            onDismiss: { [weak textField] in
+                textField?.resignFirstResponder()
+            },
+            onIncrement: { [weak textField] in
+                guard let textField else { return }
+                coordinator.increment(in: textField)
+            },
+            onDecrement: { [weak textField] in
+                guard let textField else { return }
+                coordinator.decrement(in: textField)
+            }
+        )
+
+        let hostingController = UIHostingController(rootView: keyboardView)
+        hostingController.view.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 260)
+        hostingController.view.autoresizingMask = [.flexibleWidth]
+        return hostingController
     }
 
     // MARK: - Coordinator
@@ -100,7 +87,6 @@ struct CustomInputTextField: UIViewRepresentable {
         var value: Binding<Double?>
         var config: NumericKeyboardConfig
         var onValueChanged: (() -> Void)?
-        weak var textField: UITextField?
         var hostingController: UIHostingController<NumericKeyboardView>?
         var pendingReplace = true
 

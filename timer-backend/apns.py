@@ -45,7 +45,7 @@ class APNSClient:
         return self._cached_token
 
     async def send_live_activity_update(
-        self, push_token: str, content_state: dict, alert: dict | None = None
+        self, push_token: str, content_state: dict
     ) -> httpx.Response:
         token = self.generate_jwt()
         apns_payload: dict = {
@@ -55,8 +55,6 @@ class APNSClient:
                 "content-state": content_state,
             }
         }
-        if alert:
-            apns_payload["aps"]["alert"] = alert
 
         url = f"{self._base_url}/3/device/{push_token}"
         headers = {

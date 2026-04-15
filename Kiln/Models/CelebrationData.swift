@@ -3,7 +3,6 @@ import Foundation
 struct CelebrationData {
     let workoutName: String
     let duration: String
-    let durationSeconds: Int
     let totalVolume: Double
     let totalSets: Int
     let totalReps: Int

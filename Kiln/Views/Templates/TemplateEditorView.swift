@@ -82,29 +82,27 @@ struct TemplateEditorView: View {
     }
 
     private func saveTemplate() {
+        let template: WorkoutTemplate
         if let existing = existingTemplate {
             existing.name = name
+            template = existing
             // Remove old exercises that were deleted from the local list
             for ex in existing.exercises where !templateExercises.contains(where: { $0.id == ex.id }) {
                 modelContext.delete(ex)
             }
-            // Update/add exercises
-            for (index, te) in templateExercises.enumerated() {
-                te.order = index
-                te.template = existing
-                if te.modelContext == nil {
-                    modelContext.insert(te)
-                }
-            }
         } else {
-            let template = WorkoutTemplate(name: name)
+            template = WorkoutTemplate(name: name)
             modelContext.insert(template)
-            for (index, te) in templateExercises.enumerated() {
-                te.order = index
-                te.template = template
+        }
+
+        for (index, te) in templateExercises.enumerated() {
+            te.order = index
+            te.template = template
+            if te.modelContext == nil {
                 modelContext.insert(te)
             }
         }
+
         try? modelContext.save()
     }
 }

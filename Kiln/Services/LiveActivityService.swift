@@ -68,10 +68,6 @@ final class LiveActivityService {
         if let (exercise, set) = sessionManager.findCurrentSet() {
             let equipmentType = exercise.exercise?.resolvedEquipmentType ?? .barbell
             let category = equipmentType.equipmentCategory
-            let previousLabel = formatPreviousSetLabel(for: set, equipmentType: equipmentType)
-
-            let exerciseIndex = sessionManager.activeWorkout?.sortedExercises.firstIndex(where: { $0.id == exercise.id }) ?? 0
-            let totalExercises = sessionManager.activeWorkout?.sortedExercises.count ?? 0
             let setIndex = exercise.sortedSets.firstIndex(where: { $0.id == set.id }) ?? 0
 
             let summaries = exercise.sortedSets.map { s in
@@ -85,7 +81,6 @@ final class LiveActivityService {
                 exerciseName: exercise.exercise?.name ?? "Exercise",
                 setNumber: setIndex + 1,
                 totalSetsInExercise: exercise.sortedSets.count,
-                previousSetLabel: previousLabel,
                 setSummaries: summaries,
                 weight: set.weight,
                 reps: set.reps,
@@ -95,9 +90,7 @@ final class LiveActivityService {
                 isRestTimerActive: sessionManager.restTimer.isRunning,
                 restTimerEndDate: sessionManager.restTimer.endDate ?? .distantPast,
                 restTotalSeconds: sessionManager.restTimer.totalSeconds,
-                isWorkoutComplete: false,
-                exerciseIndex: exerciseIndex + 1,
-                totalExercises: totalExercises
+                isWorkoutComplete: false
             )
         }
 
@@ -106,7 +99,6 @@ final class LiveActivityService {
             exerciseName: "",
             setNumber: 0,
             totalSetsInExercise: 0,
-            previousSetLabel: "",
             setSummaries: [],
             weight: nil,
             reps: nil,
@@ -116,9 +108,7 @@ final class LiveActivityService {
             isRestTimerActive: false,
             restTimerEndDate: .distantPast,
             restTotalSeconds: 0,
-            isWorkoutComplete: true,
-            exerciseIndex: 0,
-            totalExercises: sessionManager.activeWorkout?.sortedExercises.count ?? 0
+            isWorkoutComplete: true
         )
     }
 
@@ -139,39 +129,5 @@ final class LiveActivityService {
             seconds: set.seconds,
             distance: set.distance
         )
-    }
-
-    private func formatPreviousSetLabel(for set: WorkoutSet, equipmentType: EquipmentType) -> String {
-        // The pre-fill data is already stored on the set from PreFillService at workout start.
-        // We format based on equipment category, matching the in-app PREVIOUS column.
-        switch equipmentType.equipmentCategory {
-        case "weightReps":
-            if let w = set.weight, let r = set.reps {
-                return "\(w.formattedWeight) lbs x \(r)"
-            }
-        case "repsOnly":
-            if let r = set.reps {
-                return "x \(r)"
-            }
-        case "duration":
-            if let s = set.seconds {
-                return "\(Int(s))s"
-            }
-        case "distance":
-            if let d = set.distance {
-                return "\(formatDistance(d)) mi"
-            }
-        case "weightDistance":
-            if let w = set.weight, let d = set.distance {
-                return "\(w.formattedWeight) lbs • \(formatDistance(d)) mi"
-            }
-        default:
-            break
-        }
-        return "—"
-    }
-
-    private func formatDistance(_ value: Double) -> String {
-        String(format: "%.1f", value)
     }
 }

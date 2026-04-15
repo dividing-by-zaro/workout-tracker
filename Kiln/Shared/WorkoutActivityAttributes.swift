@@ -14,7 +14,6 @@ struct WorkoutActivityAttributes: ActivityAttributes {
         var exerciseName: String
         var setNumber: Int
         var totalSetsInExercise: Int
-        var previousSetLabel: String
         var setSummaries: [SetSummary]
         var weight: Double?
         var reps: Int?
@@ -25,7 +24,5 @@ struct WorkoutActivityAttributes: ActivityAttributes {
         var restTimerEndDate: Date
         var restTotalSeconds: Int
         var isWorkoutComplete: Bool
-        var exerciseIndex: Int
-        var totalExercises: Int
     }
 }

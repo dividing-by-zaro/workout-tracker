@@ -37,9 +37,8 @@ class CancelRequest(BaseModel):
 
 
 class PendingTimer:
-    def __init__(self, task: asyncio.Task, fire_at: datetime):
+    def __init__(self, task: asyncio.Task):
         self.task = task
-        self.fire_at = fire_at
 
 
 # --- App ---
@@ -310,7 +309,7 @@ async def schedule_timer(req: ScheduleRequest):
             pending_timers.pop(req.device_id, None)
 
     task = asyncio.create_task(_fire())
-    pending_timers[req.device_id] = PendingTimer(task=task, fire_at=fire_at)
+    pending_timers[req.device_id] = PendingTimer(task=task)
 
     return {"status": "scheduled", "fire_at": fire_at.isoformat()}
 
