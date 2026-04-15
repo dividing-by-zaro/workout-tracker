@@ -56,6 +56,7 @@ See your full workout history and weekly trends at a glance.
 - Per-user API keys stored in iOS Keychain
 - Offline-tolerant — cached profile allows app use without the backend (rest timer notifications may be unreliable, though)
 - Workout history syncs to the server (client-authoritative)
+- Optional daily Google Drive backups of the MongoDB database
 - Optional Glade integration — automatically push completed workouts to an external data aggregation system
 
 ## Getting Started
@@ -105,6 +106,35 @@ The backend is a FastAPI service in `timer-backend/`. It handles APNS push for L
 4. Deploy with Coolify by pointing a new service at the `timer-backend/` directory in your GitHub repo and setting the environment variables in the dashboard.
 5. Verify: `curl http://your-server:8000/health` should return `{"status":"ok"}`
 6. On first launch, the backend creates an account for each name in `SEED_USER_NAMES` and prints their API keys to stdout in Coolify's Logs. Save these — each user enters their key on the iOS login screen.
+
+### Optional: daily Google Drive backups
+
+The backend can gzip-dump your MongoDB database and upload it to Google Drive every night at 00:00 UTC. This is entirely optional — if the env vars below are blank, the scheduler logs "Backup skipped" once a day and does nothing else.
+
+1. Create an OAuth 2.0 **Desktop app** client in the [Google Cloud Console](https://console.cloud.google.com/apis/credentials) and enable the Google Drive API. Note the client ID and secret.
+2. Run the one-time auth script locally to obtain a refresh token:
+   ```bash
+   export GOOGLE_CLIENT_ID=your-client-id
+   export GOOGLE_CLIENT_SECRET=your-client-secret
+   uv run timer-backend/scripts/setup_google_auth.py
+   ```
+   This opens a browser consent flow and prints the refresh token.
+3. Add to your backend env vars:
+   ```
+   GOOGLE_CLIENT_ID=your-client-id
+   GOOGLE_CLIENT_SECRET=your-client-secret
+   GOOGLE_REFRESH_TOKEN=your-refresh-token
+   BACKUP_DATABASES=kiln             # optional, comma-separated
+   BACKUP_DRIVE_FOLDER=kiln-backups  # optional, Drive folder name
+   BACKUP_RETENTION_DAYS=30          # optional, prune older files
+   ```
+4. Redeploy. Trigger a test backup manually:
+   ```bash
+   curl -X POST https://your-server/api/backup -H "Authorization: Bearer <your-api-key>"
+   ```
+   You should see a new `kiln-backups` folder appear in the Drive account you authed as. Nightly runs happen automatically after that.
+
+The `drive.file` scope only exposes files this app creates, so you can safely reuse the same OAuth client across multiple self-hosted apps — each one writes to its own folder without seeing the others.
 
 ### Build the iOS app
 

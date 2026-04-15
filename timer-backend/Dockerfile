@@ -10,7 +10,7 @@ FROM python:3.13-slim
 
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
-COPY main.py apns.py db.py ./
+COPY main.py apns.py db.py backup.py glade_sync.py models.py ./
 
 ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8000

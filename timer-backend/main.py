@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from apns import APNSClient
+from backup import run_backup
 from db import get_db, seed_users, close_client
 from glade_sync import (
     backfill_to_glade,
@@ -47,6 +48,19 @@ pending_timers: dict[str, PendingTimer] = {}
 apns_client: APNSClient | None = None
 
 
+async def _backup_scheduler():
+    """Run run_backup() every day at 00:00 UTC."""
+    while True:
+        now = datetime.now(timezone.utc)
+        next_run = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        await asyncio.sleep((next_run - now).total_seconds())
+        try:
+            result = await run_backup()
+            print(f"Daily backup: {result}")
+        except Exception as e:
+            print(f"Daily backup failed: {e}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global apns_client
@@ -59,6 +73,7 @@ async def lifespan(app: FastAPI):
     )
     await seed_users()
     asyncio.create_task(backfill_to_glade())
+    asyncio.create_task(_backup_scheduler())
     yield
     await apns_client.close()
     close_client()
@@ -298,6 +313,12 @@ async def schedule_timer(req: ScheduleRequest):
     pending_timers[req.device_id] = PendingTimer(task=task, fire_at=fire_at)
 
     return {"status": "scheduled", "fire_at": fire_at.isoformat()}
+
+
+@app.post("/api/backup")
+async def trigger_backup():
+    result = await run_backup()
+    return {"result": result}
 
 
 @app.post("/api/timer/cancel")

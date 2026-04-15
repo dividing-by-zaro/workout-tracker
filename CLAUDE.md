@@ -77,7 +77,8 @@ Kiln/
 └── Design/                        # DesignSystem (colors, shadows, grain, corner radius, typography, spacing, icons)
 
 timer-backend/
-├── main.py              # FastAPI app: /api/me, /api/timer/schedule, /api/timer/cancel, /api/workouts (POST/PUT/DELETE), /api/workouts/status, /api/workouts/ids, /api/sync-glade, /health
+├── main.py              # FastAPI app: /api/me, /api/timer/schedule, /api/timer/cancel, /api/workouts (POST/PUT/DELETE), /api/workouts/status, /api/workouts/ids, /api/sync-glade, /api/backup, /health
+├── backup.py            # Daily Google Drive backup: async gzipped JSON dump of all MongoDB collections, uploaded to a Drive folder with configurable retention. Scheduled nightly at 00:00 UTC from main.py lifespan; manual trigger via POST /api/backup. Sync Google API client calls offloaded via asyncio.to_thread. Env: GOOGLE_CLIENT_ID/SECRET/REFRESH_TOKEN, BACKUP_DATABASES (default "kiln"), BACKUP_DRIVE_FOLDER (default "kiln-backups"), BACKUP_RETENTION_DAYS (default 30). Disabled when creds are blank. OAuth client can be shared with Glade's Drive app — drive.file scope is per-file so folders stay isolated.
 ├── glade_sync.py        # Glade exercise sync: backfill on startup, inline sync on create/update/delete, fire-and-forget via httpx
 ├── models.py            # Pydantic models for workout sync payloads (WorkoutPayload, WorkoutResponse, SyncStatusResponse)
 ├── db.py                # MongoDB client (motor), user seeding (names via SEED_USER_NAMES env var), ensure_indexes(), get_db() helper
