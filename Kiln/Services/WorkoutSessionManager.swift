@@ -81,6 +81,7 @@ final class WorkoutSessionManager {
     private var deviceId: String { UIDevice.current.identifierForVendor?.uuidString ?? "unknown" }
     private let persistenceController = WorkoutSessionPersistenceController()
     private var elapsedTimer: Timer?
+    private var pendingLiveActivitySyncItem: DispatchWorkItem?
 
     var showResumedToast: Bool = false
     var celebrationData: CelebrationData?
@@ -110,8 +111,10 @@ final class WorkoutSessionManager {
         persistenceController.saveNow()
         guard activeWorkout != nil else { return }
         guard currentActivity != nil else { return }
-        updateLiveActivity()
-        cacheCurrentState()
+        cancelPendingLiveActivitySync()
+        let state = liveActivityService.buildContentState(from: self)
+        updateLiveActivity(with: state)
+        cacheCurrentState(using: state)
     }
 
     func setModelContext(_ context: ModelContext) {
@@ -201,6 +204,27 @@ final class WorkoutSessionManager {
         persistenceController.scheduleSave()
 
         guard findCurrentSet()?.1.id == workoutSet.id else { return }
+        scheduleLiveActivitySync()
+    }
+
+    private func scheduleLiveActivitySync(after delay: TimeInterval = 0.25) {
+        pendingLiveActivitySyncItem?.cancel()
+        let item = DispatchWorkItem { [weak self] in
+            self?.flushPendingLiveActivitySync()
+        }
+        pendingLiveActivitySyncItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: item)
+    }
+
+    private func cancelPendingLiveActivitySync() {
+        pendingLiveActivitySyncItem?.cancel()
+        pendingLiveActivitySyncItem = nil
+    }
+
+    private func flushPendingLiveActivitySync() {
+        pendingLiveActivitySyncItem?.cancel()
+        pendingLiveActivitySyncItem = nil
+        guard activeWorkout != nil, currentActivity != nil else { return }
         syncLiveActivityState()
     }
 
@@ -290,6 +314,8 @@ final class WorkoutSessionManager {
     // MARK: - Complete Set
 
     func completeSet(_ workoutSet: WorkoutSet, context: ModelContext) {
+        cancelPendingLiveActivitySync()
+
         if workoutSet.isCompleted {
             workoutSet.isCompleted = false
             workoutSet.completedAt = nil
@@ -298,8 +324,9 @@ final class WorkoutSessionManager {
             if lastCompletedSetId == workoutSet.id {
                 stopRestTimer(cancelBackend: true)
             }
-            updateLiveActivity()
-            cacheCurrentState()
+            let state = liveActivityService.buildContentState(from: self)
+            updateLiveActivity(with: state)
+            cacheCurrentState(using: state)
             return
         }
 
@@ -318,6 +345,8 @@ final class WorkoutSessionManager {
     // MARK: - Delete Set
 
     func deleteSet(_ workoutSet: WorkoutSet, context: ModelContext) {
+        cancelPendingLiveActivitySync()
+
         let exercise = workoutSet.workoutExercise
 
         if lastCompletedSetId == workoutSet.id {
@@ -332,13 +361,16 @@ final class WorkoutSessionManager {
             }
         }
         persistenceController.saveNow(using: context)
-        updateLiveActivity()
-        cacheCurrentState()
+        let state = liveActivityService.buildContentState(from: self)
+        updateLiveActivity(with: state)
+        cacheCurrentState(using: state)
     }
 
     // MARK: - Remove Exercise
 
     func removeExercise(_ exercise: WorkoutExercise, context: ModelContext) {
+        cancelPendingLiveActivitySync()
+
         // If the rest timer is running for a set in this exercise, stop it
         if let completedId = lastCompletedSetId,
            exercise.sets.contains(where: { $0.id == completedId }) {
@@ -355,27 +387,34 @@ final class WorkoutSessionManager {
         }
 
         persistenceController.saveNow(using: context)
-        updateLiveActivity()
-        cacheCurrentState()
+        let state = liveActivityService.buildContentState(from: self)
+        updateLiveActivity(with: state)
+        cacheCurrentState(using: state)
     }
 
     // MARK: - Reorder Exercises
 
     func reorderExercises(_ exercises: [WorkoutExercise], context: ModelContext) {
+        cancelPendingLiveActivitySync()
+
         for (i, exercise) in exercises.enumerated() {
             exercise.order = i
         }
         persistenceController.saveNow(using: context)
-        updateLiveActivity()
-        cacheCurrentState()
+        let state = liveActivityService.buildContentState(from: self)
+        updateLiveActivity(with: state)
+        cacheCurrentState(using: state)
         rescheduleBackendTimerIfNeeded()
     }
 
     // MARK: - Sync Live Activity State
 
     func syncLiveActivityState() {
-        updateLiveActivity()
-        cacheCurrentState()
+        pendingLiveActivitySyncItem?.cancel()
+        pendingLiveActivitySyncItem = nil
+        let state = liveActivityService.buildContentState(from: self)
+        updateLiveActivity(with: state)
+        cacheCurrentState(using: state)
         rescheduleBackendTimerIfNeeded()
     }
 
@@ -383,6 +422,7 @@ final class WorkoutSessionManager {
 
     func reset() {
         persistenceController.cancelScheduledSave()
+        cancelPendingLiveActivitySync()
         stopRestTimer(cancelBackend: false)
         stopElapsedTimer()
         endLiveActivity()
@@ -436,6 +476,7 @@ final class WorkoutSessionManager {
         guard let workout = activeWorkout else { return }
 
         persistenceController.cancelScheduledSave()
+        cancelPendingLiveActivitySync()
         workout.isInProgress = false
         workout.completedAt = .now
         workout.durationSeconds = Int(Date.now.timeIntervalSince(workout.startedAt))
@@ -462,6 +503,7 @@ final class WorkoutSessionManager {
         guard let workout = activeWorkout else { return }
 
         persistenceController.cancelScheduledSave()
+        cancelPendingLiveActivitySync()
         context.delete(workout)
         persistenceController.saveNow(using: context)
 
@@ -597,12 +639,12 @@ final class WorkoutSessionManager {
         }
     }
 
-    private func cacheCurrentState() {
-        let state = liveActivityService.buildContentState(from: self)
+    private func cacheCurrentState(using state: WorkoutActivityAttributes.ContentState? = nil) {
+        let resolvedState = state ?? liveActivityService.buildContentState(from: self)
         let current = findCurrentSet()
         let setId = current?.1.id
         let restDuration = current?.0.exercise?.defaultRestSeconds ?? 120
-        LiveActivityCache.cache(state, setId: setId, restDuration: restDuration)
+        LiveActivityCache.cache(resolvedState, setId: setId, restDuration: restDuration)
     }
 
     // MARK: - Intent Handlers (called from LiveActivityIntents)
@@ -701,6 +743,8 @@ final class WorkoutSessionManager {
     // MARK: - Foreground Resume
 
     func handleForegroundResume() {
+        cancelPendingLiveActivitySync()
+
         let wasTimerRunning = restTimer.isRunning
         restTimer.syncFromPersistedState()
 
