@@ -147,10 +147,15 @@ struct WorkoutEditView: View {
     }
 
     private func refreshPreFillCache() {
+        let completedWorkouts = WorkoutHistoryService.fetchCompletedWorkouts(context: modelContext) ?? []
         var cache: [UUID: [PreFillData]] = [:]
         for ex in workout.sortedExercises {
             guard let exercise = ex.exercise else { continue }
-            cache[ex.id] = PreFillService.preFillSets(for: exercise, setCount: ex.sets.count, in: modelContext)
+            cache[ex.id] = PreFillService.preFillSets(
+                for: exercise,
+                setCount: ex.sets.count,
+                in: completedWorkouts
+            )
         }
         preFillCache = cache
     }

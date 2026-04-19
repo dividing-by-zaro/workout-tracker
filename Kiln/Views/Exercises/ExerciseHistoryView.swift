@@ -3,23 +3,14 @@ import SwiftData
 
 struct ExerciseHistoryView: View {
     let exercise: Exercise
-    @Query private var workoutExercises: [WorkoutExercise]
-
     @Query(filter: #Predicate<Workout> { !$0.isInProgress }) private var finishedWorkouts: [Workout]
 
     init(exercise: Exercise) {
         self.exercise = exercise
     }
 
-    private var finishedSessions: [(workout: Workout, workoutExercise: WorkoutExercise)] {
-        finishedWorkouts
-            .compactMap { workout in
-                guard let we = workout.exercises.first(where: { $0.exercise?.id == exercise.id }) else { return nil }
-                let hasCompletedSets = we.sets.contains { $0.isCompleted }
-                guard hasCompletedSets else { return nil }
-                return (workout: workout, workoutExercise: we)
-            }
-            .sorted { $0.workout.startedAt > $1.workout.startedAt }
+    private var finishedSessions: [ExerciseHistorySession] {
+        WorkoutHistoryService.exerciseSessions(for: exercise, in: finishedWorkouts)
     }
 
     var body: some View {
@@ -33,7 +24,7 @@ struct ExerciseHistoryView: View {
             } else {
                 ScrollView {
                     VStack(spacing: DesignSystem.Spacing.md) {
-                        ForEach(finishedSessions, id: \.workoutExercise.id) { session in
+                        ForEach(finishedSessions) { session in
                             sessionCard(session.workout, session.workoutExercise)
                         }
                     }

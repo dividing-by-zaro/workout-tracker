@@ -22,6 +22,44 @@ struct TemplateDiff {
     }
 }
 
+private struct SetCompletionTransition {
+    let setId: UUID
+    let isLastSetInExercise: Bool
+    let restDuration: Int
+}
+
+@MainActor
+private final class WorkoutSessionPersistenceController {
+    private(set) var modelContext: ModelContext?
+    private var pendingSaveWorkItem: DispatchWorkItem?
+
+    func bind(_ context: ModelContext) {
+        modelContext = context
+    }
+
+    func saveNow(using context: ModelContext? = nil) {
+        pendingSaveWorkItem?.cancel()
+        pendingSaveWorkItem = nil
+        try? (context ?? modelContext)?.save()
+    }
+
+    func scheduleSave(after delay: TimeInterval = 0.8) {
+        guard modelContext != nil else { return }
+
+        pendingSaveWorkItem?.cancel()
+        let workItem = DispatchWorkItem { [weak self] in
+            self?.saveNow()
+        }
+        pendingSaveWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
+    }
+
+    func cancelScheduledSave() {
+        pendingSaveWorkItem?.cancel()
+        pendingSaveWorkItem = nil
+    }
+}
+
 @MainActor
 @Observable
 final class WorkoutSessionManager {
@@ -41,12 +79,16 @@ final class WorkoutSessionManager {
     private var currentActivity: Activity<WorkoutActivityAttributes>?
     private var currentPushToken: String?
     private var deviceId: String { UIDevice.current.identifierForVendor?.uuidString ?? "unknown" }
-    private var modelContext: ModelContext?
+    private let persistenceController = WorkoutSessionPersistenceController()
     private var elapsedTimer: Timer?
 
     var showResumedToast: Bool = false
     var celebrationData: CelebrationData?
     var shouldSwitchToWorkoutTab: Bool = false
+
+    private var modelContext: ModelContext? {
+        persistenceController.modelContext
+    }
 
     init() {
         Self.shared = self
@@ -65,19 +107,21 @@ final class WorkoutSessionManager {
     }
 
     private func flushLiveActivityOnResignActive() {
-        guard activeWorkout != nil, currentActivity != nil else { return }
+        persistenceController.saveNow()
+        guard activeWorkout != nil else { return }
+        guard currentActivity != nil else { return }
         updateLiveActivity()
         cacheCurrentState()
     }
 
     func setModelContext(_ context: ModelContext) {
-        self.modelContext = context
+        persistenceController.bind(context)
     }
 
     // MARK: - Crash Recovery
 
     func checkForInterruptedWorkout(context: ModelContext) {
-        self.modelContext = context
+        persistenceController.bind(context)
         let descriptor = FetchDescriptor<Workout>(
             predicate: #Predicate<Workout> { $0.isInProgress == true }
         )
@@ -97,10 +141,11 @@ final class WorkoutSessionManager {
 
     func startWorkout(from template: WorkoutTemplate, context: ModelContext) {
         guard activeWorkout == nil else { return }
-        self.modelContext = context
+        persistenceController.bind(context)
 
         let workout = Workout(name: template.name, templateId: template.id)
         context.insert(workout)
+        let completedWorkouts = WorkoutHistoryService.fetchCompletedWorkouts(context: context) ?? []
 
         for (index, templateExercise) in template.sortedExercises.enumerated() {
             guard let exercise = templateExercise.exercise else { continue }
@@ -108,7 +153,11 @@ final class WorkoutSessionManager {
             let workoutExercise = WorkoutExercise(order: index, exercise: exercise, workout: workout)
             context.insert(workoutExercise)
 
-            let preFillData = PreFillService.preFillSets(for: exercise, setCount: templateExercise.defaultSets, in: context)
+            let preFillData = PreFillService.preFillSets(
+                for: exercise,
+                setCount: templateExercise.defaultSets,
+                in: completedWorkouts
+            )
 
             for (setIndex, data) in preFillData.enumerated() {
                 let workoutSet = WorkoutSet(
@@ -124,7 +173,7 @@ final class WorkoutSessionManager {
         }
 
         template.lastUsedAt = .now
-        try? context.save()
+        persistenceController.saveNow(using: context)
 
         activeWorkout = workout
         elapsedSeconds = 0
@@ -136,16 +185,106 @@ final class WorkoutSessionManager {
 
     func startEmptyWorkout(context: ModelContext) {
         guard activeWorkout == nil else { return }
-        self.modelContext = context
+        persistenceController.bind(context)
 
         let workout = Workout(name: "Workout")
         context.insert(workout)
-        try? context.save()
+        persistenceController.saveNow(using: context)
 
         activeWorkout = workout
         elapsedSeconds = 0
         startElapsedTimer()
         startLiveActivity()
+    }
+
+    func handleSetValueChange(for workoutSet: WorkoutSet) {
+        persistenceController.scheduleSave()
+
+        guard findCurrentSet()?.1.id == workoutSet.id else { return }
+        syncLiveActivityState()
+    }
+
+    private func stopRestTimer(cancelBackend: Bool = false) {
+        restTimer.stop()
+        lastCompletedSetId = nil
+        notificationService.cancelRestTimer()
+        if cancelBackend {
+            sendTimerCancelToBackend()
+        }
+    }
+
+    private func startRestTimer(duration: Int) {
+        notificationService.cancelRestTimer()
+        restTimer.start(duration: duration)
+        notificationService.scheduleRestTimer(duration: duration)
+    }
+
+    private func buildCompletionTransition(for workoutSet: WorkoutSet) -> SetCompletionTransition {
+        let isLastSetInExercise = workoutSet.workoutExercise.map { exercise in
+            exercise.sortedSets.allSatisfy { $0.isCompleted }
+        } ?? false
+
+        return SetCompletionTransition(
+            setId: workoutSet.id,
+            isLastSetInExercise: isLastSetInExercise,
+            restDuration: workoutSet.workoutExercise?.exercise?.defaultRestSeconds ?? 120
+        )
+    }
+
+    private func buildCompletionTransition(
+        for cachedState: WorkoutActivityAttributes.ContentState,
+        setId: UUID
+    ) -> SetCompletionTransition {
+        SetCompletionTransition(
+            setId: setId,
+            isLastSetInExercise: cachedState.setNumber == cachedState.totalSetsInExercise,
+            restDuration: LiveActivityCache.restDuration > 0 ? LiveActivityCache.restDuration : 120
+        )
+    }
+
+    private func applySetCompletion(
+        _ transition: SetCompletionTransition,
+        cachedState: inout WorkoutActivityAttributes.ContentState?,
+        recordPendingCompletion: Bool
+    ) {
+        lastCompletedSetId = transition.setId
+
+        if recordPendingCompletion {
+            LiveActivityCache.recordCompletion(setId: transition.setId)
+            // Mark the set completed in-memory so subsequent content-state rebuilds
+            // advance to the next set before foreground persistence catches up.
+            applyPendingCompletionsInMemory()
+        }
+
+        if transition.isLastSetInExercise {
+            updateLiveActivity()
+            cacheCurrentState()
+            return
+        }
+
+        startRestTimer(duration: transition.restDuration)
+
+        if var cachedState {
+            let completedIndex = cachedState.setNumber - 1
+            cachedState.isRestTimerActive = true
+            cachedState.restTimerEndDate = restTimer.endDate ?? Date.now.addingTimeInterval(Double(transition.restDuration))
+            cachedState.restTotalSeconds = transition.restDuration
+            if completedIndex >= 0 && completedIndex < cachedState.setSummaries.count {
+                cachedState.setSummaries[completedIndex].isCompleted = true
+            }
+            cachedState.setNumber += 1
+            LiveActivityCache.cache(
+                cachedState,
+                setId: findCurrentSet()?.1.id,
+                restDuration: transition.restDuration
+            )
+            updateLiveActivity(with: cachedState)
+        } else {
+            updateLiveActivity()
+            cacheCurrentState()
+        }
+
+        sendTimerScheduleToBackend(duration: transition.restDuration)
     }
 
     // MARK: - Complete Set
@@ -154,12 +293,10 @@ final class WorkoutSessionManager {
         if workoutSet.isCompleted {
             workoutSet.isCompleted = false
             workoutSet.completedAt = nil
-            try? context.save()
+            persistenceController.saveNow(using: context)
 
             if lastCompletedSetId == workoutSet.id {
-                restTimer.stop()
-                lastCompletedSetId = nil
-                notificationService.cancelRestTimer()
+                stopRestTimer(cancelBackend: true)
             }
             updateLiveActivity()
             cacheCurrentState()
@@ -168,27 +305,14 @@ final class WorkoutSessionManager {
 
         workoutSet.isCompleted = true
         workoutSet.completedAt = .now
-        try? context.save()
+        persistenceController.saveNow(using: context)
 
-        lastCompletedSetId = workoutSet.id
-
-        // Skip rest timer on the last set of an exercise — no rest needed before the next exercise
-        let isLastSetInExercise = workoutSet.workoutExercise.map { exercise in
-            exercise.sortedSets.allSatisfy { $0.isCompleted }
-        } ?? false
-
-        if isLastSetInExercise {
-            updateLiveActivity()
-            cacheCurrentState()
-        } else {
-            let restDuration = workoutSet.workoutExercise?.exercise?.defaultRestSeconds ?? 120
-            notificationService.cancelRestTimer()
-            restTimer.start(duration: restDuration)
-            notificationService.scheduleRestTimer(duration: restDuration)
-            updateLiveActivity()
-            cacheCurrentState()
-            sendTimerScheduleToBackend(duration: restDuration)
-        }
+        var cachedState: WorkoutActivityAttributes.ContentState?
+        applySetCompletion(
+            buildCompletionTransition(for: workoutSet),
+            cachedState: &cachedState,
+            recordPendingCompletion: false
+        )
     }
 
     // MARK: - Delete Set
@@ -197,8 +321,7 @@ final class WorkoutSessionManager {
         let exercise = workoutSet.workoutExercise
 
         if lastCompletedSetId == workoutSet.id {
-            restTimer.stop()
-            lastCompletedSetId = nil
+            stopRestTimer(cancelBackend: true)
         }
 
         context.delete(workoutSet)
@@ -208,7 +331,7 @@ final class WorkoutSessionManager {
                 set.order = i
             }
         }
-        try? context.save()
+        persistenceController.saveNow(using: context)
         updateLiveActivity()
         cacheCurrentState()
     }
@@ -219,10 +342,7 @@ final class WorkoutSessionManager {
         // If the rest timer is running for a set in this exercise, stop it
         if let completedId = lastCompletedSetId,
            exercise.sets.contains(where: { $0.id == completedId }) {
-            restTimer.stop()
-            lastCompletedSetId = nil
-            notificationService.cancelRestTimer()
-            sendTimerCancelToBackend()
+            stopRestTimer(cancelBackend: true)
         }
 
         context.delete(exercise)
@@ -234,7 +354,7 @@ final class WorkoutSessionManager {
             }
         }
 
-        try? context.save()
+        persistenceController.saveNow(using: context)
         updateLiveActivity()
         cacheCurrentState()
     }
@@ -245,7 +365,7 @@ final class WorkoutSessionManager {
         for (i, exercise) in exercises.enumerated() {
             exercise.order = i
         }
-        try? context.save()
+        persistenceController.saveNow(using: context)
         updateLiveActivity()
         cacheCurrentState()
         rescheduleBackendTimerIfNeeded()
@@ -262,8 +382,8 @@ final class WorkoutSessionManager {
     // MARK: - Reset
 
     func reset() {
-        restTimer.stop()
-        notificationService.cancelRestTimer()
+        persistenceController.cancelScheduledSave()
+        stopRestTimer(cancelBackend: false)
         stopElapsedTimer()
         endLiveActivity()
         activeWorkout = nil
@@ -315,10 +435,11 @@ final class WorkoutSessionManager {
     func finishWorkout(context: ModelContext) {
         guard let workout = activeWorkout else { return }
 
+        persistenceController.cancelScheduledSave()
         workout.isInProgress = false
         workout.completedAt = .now
         workout.durationSeconds = Int(Date.now.timeIntervalSince(workout.startedAt))
-        try? context.save()
+        persistenceController.saveNow(using: context)
 
         computeCelebrationData(for: workout, context: context)
 
@@ -328,10 +449,7 @@ final class WorkoutSessionManager {
             Task { await syncService.uploadWorkout(workoutToSync) }
         }
 
-        restTimer.stop()
-        notificationService.cancelRestTimer()
-        sendTimerCancelToBackend()
-        lastCompletedSetId = nil
+        stopRestTimer(cancelBackend: true)
         stopElapsedTimer()
         endLiveActivity()
         activeWorkout = nil
@@ -343,13 +461,11 @@ final class WorkoutSessionManager {
     func discardWorkout(context: ModelContext) {
         guard let workout = activeWorkout else { return }
 
+        persistenceController.cancelScheduledSave()
         context.delete(workout)
-        try? context.save()
+        persistenceController.saveNow(using: context)
 
-        restTimer.stop()
-        notificationService.cancelRestTimer()
-        sendTimerCancelToBackend()
-        lastCompletedSetId = nil
+        stopRestTimer(cancelBackend: true)
         stopElapsedTimer()
         endLiveActivity()
         activeWorkout = nil
@@ -414,7 +530,7 @@ final class WorkoutSessionManager {
             context.insert(templateExercise)
         }
 
-        try? context.save()
+        persistenceController.saveNow(using: context)
 
         finishWorkout(context: context)
     }
@@ -492,44 +608,16 @@ final class WorkoutSessionManager {
     // MARK: - Intent Handlers (called from LiveActivityIntents)
 
     func completeCurrentSetFromIntent() {
-        guard var cachedState = LiveActivityCache.state,
+        guard let state = LiveActivityCache.state,
               let setId = LiveActivityCache.setId,
-              !cachedState.isWorkoutComplete else { return }
+              !state.isWorkoutComplete else { return }
 
-        // Skip rest timer on the last set of an exercise
-        let isLastSetInExercise = cachedState.setNumber == cachedState.totalSetsInExercise
-
-        LiveActivityCache.recordCompletion(setId: setId)
-        lastCompletedSetId = setId
-
-        // Mark the set completed in-memory so findCurrentSet() advances
-        // to the next set when buildContentState() is called by the backend scheduler
-        applyPendingCompletionsInMemory()
-
-        if isLastSetInExercise {
-            updateLiveActivity()
-            cacheCurrentState()
-        } else {
-            let restDuration = LiveActivityCache.restDuration > 0 ? LiveActivityCache.restDuration : 120
-            notificationService.cancelRestTimer()
-            restTimer.start(duration: restDuration)
-            notificationService.scheduleRestTimer(duration: restDuration)
-
-            cachedState.isRestTimerActive = true
-            cachedState.restTimerEndDate = restTimer.endDate ?? Date.now.addingTimeInterval(Double(restDuration))
-            cachedState.restTotalSeconds = restDuration
-            // Mark the just-completed set in setSummaries
-            let completedIndex = cachedState.setNumber - 1
-            if completedIndex >= 0 && completedIndex < cachedState.setSummaries.count {
-                cachedState.setSummaries[completedIndex].isCompleted = true
-            }
-            // Advance setNumber to point to the NEXT set
-            cachedState.setNumber += 1
-
-            LiveActivityCache.state = cachedState
-            updateLiveActivity(with: cachedState)
-            sendTimerScheduleToBackend(duration: restDuration)
-        }
+        var cachedState: WorkoutActivityAttributes.ContentState? = state
+        applySetCompletion(
+            buildCompletionTransition(for: state, setId: setId),
+            cachedState: &cachedState,
+            recordPendingCompletion: true
+        )
     }
 
     func adjustWeightFromIntent(delta: Double) {
@@ -554,10 +642,7 @@ final class WorkoutSessionManager {
 
     private func skipRestTimerInternal() {
         if checkAndHandleExpiredTimer() { return }
-        restTimer.stop()
-        lastCompletedSetId = nil
-        notificationService.cancelRestTimer()
-        sendTimerCancelToBackend()
+        stopRestTimer(cancelBackend: true)
         applyPendingCompletionsInMemory()
         LiveActivityCache.clearRest()
         updateLiveActivity()
@@ -665,7 +750,7 @@ final class WorkoutSessionManager {
             }
         }
 
-        try? context.save()
+        persistenceController.saveNow(using: context)
         cacheCurrentState()
     }
 
@@ -713,8 +798,6 @@ final class WorkoutSessionManager {
             Task { @MainActor in
                 guard let self, let workout = self.activeWorkout else { return }
                 self.elapsedSeconds = Int(Date.now.timeIntervalSince(workout.startedAt))
-                // Periodic save to persist any in-flight weight/reps edits
-                try? self.modelContext?.save()
             }
         }
     }

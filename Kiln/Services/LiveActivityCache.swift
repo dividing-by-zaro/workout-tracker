@@ -28,6 +28,8 @@ enum LiveActivityCache {
         }
         if let setId {
             suite.set(setId.uuidString, forKey: setIdKey)
+        } else {
+            suite.removeObject(forKey: setIdKey)
         }
         suite.set(restDuration, forKey: restDurationKey)
         suite.set(false, forKey: dirtyKey)

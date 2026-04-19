@@ -61,11 +61,6 @@ struct SetRowView: View {
         .opacity(workoutSet.isCompleted ? 0.7 : 1.0)
     }
 
-    private func syncLiveActivityIfCurrent() {
-        guard sessionManager.findCurrentSet()?.1.id == workoutSet.id else { return }
-        sessionManager.syncLiveActivityState()
-    }
-
     @ViewBuilder
     private var previousLabel: some View {
         if let prev = previousData {
@@ -121,7 +116,7 @@ struct SetRowView: View {
 
     @ViewBuilder
     private var inputFields: some View {
-        let sync: () -> Void = { syncLiveActivityIfCurrent() }
+        let sync: () -> Void = { sessionManager.handleSetValueChange(for: workoutSet) }
         if equipmentType.tracksWeight && equipmentType.tracksReps && equipmentType == .weightedBodyweight {
             HStack(spacing: DesignSystem.Spacing.xs) {
                 Text("+BW")
@@ -174,4 +169,3 @@ struct SetRowView: View {
         }
     }
 }
-

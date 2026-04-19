@@ -13,36 +13,60 @@ struct PreFillRecommendation {
     let preFillData: [PreFillData]
 }
 
-private struct HistoricalPreFillMatch {
-    let setCount: Int
-    let sourceSets: [WorkoutSet]?
-}
-
 struct PreFillService {
     static func recommendedSetCount(for exercise: Exercise, in context: ModelContext, defaultCount: Int = 3) -> Int {
-        resolveHistoricalMatch(for: exercise, in: context, defaultCount: defaultCount)?.setCount ?? defaultCount
+        let workouts = WorkoutHistoryService.fetchCompletedWorkouts(context: context) ?? []
+        return recommendedSetCount(for: exercise, in: workouts, defaultCount: defaultCount)
     }
 
     static func preFillSets(for exercise: Exercise, setCount: Int, in context: ModelContext) -> [PreFillData] {
-        guard let match = resolveHistoricalMatch(for: exercise, in: context, defaultCount: setCount),
-              let previousSets = match.sourceSets,
-              !previousSets.isEmpty else {
-            return defaultPreFill(count: setCount)
-        }
-        return preFillData(from: previousSets, setCount: setCount)
+        let workouts = WorkoutHistoryService.fetchCompletedWorkouts(context: context) ?? []
+        return preFillSets(for: exercise, setCount: setCount, in: workouts)
     }
 
     static func recommendation(for exercise: Exercise, in context: ModelContext, defaultCount: Int = 3) -> PreFillRecommendation {
-        guard let match = resolveHistoricalMatch(for: exercise, in: context, defaultCount: defaultCount),
-              let previousSets = match.sourceSets,
-              !previousSets.isEmpty else {
+        let workouts = WorkoutHistoryService.fetchCompletedWorkouts(context: context) ?? []
+        return recommendation(for: exercise, in: workouts, defaultCount: defaultCount)
+    }
+
+    static func recommendedSetCount(for exercise: Exercise, in workouts: [Workout], defaultCount: Int = 3) -> Int {
+        recommendation(for: exercise, in: workouts, defaultCount: defaultCount).setCount
+    }
+
+    static func preFillSets(for exercise: Exercise, setCount: Int, in workouts: [Workout]) -> [PreFillData] {
+        guard let match = WorkoutHistoryService.mostRecentHistoricalMatch(
+            for: exercise.name,
+            in: workouts,
+            defaultSetCount: setCount
+        ),
+        let sourceSets = match.sourceSets
+        else {
+            return defaultPreFill(count: setCount)
+        }
+
+        return preFillData(from: sourceSets, setCount: setCount)
+    }
+
+    static func recommendation(for exercise: Exercise, in workouts: [Workout], defaultCount: Int = 3) -> PreFillRecommendation {
+        guard let match = WorkoutHistoryService.mostRecentHistoricalMatch(
+            for: exercise.name,
+            in: workouts,
+            defaultSetCount: defaultCount
+        ) else {
             let fallback = defaultPreFill(count: defaultCount)
             return PreFillRecommendation(setCount: defaultCount, preFillData: fallback)
         }
 
+        guard let sourceSets = match.sourceSets else {
+            return PreFillRecommendation(
+                setCount: match.recommendedSetCount,
+                preFillData: defaultPreFill(count: match.recommendedSetCount)
+            )
+        }
+
         return PreFillRecommendation(
-            setCount: match.setCount,
-            preFillData: preFillData(from: previousSets, setCount: match.setCount)
+            setCount: match.recommendedSetCount,
+            preFillData: preFillData(from: sourceSets, setCount: match.recommendedSetCount)
         )
     }
 
@@ -60,57 +84,6 @@ struct PreFillService {
         }
         workoutExercise.exercise = newExercise
         populatePrefillSets(for: newExercise, on: workoutExercise, in: context)
-    }
-
-    private static func fetchCompletedWorkouts(context: ModelContext) -> [Workout]? {
-        let descriptor = FetchDescriptor<Workout>(
-            predicate: #Predicate<Workout> { workout in
-                workout.isInProgress == false
-            },
-            sortBy: [SortDescriptor(\Workout.startedAt, order: .reverse)]
-        )
-        return try? context.fetch(descriptor)
-    }
-
-    private static func resolveHistoricalMatch(for exercise: Exercise, in context: ModelContext, defaultCount: Int) -> HistoricalPreFillMatch? {
-        let exerciseName = exercise.name
-        guard let workouts = fetchCompletedWorkouts(context: context) else {
-            return nil
-        }
-
-        var resolvedSetCount: Int?
-        var sourceSets: [WorkoutSet]?
-
-        for workout in workouts {
-            guard let workoutExercise = workout.exercises.first(where: { $0.exercise?.name == exerciseName }) else {
-                continue
-            }
-
-            let previousSets = workoutExercise.sortedSets
-            if resolvedSetCount == nil, !previousSets.isEmpty {
-                let completedSetCount = previousSets.filter(\.isCompleted).count
-                resolvedSetCount = completedSetCount > 0 ? completedSetCount : previousSets.count
-            }
-
-            if sourceSets == nil, !previousSets.isEmpty {
-                let hasMeaningfulData = previousSets.contains { set in
-                    set.weight != nil || set.reps != nil || set.distance != nil || set.seconds != nil
-                }
-                if hasMeaningfulData {
-                    sourceSets = previousSets
-                }
-            }
-
-            if resolvedSetCount != nil && sourceSets != nil {
-                break
-            }
-        }
-
-        guard resolvedSetCount != nil || sourceSets != nil else {
-            return nil
-        }
-
-        return HistoricalPreFillMatch(setCount: resolvedSetCount ?? defaultCount, sourceSets: sourceSets)
     }
 
     private static func populatePrefillSets(for exercise: Exercise, on workoutExercise: WorkoutExercise, in context: ModelContext) {

@@ -35,16 +35,14 @@ struct StartWorkoutView: View {
                 } else {
                     LazyVStack(spacing: DesignSystem.Spacing.md) {
                         ForEach(templates) { template in
+                            let historySummary = WorkoutHistoryService.templateSummary(
+                                for: template.name,
+                                in: completedWorkouts
+                            )
                             TemplateCardView(
                                 template: template,
-                                averageDuration: WorkoutTemplate.averageDuration(
-                                    for: template.name,
-                                    from: completedWorkouts
-                                ),
-                                timesCompleted: WorkoutTemplate.workoutCount(
-                                    for: template.name,
-                                    from: completedWorkouts
-                                ),
+                                averageDuration: historySummary.averageDuration,
+                                timesCompleted: historySummary.workoutCount,
                                 onStart: {
                                     sessionManager.startWorkout(from: template, context: modelContext)
                                 }
