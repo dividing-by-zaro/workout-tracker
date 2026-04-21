@@ -244,34 +244,10 @@ struct CustomChartCard: View {
                     }
                 }
             }
-            .chartOverlay { proxy in
-                GeometryReader { geo in
-                    Rectangle()
-                        .fill(.clear)
-                        .contentShape(Rectangle())
-                        .simultaneousGesture(
-                            LongPressGesture(minimumDuration: 0.2)
-                                .sequenced(before: DragGesture(minimumDistance: 0))
-                                .onChanged { value in
-                                    switch value {
-                                    case .second(true, let drag):
-                                        let plotFrame = proxy.plotFrame.map { geo[$0] } ?? .zero
-                                        let location = drag?.location ?? CGPoint(x: plotFrame.midX, y: plotFrame.midY)
-                                        let x = location.x - plotFrame.origin.x
-                                        if let date: Date = proxy.value(atX: x) {
-                                            if selectedDate == nil {
-                                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                                            }
-                                            selectedDate = date
-                                        }
-                                    default:
-                                        break
-                                    }
-                                }
-                                .onEnded { _ in
-                                    selectedDate = nil
-                                }
-                        )
+            .chartXSelection(value: $selectedDate)
+            .onChange(of: selectedDate) { old, new in
+                if old == nil, new != nil {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 }
             }
             .frame(height: 180)
