@@ -19,6 +19,7 @@
 		220B6A8EF1737DA63EEAB3A7 /* PreFillService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D67B8481533CEAE0D365B0CE /* PreFillService.swift */; };
 		2C5D57AFCB704592F35A534C /* WorkoutLiveActivityIntents+App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7790D141AD23B09F96A8CA4D /* WorkoutLiveActivityIntents+App.swift */; };
 		2E7A38A1E94D94B49F1152BA /* RestTimerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95FD1C13168449520BC53044 /* RestTimerService.swift */; };
+		31D21C31CD66DC932844C440 /* NotesSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEEB31DEECF632993CA0EDF4 /* NotesSection.swift */; };
 		337E4413CC3E57D07DA9FC9C /* ExerciseType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DA4E36A8C5E80D76957DE99 /* ExerciseType.swift */; };
 		388339A2FD506B77947158EC /* WorkoutEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 233B9C6DD2A37A3607DBAE83 /* WorkoutEditView.swift */; };
 		3D8F36EFF536102906450485 /* ExerciseCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 732E39921F13970E5FB13F81 /* ExerciseCardView.swift */; };
@@ -168,6 +169,7 @@
 		B6ABFEC49D0E51B1D1EC789E /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
 		B705F94180BA1ABD9857C4A0 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		BD9B11F63D41118A72E86932 /* LiveActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityService.swift; sourceTree = "<group>"; };
+		BEEB31DEECF632993CA0EDF4 /* NotesSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesSection.swift; sourceTree = "<group>"; };
 		C168611F11149FC65A4A1672 /* NumericKeyboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumericKeyboardView.swift; sourceTree = "<group>"; };
 		C3A90A8579EDF403F0477613 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		C5CF29394B83146F54454E30 /* KilnWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KilnWidgetBundle.swift; sourceTree = "<group>"; };
@@ -186,7 +188,7 @@
 		ED930F72F14339C0595891BB /* WorkoutLiveActivityIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutLiveActivityIntents.swift; sourceTree = "<group>"; };
 		FC9B36FAFB73E7A84B2EBF2B /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		FE83C57D250533B71E6B8FF5 /* WorkoutLiveActivityIntents+Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkoutLiveActivityIntents+Widget.swift"; sourceTree = "<group>"; };
-		"TEMP_D3A37525-FD4D-46D3-854C-E43E5D2C3BED" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_A80E76C7-D8D3-45BA-9A3D-1E11C46954F4" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -196,6 +198,7 @@
 				AFA496475B5378C23CA07E83 /* ContentView.swift */,
 				32EA4C9042FDA38135243256 /* DetailedSetLabelView.swift */,
 				CB7E573534C23FE4E5988D65 /* LoginView.swift */,
+				BEEB31DEECF632993CA0EDF4 /* NotesSection.swift */,
 				5E8776C84DB0CA7741C5E97D /* Exercises */,
 				CC0A03089910DA34CA483F43 /* History */,
 				1C41EE1188D3E6987532FD52 /* Profile */,
@@ -409,10 +412,10 @@
 			);
 			sourceTree = "<group>";
 		};
-		"TEMP_D230E1FC-FF10-4761-877E-EA6258EF4387" /* workout-tracker */ = {
+		"TEMP_46785309-2A03-4FD5-9C46-2AA384F491B0" /* workout-tracker */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_D3A37525-FD4D-46D3-854C-E43E5D2C3BED" /* Secrets.xcconfig */,
+				"TEMP_A80E76C7-D8D3-45BA-9A3D-1E11C46954F4" /* Secrets.xcconfig */,
 			);
 			path = "workout-tracker";
 			sourceTree = "<group>";
@@ -554,6 +557,7 @@
 				8480DD9CCAFEE5DBB95CBFDC /* LiveActivityCache.swift in Sources */,
 				687006283D6A528D6368B16A /* LiveActivityService.swift in Sources */,
 				9D22C34556CF8C23798DC0D0 /* LoginView.swift in Sources */,
+				31D21C31CD66DC932844C440 /* NotesSection.swift in Sources */,
 				1B986DF942399688FC9F09C4 /* NotificationService.swift in Sources */,
 				81D095C9092E0EAD3819E5CC /* NumericKeyboardView.swift in Sources */,
 				220B6A8EF1737DA63EEAB3A7 /* PreFillService.swift in Sources */,
@@ -614,7 +618,7 @@
 /* Begin XCBuildConfiguration section */
 		00819B2D95689EC0CA9D55F3 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_D3A37525-FD4D-46D3-854C-E43E5D2C3BED" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_A80E76C7-D8D3-45BA-9A3D-1E11C46954F4" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -700,7 +704,7 @@
 		};
 		4B79A099121FCF4CBC38B849 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_D3A37525-FD4D-46D3-854C-E43E5D2C3BED" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_A80E76C7-D8D3-45BA-9A3D-1E11C46954F4" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

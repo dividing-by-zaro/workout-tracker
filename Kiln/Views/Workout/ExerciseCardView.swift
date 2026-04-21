@@ -46,6 +46,10 @@ struct ExerciseCardView: View {
                 }
             }
 
+            if let exercise = workoutExercise.exercise {
+                exerciseNotes(for: exercise)
+            }
+
             columnHeaders
 
             ForEach(Array(workoutExercise.sortedSets.enumerated()), id: \.element.id) { index, workoutSet in
@@ -93,6 +97,21 @@ struct ExerciseCardView: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
         .cardShadow()
+    }
+
+    private func exerciseNotes(for exercise: Exercise) -> some View {
+        @Bindable var bindableExercise = exercise
+        return NotesSection(
+            title: "Exercise Note",
+            placeholder: "Add exercise note",
+            notes: $bindableExercise.notes,
+            onSave: {
+                try? modelContext.save()
+                WorkoutSessionManager.shared?.syncService?.syncExerciseMetadataChange(
+                    for: exercise, in: modelContext
+                )
+            }
+        )
     }
 
     @ViewBuilder

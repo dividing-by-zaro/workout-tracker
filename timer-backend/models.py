@@ -19,6 +19,7 @@ class WorkoutExercisePayload(BaseModel):
     exercise_type: str
     body_part: str | None = None
     equipment_type: str | None = None
+    exercise_notes: str | None = None
     sets: list[WorkoutSetPayload]
 
 
@@ -28,4 +29,5 @@ class WorkoutPayload(BaseModel):
     started_at: datetime
     completed_at: datetime
     duration_seconds: int | None = None
+    notes: str | None = None
     exercises: list[WorkoutExercisePayload]

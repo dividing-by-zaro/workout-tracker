@@ -37,6 +37,7 @@
 - **Template diff & update**: `TemplateDiff` struct compares workout exercises vs template exercises by `Exercise.id` (added/removed/moved counts). End-workout overlay conditionally shows "Finish & Update Template" button when exercises differ from the source template. `finishAndUpdateTemplate(context:)` replaces all `TemplateExercise` objects on the template with the workout's current exercise list.
 - **Exercise reorder**: `ExerciseReorderView` provides drag-and-drop reordering of exercises during an active workout via a sheet.
 - **Celebration screen**: `CelebrationData` struct snapshots workout stats (volume, sets, reps, distance, duration, workout count ordinal) at finish time. `CelebrationView` presented as `.fullScreenCover` on `ContentView` via `sessionManager.celebrationData`. Adaptive stat display uses `EquipmentType.tracksWeight/tracksReps/tracksDistance`. Ember particle animation via SwiftUI `Canvas` + `TimelineView`.
+- **Notes on workouts and exercises**: `Exercise.notes` is shared across every workout that uses the exercise; `Workout.notes` is per-instance. `NotesSection` (inline display + pencil button → sheet with `TextEditor`) is wired into `ActiveWorkoutView` header (workout notes), `ExerciseCardView` (exercise notes, in-active-workout), and `ExerciseHistoryView` (exercise notes, Exercises tab). On `startWorkout(from:template:)`, workout notes are carried forward from the most recent completed workout with the same `templateId` so the prior message to future-self is pre-filled. Notes flow into the sync payload (`notes` at workout level, `exercise_notes` at exercise level) and are persisted to MongoDB (`workouts.notes`, `workouts.exercises[].exercise_notes`, `exercises.notes`). Exercise-note edits outside an active workout call `WorkoutSyncService.syncExerciseMetadataChange(for:in:)`, which re-uploads the most recent synced workout that uses the exercise so the server's `exercises` collection picks up the change. Notes are intentionally NOT displayed in `WorkoutDetailView` history.
 - **CSV import**: `@ModelActor` background actor with batched saves
 
 ## Build
@@ -56,10 +57,12 @@ Kiln/
 ├── Models/                        # 10 files: ExerciseType, EquipmentType, BodyPart, Exercise,
 │                                  #   WorkoutTemplate, TemplateExercise, Workout, WorkoutExercise, WorkoutSet,
 │                                  #   CelebrationData
+│                                  #   (Exercise and Workout both carry an optional `notes: String?`)
 ├── Views/
 │   ├── LoginView.swift             # API key login screen (shown when unauthenticated)
 │   ├── ContentView.swift          # 4-tab TabView with conditional Workout tab
 │   ├── DetailedSetLabelView.swift # App-only set label UI (must stay out of Shared/)
+│   ├── NotesSection.swift         # Reusable inline notes display + NotesEditorSheet (TextEditor sheet)
 │   ├── Exercises/                 # ExerciseListView, ExerciseHistoryView
 │   ├── Workout/                   # StartWorkoutView, ActiveWorkoutView, SetRowView,
 │   │                              #   ExerciseCardView, TemplateCardView, RestTimerView,

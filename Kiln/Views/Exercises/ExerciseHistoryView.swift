@@ -2,37 +2,51 @@ import SwiftUI
 import SwiftData
 
 struct ExerciseHistoryView: View {
-    let exercise: Exercise
+    @Bindable var exercise: Exercise
+    @Environment(\.modelContext) private var modelContext
+    @Environment(WorkoutSessionManager.self) private var sessionManager
     @Query(filter: #Predicate<Workout> { !$0.isInProgress }) private var finishedWorkouts: [Workout]
-
-    init(exercise: Exercise) {
-        self.exercise = exercise
-    }
 
     private var finishedSessions: [ExerciseHistorySession] {
         WorkoutHistoryService.exerciseSessions(for: exercise, in: finishedWorkouts)
     }
 
     var body: some View {
-        Group {
-            if finishedSessions.isEmpty {
-                ContentUnavailableView(
-                    "No History Yet",
-                    systemImage: "clock",
-                    description: Text("Complete a workout with this exercise to see your history.")
-                )
-            } else {
-                ScrollView {
-                    VStack(spacing: DesignSystem.Spacing.md) {
-                        ForEach(finishedSessions) { session in
-                            sessionCard(session.workout, session.workoutExercise)
-                        }
+        ScrollView {
+            VStack(spacing: DesignSystem.Spacing.md) {
+                NotesSection(
+                    title: "Exercise Note",
+                    placeholder: "Add exercise note",
+                    notes: $exercise.notes,
+                    onSave: {
+                        try? modelContext.save()
+                        sessionManager.syncService?.syncExerciseMetadataChange(
+                            for: exercise, in: modelContext
+                        )
                     }
-                    .padding(.vertical, DesignSystem.Spacing.md)
+                )
+                .padding(DesignSystem.Spacing.md)
+                .background(DesignSystem.Colors.surface)
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
+                .cardShadow()
+                .padding(.horizontal, DesignSystem.Spacing.md)
+
+                if finishedSessions.isEmpty {
+                    ContentUnavailableView(
+                        "No History Yet",
+                        systemImage: "clock",
+                        description: Text("Complete a workout with this exercise to see your history.")
+                    )
+                    .padding(.top, DesignSystem.Spacing.xl)
+                } else {
+                    ForEach(finishedSessions) { session in
+                        sessionCard(session.workout, session.workoutExercise)
+                    }
                 }
-                .grainedBackground()
             }
+            .padding(.vertical, DesignSystem.Spacing.md)
         }
+        .grainedBackground()
         .navigationTitle(exercise.name)
         .navigationBarTitleDisplayMode(.inline)
     }

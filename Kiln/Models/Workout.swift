@@ -10,6 +10,7 @@ final class Workout {
     var durationSeconds: Int?
     var isInProgress: Bool
     var templateId: UUID?
+    var notes: String?
 
     @Relationship(deleteRule: .cascade, inverse: \WorkoutExercise.workout)
     var exercises: [WorkoutExercise] = []

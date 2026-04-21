@@ -120,15 +120,20 @@ async def get_me(request: Request):
 
 async def _upsert_exercises(db, user_id, exercises, now):
     for ex in exercises:
+        set_doc = {
+            "exercise_type": ex.exercise_type,
+            "body_part": ex.body_part,
+            "equipment_type": ex.equipment_type,
+            "updated_at": now,
+        }
+        # Only overwrite notes when the client has something to say; a None
+        # payload shouldn't clobber notes set from a different device.
+        if ex.exercise_notes is not None:
+            set_doc["notes"] = ex.exercise_notes
         await db["exercises"].update_one(
             {"user_id": user_id, "name": ex.exercise_name},
             {
-                "$set": {
-                    "exercise_type": ex.exercise_type,
-                    "body_part": ex.body_part,
-                    "equipment_type": ex.equipment_type,
-                    "updated_at": now,
-                },
+                "$set": set_doc,
                 "$setOnInsert": {
                     "user_id": user_id,
                     "name": ex.exercise_name,
@@ -144,6 +149,7 @@ def _build_exercises_doc(exercises):
         {
             "order": ex.order,
             "exercise_name": ex.exercise_name,
+            "exercise_notes": ex.exercise_notes,
             "sets": [
                 {
                     "order": s.order,
@@ -177,6 +183,7 @@ async def create_workout(req: WorkoutPayload, request: Request):
         "started_at": req.started_at,
         "completed_at": req.completed_at,
         "duration_seconds": req.duration_seconds,
+        "notes": req.notes,
         "exercises": _build_exercises_doc(req.exercises),
         "synced_at": now,
     }
@@ -216,6 +223,7 @@ async def update_workout(local_id: str, req: WorkoutPayload, request: Request):
                 "started_at": req.started_at,
                 "completed_at": req.completed_at,
                 "duration_seconds": req.duration_seconds,
+                "notes": req.notes,
                 "exercises": _build_exercises_doc(req.exercises),
                 "synced_at": now,
             }

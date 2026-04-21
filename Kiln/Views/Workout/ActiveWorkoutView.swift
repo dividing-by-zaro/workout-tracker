@@ -90,53 +90,63 @@ struct ActiveWorkoutView: View {
     }
 
     private func header(workout: Workout) -> some View {
-        HStack {
-            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
-                Text(workout.name)
-                    .font(DesignSystem.Typography.headline)
-                    .foregroundStyle(DesignSystem.Colors.textPrimary)
-                Text(sessionManager.formattedElapsedTime)
-                    .font(DesignSystem.Typography.body)
-                    .foregroundStyle(DesignSystem.Colors.textSecondary)
-                    .monospacedDigit()
-            }
-            Spacer()
-            Button {
-                showExercisePicker = true
-            } label: {
-                Image(systemName: DesignSystem.Icon.add)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(DesignSystem.Colors.textOnPrimary)
-                    .frame(width: 36, height: 36)
-                    .background(DesignSystem.Colors.success)
-                    .clipShape(Circle())
-            }
-            Button {
-                showReorderSheet = true
-            } label: {
-                Image(systemName: "arrow.up.arrow.down")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(DesignSystem.Colors.textOnPrimary)
-                    .frame(width: 36, height: 36)
-                    .background(DesignSystem.Colors.secondary)
-                    .clipShape(Circle())
-            }
-            Button {
-                templateDiff = sessionManager.computeTemplateDiff(context: modelContext)
-                showEndConfirmation = true
-            } label: {
-                HStack(spacing: DesignSystem.Spacing.xs) {
-                    Image(systemName: "stop.fill")
-                        .font(.system(size: 10))
-                    Text("End")
-                        .font(.system(size: 13, weight: .semibold))
+        @Bindable var bindableWorkout = workout
+        return VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+            HStack {
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
+                    Text(workout.name)
+                        .font(DesignSystem.Typography.headline)
+                        .foregroundStyle(DesignSystem.Colors.textPrimary)
+                    Text(sessionManager.formattedElapsedTime)
+                        .font(DesignSystem.Typography.body)
+                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+                        .monospacedDigit()
                 }
-                .foregroundStyle(DesignSystem.Colors.textOnPrimary)
-                .frame(height: 36)
-                .padding(.horizontal, DesignSystem.Spacing.sm + 2)
-                .background(DesignSystem.Colors.primary)
-                .clipShape(Capsule())
+                Spacer()
+                Button {
+                    showExercisePicker = true
+                } label: {
+                    Image(systemName: DesignSystem.Icon.add)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(DesignSystem.Colors.textOnPrimary)
+                        .frame(width: 36, height: 36)
+                        .background(DesignSystem.Colors.success)
+                        .clipShape(Circle())
+                }
+                Button {
+                    showReorderSheet = true
+                } label: {
+                    Image(systemName: "arrow.up.arrow.down")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(DesignSystem.Colors.textOnPrimary)
+                        .frame(width: 36, height: 36)
+                        .background(DesignSystem.Colors.secondary)
+                        .clipShape(Circle())
+                }
+                Button {
+                    templateDiff = sessionManager.computeTemplateDiff(context: modelContext)
+                    showEndConfirmation = true
+                } label: {
+                    HStack(spacing: DesignSystem.Spacing.xs) {
+                        Image(systemName: "stop.fill")
+                            .font(.system(size: 10))
+                        Text("End")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .foregroundStyle(DesignSystem.Colors.textOnPrimary)
+                    .frame(height: 36)
+                    .padding(.horizontal, DesignSystem.Spacing.sm + 2)
+                    .background(DesignSystem.Colors.primary)
+                    .clipShape(Capsule())
+                }
             }
+
+            NotesSection(
+                title: "Workout Note",
+                placeholder: "Add workout note",
+                notes: $bindableWorkout.notes,
+                onSave: { try? modelContext.save() }
+            )
         }
         .padding(DesignSystem.Spacing.md)
         .background(DesignSystem.Colors.surface)

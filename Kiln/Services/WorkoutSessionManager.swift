@@ -150,6 +150,13 @@ final class WorkoutSessionManager {
         context.insert(workout)
         let completedWorkouts = WorkoutHistoryService.fetchCompletedWorkouts(context: context) ?? []
 
+        // Carry forward the note from the most recent run of this template so the user
+        // sees what they wrote for their future self.
+        if let previous = completedWorkouts.first(where: { $0.templateId == template.id }),
+           let previousNotes = previous.notes, !previousNotes.isEmpty {
+            workout.notes = previousNotes
+        }
+
         for (index, templateExercise) in template.sortedExercises.enumerated() {
             guard let exercise = templateExercise.exercise else { continue }
 

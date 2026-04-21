@@ -9,6 +9,7 @@ final class Exercise {
     var defaultRestSeconds: Int
     var bodyPart: BodyPart?
     var equipmentType: EquipmentType?
+    var notes: String?
 
     var resolvedBodyPart: BodyPart {
         bodyPart ?? BodyPart.infer(from: name)
@@ -24,7 +25,8 @@ final class Exercise {
         exerciseType: ExerciseType = .strength,
         defaultRestSeconds: Int = 120,
         bodyPart: BodyPart? = nil,
-        equipmentType: EquipmentType? = nil
+        equipmentType: EquipmentType? = nil,
+        notes: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -32,5 +34,6 @@ final class Exercise {
         self.defaultRestSeconds = defaultRestSeconds
         self.bodyPart = bodyPart
         self.equipmentType = equipmentType
+        self.notes = notes
     }
 }

@@ -231,7 +231,7 @@ final class WorkoutSyncService {
             }
 
             let exercise = workoutExercise.exercise
-            return [
+            var dict: [String: Any] = [
                 "order": workoutExercise.order,
                 "exercise_name": exercise?.name ?? "Unknown",
                 "exercise_type": exercise?.exerciseType.rawValue ?? "strength",
@@ -240,7 +240,11 @@ final class WorkoutSyncService {
                 "sets": sets.map { dict in
                     dict.compactMapValues { $0 }
                 },
-            ] as [String: Any]
+            ]
+            if let notes = exercise?.notes, !notes.isEmpty {
+                dict["exercise_notes"] = notes
+            }
+            return dict
         }
 
         var payload: [String: Any] = [
@@ -255,7 +259,31 @@ final class WorkoutSyncService {
             payload["duration_seconds"] = duration
         }
 
+        if let notes = workout.notes, !notes.isEmpty {
+            payload["notes"] = notes
+        }
+
         return payload
+    }
+
+    // MARK: - Exercise Metadata Sync
+
+    /// Called when exercise-level data (e.g. notes) is edited outside an active
+    /// workout. Re-uploads the most recent synced workout that uses the exercise
+    /// so the backend's exercise collection picks up the change.
+    func syncExerciseMetadataChange(for exercise: Exercise, in context: ModelContext) {
+        let descriptor = FetchDescriptor<Workout>(
+            predicate: #Predicate<Workout> { $0.isInProgress == false },
+            sortBy: [SortDescriptor(\Workout.startedAt, order: .reverse)]
+        )
+        guard let workouts = try? context.fetch(descriptor) else { return }
+        let exerciseId = exercise.id
+        guard let recent = workouts.first(where: { w in
+            w.exercises.contains(where: { $0.exercise?.id == exerciseId })
+        }) else { return }
+
+        markWorkoutEdited(recent)
+        Task { await updateWorkout(recent) }
     }
 
     // MARK: - Server Sync Status
