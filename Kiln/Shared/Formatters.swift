@@ -11,9 +11,10 @@ extension Double {
 /// Shared formatters for workout set labels.
 ///
 /// `summaryLabel` produces the compact set-summary strings shown in the
-/// Live Activity (e.g. `"8×135"`, `"×12"`, `"45s"`, `"1.2mi"`, `"135•1.2mi"`).
-/// This is the format used by both `LiveActivityService` and `LiveActivityCache`
-/// so pending in-memory edits on the lock screen match what the app would
+/// Live Activity (e.g. `"135 lbs x 8"`, `"x 12"`, `"45s"`, `"1.2 mi"`, `"135 lbs • 1.2 mi"`).
+/// Format mirrors the active workout display (SetRowView) so the lock screen
+/// matches the in-app rendering. Used by both `LiveActivityService` and
+/// `LiveActivityCache` so pending in-memory edits match what the app would
 /// render when it next rebuilds the content state.
 enum SetFormatter {
     /// Build the compact summary label for a set.
@@ -34,16 +35,16 @@ enum SetFormatter {
         case "weightReps":
             let r = reps ?? 0
             let w = (weight ?? 0).formattedWeight
-            return "\(r)×\(w)"
+            return "\(w) lbs x \(r)"
         case "repsOnly":
-            return "×\(reps ?? 0)"
+            return "x \(reps ?? 0)"
         case "duration":
             return "\(Int(seconds ?? 0))s"
         case "distance":
-            return "\(String(format: "%.1f", distance ?? 0))mi"
+            return "\(String(format: "%.1f", distance ?? 0)) mi"
         case "weightDistance":
             let w = (weight ?? 0).formattedWeight
-            return "\(w)•\(String(format: "%.1f", distance ?? 0))mi"
+            return "\(w) lbs • \(String(format: "%.1f", distance ?? 0)) mi"
         default:
             return "—"
         }
