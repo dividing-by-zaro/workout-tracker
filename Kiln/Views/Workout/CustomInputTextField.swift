@@ -18,6 +18,7 @@ struct CustomInputTextField: UIViewRepresentable {
         textField.textAlignment = .center
         textField.font = UIFont.systemFont(ofSize: 16)
         textField.delegate = context.coordinator
+        textField.tintColor = UIColor(DesignSystem.Colors.primary)
         textField.setContentHuggingPriority(.defaultHigh, for: .horizontal)
 
         let hostingController = makeKeyboardHostingController(for: textField, coordinator: context.coordinator)
@@ -98,6 +99,9 @@ struct CustomInputTextField: UIViewRepresentable {
 
         func textFieldDidBeginEditing(_ textField: UITextField) {
             pendingReplace = true
+            DispatchQueue.main.async {
+                textField.selectAll(nil)
+            }
         }
 
         func format(_ v: Double) -> String {
