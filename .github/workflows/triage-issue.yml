@@ -1,0 +1,73 @@
+name: Auto-Triage Issues
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  triage:
+    if: github.event.issue.user.login == 'dividing-by-zaro'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: "--max-turns 20"
+          prompt: |
+            You are triaging GitHub issue #${{ github.event.issue.number }} in the Kiln iOS workout-tracking app. The repo is checked out at the working directory — grep, read, and search it freely. CLAUDE.md at the repo root has full architecture notes; consult it.
+
+            Read the issue:
+              gh issue view ${{ github.event.issue.number }}
+
+            CONTEXT
+            Kiln is a 2-user personal app (developer + wife). Reach is small — score it as estimated user-impact-events per month, NOT raw user count. Two users doing ~12 workouts/month each is ~24 workout-events/mo as the upper bound for anything that hits every workout.
+
+            TASK
+
+            1. Classify as **BUG** (something behaves wrong / breaks / regressed) or **CONCEPTUAL** (feature request, design question, ambiguous ask).
+
+            2. Compute a RICE score:
+               - **Reach**: estimated user-impact-events per month
+               - **Impact**: 3 (massive — blocks core flow), 2 (high), 1 (medium), 0.5 (low), 0.25 (minimal/cosmetic)
+               - **Confidence**: 100 / 80 / 50 (%) — your confidence in the Reach × Impact estimate
+               - **Effort**: person-days (be realistic for a solo iOS dev; include testing)
+               - **RICE = (Reach × Impact × Confidence/100) / Effort**, rounded to 1 decimal.
+
+            3. If **BUG**: locate the root cause in the codebase. Cite exact `file:line` references (e.g. `Kiln/Services/WorkoutSessionManager.swift:142`) for the suspected lines and explain what's going wrong. If you can't pinpoint it confidently, say so — do not fabricate citations.
+
+            4. If **CONCEPTUAL**: propose **2–3 distinct solutions**. For each: one-sentence description, key tradeoffs (UX / complexity / risk), and rough effort. Note which one you'd lean toward and why.
+
+            5. Post the analysis as a comment on the issue. Write the body to a file first, then:
+                 gh issue comment ${{ github.event.issue.number }} --body-file <file>
+
+            COMMENT FORMAT (use exactly this structure)
+
+            ## Triage
+
+            **Type:** Bug | Conceptual
+            **RICE:** <score>
+
+            | Factor | Value | Reasoning |
+            |---|---|---|
+            | Reach | <n>/mo | <one line> |
+            | Impact | <n> | <one line> |
+            | Confidence | <n>% | <one line> |
+            | Effort | <n>d | <one line> |
+
+            ### Analysis
+
+            <For BUG: root cause + `file:line` citations, plus a short explanation of the failure mode.>
+            <For CONCEPTUAL: numbered list of 2–3 solutions with tradeoffs and a recommendation.>
+
+            ---
+            *Auto-triage. Numbers are starting points — adjust as you scope.*
+
+            Be terse. Be honest about uncertainty. Do not invent file paths or line numbers.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
