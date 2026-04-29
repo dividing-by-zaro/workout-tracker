@@ -1,8 +1,10 @@
-name: Auto-Triage Issues
+name: Claude on Issues
 
 on:
   issues:
     types: [opened]
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: read
@@ -11,7 +13,7 @@ permissions:
 
 jobs:
   triage:
-    if: github.event.issue.user.login == 'dividing-by-zaro'
+    if: github.event_name == 'issues' && github.event.issue.user.login == 'dividing-by-zaro'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -93,5 +95,23 @@ jobs:
             *Auto-triage. Pre-thinking only — not investigation.*
 
             Be terse. Be honest about uncertainty. Do not fabricate file paths, line numbers, or commit hashes.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  respond:
+    if: |
+      github.event_name == 'issue_comment' &&
+      github.event.comment.user.login == 'dividing-by-zaro' &&
+      contains(github.event.comment.body, '@claude')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: |
+            --max-turns 30
+            --allowedTools "Bash(gh:*),Bash(git log:*),Bash(git show:*),Bash(git diff:*),Read,Glob,Grep"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
