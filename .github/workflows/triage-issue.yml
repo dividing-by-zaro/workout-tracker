@@ -65,8 +65,9 @@ jobs:
               - Reach: user-impact-events / month. 2 users × ~12 workouts/mo = ~24/mo upper bound. Score lower for niche flows.
               - Impact: 3 (massive — blocks core flow), 2 (high), 1 (medium), 0.5 (low), 0.25 (cosmetic).
               - Confidence: 100 / 80 / 50 (%).
-              - Effort: person-days for a solo iOS dev including testing.
+              - Effort: estimated **# of files touched**. Use files cited in the issue body as the baseline; add 1–2 if tests / Live Activity sync / sync payload changes are implied. Minimum 1.
               - **RICE = (Reach × Impact × Confidence/100) / Effort**, rounded to 1 decimal.
+              - In the Effort reasoning column, flag complexity if a single file change is unusually risky (e.g. "1 file but core state machine — treat as 3").
 
             STEP 6 — Post the final comment. Write to a file, then:
               gh issue comment ${{ github.event.issue.number }} --body-file <file>
@@ -83,7 +84,7 @@ jobs:
             | Reach | <n>/mo | <one line> |
             | Impact | <n> | <one line> |
             | Confidence | <n>% | <one line> |
-            | Effort | <n>d | <one line> |
+            | Effort | <n> files | <one line, flag complexity if relevant> |
 
             ### Pre-thinking
 
