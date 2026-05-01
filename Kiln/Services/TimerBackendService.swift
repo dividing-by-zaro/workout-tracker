@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 @MainActor
 final class TimerBackendService {
@@ -52,6 +53,13 @@ final class TimerBackendService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = jsonData
 
+        var bgTask: UIBackgroundTaskIdentifier = .invalid
+        bgTask = UIApplication.shared.beginBackgroundTask(withName: "timer-backend-post") {
+            if bgTask != .invalid {
+                UIApplication.shared.endBackgroundTask(bgTask)
+                bgTask = .invalid
+            }
+        }
         Task.detached {
             do {
                 let (_, response) = try await URLSession.shared.data(for: request)
@@ -60,6 +68,12 @@ final class TimerBackendService {
                 }
             } catch {
                 print("TimerBackend \(path) error: \(error.localizedDescription)")
+            }
+            await MainActor.run {
+                if bgTask != .invalid {
+                    UIApplication.shared.endBackgroundTask(bgTask)
+                    bgTask = .invalid
+                }
             }
         }
     }

@@ -808,9 +808,15 @@ final class WorkoutSessionManager {
     // MARK: - Timer Backend
 
     private func sendTimerScheduleToBackend(duration: Int) {
-        guard let pushToken = currentPushToken else { return }
-        // Build the next-set content state (timer finished, show next set)
-        var nextState = liveActivityService.buildContentState(from: self)
+        // On intent relaunch (app was killed), currentPushToken is nil — fall back to cached token.
+        guard let pushToken = currentPushToken ?? LiveActivityCache.pushToken else { return }
+        // Build the next-set content state (timer finished, show next set).
+        // On intent path activeWorkout is nil, so use the cached state that applySetCompletion
+        // just wrote rather than calling buildContentState which would return "all complete".
+        guard let nextStateBase = activeWorkout != nil
+            ? Optional(liveActivityService.buildContentState(from: self))
+            : LiveActivityCache.state else { return }
+        var nextState = nextStateBase
         nextState.isRestTimerActive = false
         nextState.restTimerEndDate = .distantPast
         nextState.restTotalSeconds = 0
