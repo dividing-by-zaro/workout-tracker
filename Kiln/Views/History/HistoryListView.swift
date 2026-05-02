@@ -14,46 +14,65 @@ struct HistoryListView: View {
 
     var body: some View {
         ScrollView {
-            if workouts.isEmpty {
-                VStack(spacing: DesignSystem.Spacing.md) {
-                    Image(systemName: "clock")
-                        .font(.system(size: 48))
-                        .foregroundStyle(DesignSystem.Colors.textSecondary)
-                    Text("No workouts yet")
-                        .font(DesignSystem.Typography.headline)
-                        .foregroundStyle(DesignSystem.Colors.textSecondary)
-                    Text("Complete a workout to see it here")
-                        .font(DesignSystem.Typography.body)
-                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+            VStack(alignment: .leading, spacing: 0) {
+                // Header
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("ALL SESSIONS")
+                        .font(DesignSystem.Typography.eyebrow)
+                        .tracking(2)
+                        .textCase(.uppercase)
+                        .foregroundStyle(DesignSystem.Colors.ink3)
+                    Text("History")
+                        .font(DesignSystem.Typography.h1Display)
+                        .foregroundStyle(DesignSystem.Colors.ink)
+                        .lineSpacing(0)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.top, DesignSystem.Spacing.xxl)
-            } else {
-                LazyVStack(spacing: DesignSystem.Spacing.md) {
-                    ForEach(workouts) { workout in
-                        NavigationLink(value: workout) {
-                            WorkoutCardView(workout: workout)
-                        }
-                        .buttonStyle(.plain)
-                        .contextMenu {
-                            Button {
-                                editingWorkout = workout
-                            } label: {
-                                Label("Edit", systemImage: DesignSystem.Icon.edit)
-                            }
-                            Button(role: .destructive) {
-                                workoutToDelete = workout
-                            } label: {
-                                Label("Delete", systemImage: DesignSystem.Icon.delete)
-                            }
-                        }
+                .padding(.horizontal, 18)
+                .padding(.top, 12)
+                .padding(.bottom, 16)
+
+                if workouts.isEmpty {
+                    VStack(spacing: 6) {
+                        Text("No bricks laid yet.")
+                            .font(DesignSystem.Typography.italicBody)
+                            .foregroundStyle(DesignSystem.Colors.ink3)
+                        Text("Complete a workout to see it here.")
+                            .font(DesignSystem.Typography.helper)
+                            .foregroundStyle(DesignSystem.Colors.ink3)
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 48)
+                } else {
+                    LazyVStack(spacing: 12) {
+                        ForEach(workouts) { workout in
+                            NavigationLink(value: workout) {
+                                WorkoutCardView(workout: workout)
+                            }
+                            .buttonStyle(.plain)
+                            .contextMenu {
+                                Button {
+                                    editingWorkout = workout
+                                } label: {
+                                    Label("Edit", systemImage: DesignSystem.Icon.edit)
+                                }
+                                Button(role: .destructive) {
+                                    workoutToDelete = workout
+                                } label: {
+                                    Label("Delete", systemImage: DesignSystem.Icon.delete)
+                                }
+                            }
+                        }
+
+                        Color.clear.frame(height: 80)
+                    }
+                    .padding(.horizontal, 14)
                 }
-                .padding(DesignSystem.Spacing.md)
             }
         }
-        .grainedBackground()
-        .navigationTitle("History")
+        .grainedBackground(DesignSystem.Colors.bg)
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(for: Workout.self) { workout in
             WorkoutDetailView(workout: workout)
         }

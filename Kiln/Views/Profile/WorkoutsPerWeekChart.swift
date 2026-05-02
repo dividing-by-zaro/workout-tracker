@@ -27,30 +27,42 @@ struct WorkoutsPerWeekChart: View {
         return result
     }
 
+    private var barGradient: LinearGradient {
+        LinearGradient(
+            colors: [DesignSystem.Colors.brick1, DesignSystem.Colors.brick2],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-            Text("Workouts Per Week")
-                .font(DesignSystem.Typography.headline)
-                .foregroundStyle(DesignSystem.Colors.textPrimary)
+            Text("Workouts per week")
+                .font(DesignSystem.Typography.sans(13, weight: .semibold))
+                .foregroundStyle(DesignSystem.Colors.ink)
 
             Chart(weeklyData, id: \.week) { item in
                 BarMark(
                     x: .value("Week", item.week),
                     y: .value("Count", item.count)
                 )
-                .foregroundStyle(DesignSystem.Colors.primary)
+                .foregroundStyle(barGradient)
                 .cornerRadius(4)
             }
             .chartYAxis {
-                AxisMarks(values: .automatic(desiredCount: 4)) { value in
+                AxisMarks(values: .automatic(desiredCount: 4)) { _ in
                     AxisGridLine()
+                        .foregroundStyle(DesignSystem.Colors.chartGrid)
                     AxisValueLabel()
+                        .font(DesignSystem.Typography.sans(10, weight: .medium))
+                        .foregroundStyle(DesignSystem.Colors.ink3)
                 }
             }
             .chartXAxis {
-                AxisMarks(values: .automatic) { value in
+                AxisMarks(values: .automatic) { _ in
                     AxisValueLabel()
-                        .font(DesignSystem.Typography.caption)
+                        .font(DesignSystem.Typography.sans(10, weight: .medium))
+                        .foregroundStyle(DesignSystem.Colors.ink3)
                 }
             }
             .frame(height: 200)

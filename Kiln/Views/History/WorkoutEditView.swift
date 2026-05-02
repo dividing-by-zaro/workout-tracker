@@ -45,15 +45,17 @@ struct WorkoutEditView: View {
                             Image(systemName: DesignSystem.Icon.add)
                             Text("Add Exercise")
                         }
-                        .font(DesignSystem.Typography.body.bold())
-                        .foregroundStyle(DesignSystem.Colors.primary)
+                        .font(DesignSystem.Typography.button)
+                        .foregroundStyle(DesignSystem.Colors.brick2)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, DesignSystem.Spacing.sm + 2)
                         .background {
-                            ZStack {
-                                DesignSystem.Colors.surface
-                                CardGrainOverlay()
-                            }
+                            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card)
+                                .fill(DesignSystem.Colors.card)
+                        }
+                        .overlay {
+                            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card)
+                                .strokeBorder(DesignSystem.Colors.cardEdge, lineWidth: 1)
                         }
                         .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
                         .cardShadow()
@@ -62,16 +64,20 @@ struct WorkoutEditView: View {
                 }
                 .padding(.vertical, DesignSystem.Spacing.md)
             }
-            .grainedBackground()
+            .grainedBackground(DesignSystem.Colors.bg)
             .navigationTitle("Edit Workout")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button {
                         try? modelContext.save()
                         sessionManager.syncService?.markWorkoutEdited(workout)
                         Task { await sessionManager.syncService?.updateWorkout(workout) }
                         dismiss()
+                    } label: {
+                        Text("Done")
+                            .font(DesignSystem.Typography.button)
+                            .foregroundStyle(DesignSystem.Colors.brick2)
                     }
                 }
             }
@@ -91,14 +97,16 @@ struct WorkoutEditView: View {
 
     private var nameField: some View {
         TextField("Workout Name", text: $workout.name)
-            .font(DesignSystem.Typography.headline)
-            .foregroundStyle(DesignSystem.Colors.textPrimary)
+            .font(DesignSystem.Typography.h2Display)
+            .foregroundStyle(DesignSystem.Colors.ink)
             .padding(DesignSystem.Spacing.md)
             .background {
-                ZStack {
-                    DesignSystem.Colors.surface
-                    CardGrainOverlay()
-                }
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card)
+                    .fill(DesignSystem.Colors.card)
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card)
+                    .strokeBorder(DesignSystem.Colors.cardEdge, lineWidth: 1)
             }
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
             .cardShadow()
@@ -109,19 +117,21 @@ struct WorkoutEditView: View {
     }
 
     private var dateInfo: some View {
-        HStack(spacing: DesignSystem.Spacing.md) {
-            Label(
-                workout.startedAt.formatted(date: .abbreviated, time: .shortened),
-                systemImage: "calendar"
-            )
-            Label(
-                workout.formattedDuration,
-                systemImage: DesignSystem.Icon.timer
-            )
+        HStack(spacing: 10) {
+            Text(workout.startedAt.formatted(date: .abbreviated, time: .shortened))
+                .font(DesignSystem.Typography.italicBody)
+                .foregroundStyle(DesignSystem.Colors.ink3)
+
+            Text("·")
+                .font(DesignSystem.Typography.helper)
+                .foregroundStyle(DesignSystem.Colors.ink3)
+
+            Text(workout.formattedDuration)
+                .font(DesignSystem.Typography.mono(13, weight: .medium))
+                .foregroundStyle(DesignSystem.Colors.ink2)
+
             Spacer()
         }
-        .font(DesignSystem.Typography.caption)
-        .foregroundStyle(DesignSystem.Colors.textSecondary)
         .padding(.horizontal, DesignSystem.Spacing.md)
     }
 

@@ -12,6 +12,9 @@ struct ProfileChartsSection: View {
 
     var body: some View {
         VStack(spacing: DesignSystem.Spacing.lg) {
+            sectionHeader
+                .padding(.horizontal, DesignSystem.Spacing.md)
+
             ForEach(configs) { config in
                 CustomChartCard(
                     config: config,
@@ -21,9 +24,6 @@ struct ProfileChartsSection: View {
                 )
                 .padding(.horizontal, DesignSystem.Spacing.md)
             }
-
-            addButton
-                .padding(.horizontal, DesignSystem.Spacing.md)
         }
         .sheet(isPresented: $showingCreate) {
             ChartConfigEditorView(mode: .create) { exerciseId, exerciseName, metric, range, customStart, customEnd in
@@ -53,34 +53,30 @@ struct ProfileChartsSection: View {
         }
     }
 
-    private var addButton: some View {
-        Button {
-            showingCreate = true
-        } label: {
-            HStack(spacing: DesignSystem.Spacing.sm) {
-                Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 18))
-                    .foregroundStyle(DesignSystem.Colors.primary)
-                Text("Add Graph")
-                    .font(DesignSystem.Typography.label)
-                    .foregroundStyle(DesignSystem.Colors.primary)
-                Spacer()
-            }
-            .padding(DesignSystem.Spacing.md)
-            .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card)
-                    .fill(DesignSystem.Colors.surface.opacity(0.6))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card)
-                    .strokeBorder(
-                        DesignSystem.Colors.primary.opacity(0.35),
-                        style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])
+    private var sectionHeader: some View {
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            Text("Custom graphs")
+                .font(DesignSystem.Typography.sans(13, weight: .semibold))
+                .foregroundStyle(DesignSystem.Colors.ink)
+            Spacer()
+            Button {
+                showingCreate = true
+            } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 12))
+                    .foregroundStyle(DesignSystem.Colors.ink)
+                    .frame(width: 28, height: 28)
+                    .background(
+                        RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button)
+                            .fill(DesignSystem.Colors.card)
                     )
-            )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button)
+                            .strokeBorder(DesignSystem.Colors.cardEdge, lineWidth: 1)
+                    )
+            }
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
     }
 
     private func delete(_ config: ProfileChartConfig) {

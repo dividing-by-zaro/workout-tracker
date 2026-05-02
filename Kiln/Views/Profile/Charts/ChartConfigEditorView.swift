@@ -34,73 +34,178 @@ struct ChartConfigEditorView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section("Exercise") {
-                    Button {
-                        showingExercisePicker = true
-                    } label: {
-                        HStack {
-                            Text(selectedExerciseName.isEmpty ? "Select exercise" : selectedExerciseName)
-                                .foregroundStyle(selectedExerciseName.isEmpty ? DesignSystem.Colors.textSecondary : DesignSystem.Colors.textPrimary)
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(DesignSystem.Colors.textSecondary.opacity(0.6))
-                        }
+        ZStack {
+            DesignSystem.Colors.bg.ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                dragIndicator
+
+                topBar
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
+                        exerciseSection
+                        metricSection
+                        rangeSection
                     }
+                    .padding(.horizontal, DesignSystem.Spacing.padPage)
+                    .padding(.top, DesignSystem.Spacing.md)
+                    .padding(.bottom, DesignSystem.Spacing.xl)
                 }
 
-                Section("Metric") {
-                    Picker("Metric", selection: $metric) {
-                        ForEach(ChartMetric.allCases) { m in
-                            Text(m.displayName).tag(m)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                }
-
-                Section("Range") {
-                    Picker("Range", selection: $range) {
-                        ForEach(ChartRange.allCases) { r in
-                            Text(r.displayName).tag(r)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-
-                    if range == .custom {
-                        DatePicker("Start", selection: $customStart, displayedComponents: .date)
-                        DatePicker("End", selection: $customEnd, displayedComponents: .date)
-                    }
-                }
+                saveButton
+                    .padding(.horizontal, DesignSystem.Spacing.padPage)
+                    .padding(.bottom, DesignSystem.Spacing.md)
             }
-            .navigationTitle(isEditing ? "Edit Graph" : "New Graph")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        guard let id = selectedExerciseId else { return }
-                        onSave(
-                            id,
-                            selectedExerciseName,
-                            metric,
-                            range,
-                            range == .custom ? customStart : nil,
-                            range == .custom ? customEnd : nil
-                        )
-                        dismiss()
-                    }
-                    .disabled(!isValid)
-                }
-            }
-            .sheet(isPresented: $showingExercisePicker) {
-                exercisePickerSheet
-            }
-            .onAppear(perform: loadInitialState)
         }
+        .sheet(isPresented: $showingExercisePicker) {
+            exercisePickerSheet
+        }
+        .onAppear(perform: loadInitialState)
+    }
+
+    // MARK: - Sections
+
+    private var dragIndicator: some View {
+        Capsule()
+            .fill(DesignSystem.Colors.ink3.opacity(0.4))
+            .frame(width: 36, height: 4)
+            .padding(.top, 8)
+            .frame(maxWidth: .infinity)
+    }
+
+    private var topBar: some View {
+        HStack {
+            Button {
+                dismiss()
+            } label: {
+                Text("Cancel")
+                    .font(DesignSystem.Typography.button)
+                    .foregroundStyle(DesignSystem.Colors.ink2)
+            }
+            Spacer()
+            Text(isEditing ? "Edit Graph" : "New Graph")
+                .font(DesignSystem.Typography.h2Display)
+                .foregroundStyle(DesignSystem.Colors.ink)
+            Spacer()
+            // Invisible placeholder to keep the title centered
+            Text("Cancel")
+                .font(DesignSystem.Typography.button)
+                .opacity(0)
+        }
+        .padding(.horizontal, DesignSystem.Spacing.padPage)
+        .padding(.top, DesignSystem.Spacing.sm)
+        .padding(.bottom, DesignSystem.Spacing.md)
+    }
+
+    private func sectionHeader(_ text: String) -> some View {
+        Text(text.uppercased())
+            .font(DesignSystem.Typography.helper)
+            .tracking(1.4)
+            .foregroundStyle(DesignSystem.Colors.ink3)
+    }
+
+    private var exerciseSection: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+            sectionHeader("Exercise")
+            Button {
+                showingExercisePicker = true
+            } label: {
+                HStack {
+                    Text(selectedExerciseName.isEmpty ? "Select exercise" : selectedExerciseName)
+                        .font(DesignSystem.Typography.sans(14, weight: .regular))
+                        .foregroundStyle(selectedExerciseName.isEmpty ? DesignSystem.Colors.ink3 : DesignSystem.Colors.ink)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(DesignSystem.Colors.ink3)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button)
+                        .fill(DesignSystem.Colors.card)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button)
+                        .strokeBorder(DesignSystem.Colors.cardEdge, lineWidth: 1)
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var metricSection: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+            sectionHeader("Metric")
+            Picker("Metric", selection: $metric) {
+                ForEach(ChartMetric.allCases) { m in
+                    Text(m.displayName).tag(m)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+    }
+
+    private var rangeSection: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+            sectionHeader("Range")
+            Picker("Range", selection: $range) {
+                ForEach(ChartRange.allCases) { r in
+                    Text(r.displayName).tag(r)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            if range == .custom {
+                VStack(spacing: DesignSystem.Spacing.sm) {
+                    DatePicker("Start", selection: $customStart, displayedComponents: .date)
+                        .font(DesignSystem.Typography.sans(14, weight: .regular))
+                        .foregroundStyle(DesignSystem.Colors.ink)
+                    DatePicker("End", selection: $customEnd, displayedComponents: .date)
+                        .font(DesignSystem.Typography.sans(14, weight: .regular))
+                        .foregroundStyle(DesignSystem.Colors.ink)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button)
+                        .fill(DesignSystem.Colors.card)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button)
+                        .strokeBorder(DesignSystem.Colors.cardEdge, lineWidth: 1)
+                )
+            }
+        }
+    }
+
+    private var saveButton: some View {
+        Button {
+            guard let id = selectedExerciseId else { return }
+            onSave(
+                id,
+                selectedExerciseName,
+                metric,
+                range,
+                range == .custom ? customStart : nil,
+                range == .custom ? customEnd : nil
+            )
+            dismiss()
+        } label: {
+            Text("Save")
+                .font(DesignSystem.Typography.buttonLarge)
+                .foregroundStyle(DesignSystem.Colors.brickText)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(
+                    BrickButtonBackground(cornerRadius: DesignSystem.CornerRadius.button)
+                )
+                .opacity(isValid ? 1 : 0.5)
+                .mortarShadow()
+        }
+        .buttonStyle(.plain)
+        .disabled(!isValid)
     }
 
     private var isEditing: Bool {
@@ -130,11 +235,11 @@ struct ChartConfigEditorView: View {
                     } label: {
                         HStack {
                             Text(exercise.name)
-                                .foregroundStyle(DesignSystem.Colors.textPrimary)
+                                .foregroundStyle(DesignSystem.Colors.ink)
                             Spacer()
                             if selectedExerciseId == exercise.id {
                                 Image(systemName: "checkmark")
-                                    .foregroundStyle(DesignSystem.Colors.primary)
+                                    .foregroundStyle(DesignSystem.Colors.brick1)
                             }
                         }
                     }

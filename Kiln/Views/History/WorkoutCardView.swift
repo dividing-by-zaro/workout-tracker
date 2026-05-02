@@ -5,59 +5,86 @@ struct WorkoutCardView: View {
     let workout: Workout
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-            HStack {
-                Text(workout.name)
-                    .font(DesignSystem.Typography.headline)
-                    .foregroundStyle(DesignSystem.Colors.textPrimary)
-                Spacer()
-                Text(workout.startedAt, format: .dateTime.month().day().year())
-                    .font(DesignSystem.Typography.caption)
-                    .foregroundStyle(DesignSystem.Colors.textSecondary)
+        VStack(alignment: .leading, spacing: 8) {
+            // Eyebrow: SESSION · MMM d
+            HStack(spacing: 6) {
+                Text("SESSION")
+                    .font(DesignSystem.Typography.eyebrow)
+                    .tracking(2)
+                    .textCase(.uppercase)
+                Text("·")
+                    .font(DesignSystem.Typography.eyebrow)
+                Text(workout.startedAt, format: .dateTime.month(.abbreviated).day())
+                    .font(DesignSystem.Typography.eyebrow)
+                    .tracking(2)
+                    .textCase(.uppercase)
             }
+            .foregroundStyle(DesignSystem.Colors.ink3)
 
-            HStack(spacing: DesignSystem.Spacing.md) {
-                Label(workout.formattedDuration, systemImage: "clock")
+            // Title
+            Text(workout.name)
+                .font(DesignSystem.Typography.h2Display)
+                .foregroundStyle(DesignSystem.Colors.ink)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+
+            // Stats line: duration · volume lb
+            HStack(spacing: 6) {
+                Text(workout.formattedDuration)
+                    .font(DesignSystem.Typography.mono(11, weight: .medium))
+                    .foregroundStyle(DesignSystem.Colors.ink2)
+
                 if workout.totalVolume > 0 {
-                    Label(String(format: "%.0f lbs", workout.totalVolume), systemImage: "scalemass")
+                    Text("·")
+                        .font(DesignSystem.Typography.helper)
+                        .foregroundStyle(DesignSystem.Colors.ink3)
+
+                    Text(volumeString(workout.totalVolume))
+                        .font(DesignSystem.Typography.mono(11, weight: .medium))
+                        .foregroundStyle(DesignSystem.Colors.ink2)
+
+                    Text("lb")
+                        .font(DesignSystem.Typography.helper)
+                        .foregroundStyle(DesignSystem.Colors.ink3)
                 }
             }
-            .font(DesignSystem.Typography.caption)
-            .foregroundStyle(DesignSystem.Colors.textSecondary)
 
-            // Exercise summary - show each exercise with best set
-            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                ForEach(workout.sortedExercises.prefix(5)) { workoutExercise in
-                    if let exercise = workoutExercise.exercise {
-                        HStack {
-                            Text(exercise.name)
-                                .font(DesignSystem.Typography.caption)
-                                .foregroundStyle(DesignSystem.Colors.textSecondary)
-                            Spacer()
-                            Text(bestSetLabel(for: workoutExercise))
-                                .font(DesignSystem.Typography.caption)
-                                .foregroundStyle(DesignSystem.Colors.textSecondary)
-                        }
+            // Brick thumbnail row
+            if !workout.exercises.isEmpty {
+                let count = min(workout.exercises.count, 6)
+                HStack(spacing: 4) {
+                    ForEach(0..<count, id: \.self) { _ in
+                        BrickFill(cornerRadius: 4)
+                            .frame(width: 24, height: 10)
                     }
                 }
-                if workout.exercises.count > 5 {
-                    Text("+\(workout.exercises.count - 5) more")
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundStyle(DesignSystem.Colors.textSecondary)
-                }
+                .mortarShadow()
+                .padding(.top, 6)
             }
         }
-        .padding(DesignSystem.Spacing.md)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background {
-            ZStack {
-                DesignSystem.Colors.surface
-                CardGrainOverlay()
-            }
+            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card)
+                .fill(DesignSystem.Colors.card)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card)
+                .strokeBorder(DesignSystem.Colors.cardEdge, lineWidth: 1)
         }
         .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
         .cardShadow()
     }
 
+    private func volumeString(_ volume: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 0
+        return formatter.string(from: NSNumber(value: volume)) ?? String(Int(volume))
+    }
+
+    /// Retained for downstream consumers (other views may still reference if extended).
     private func bestSetLabel(for workoutExercise: WorkoutExercise) -> String {
         let completedSets = workoutExercise.sortedSets.filter(\.isCompleted)
         guard !completedSets.isEmpty else { return "" }

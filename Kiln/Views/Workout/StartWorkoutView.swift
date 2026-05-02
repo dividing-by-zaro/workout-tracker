@@ -12,28 +12,37 @@ struct StartWorkoutView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
-                HStack {
+                HStack(alignment: .center) {
                     Text("Workouts")
-                        .font(DesignSystem.Typography.title)
-                        .foregroundStyle(DesignSystem.Colors.textPrimary)
+                        .font(DesignSystem.Typography.h1Display)
+                        .foregroundStyle(DesignSystem.Colors.ink)
+
                     Spacer()
+
                     Button {
                         showTemplateEditor = true
                     } label: {
-                        Image(systemName: DesignSystem.Icon.add)
-                            .font(.title2)
-                            .foregroundStyle(DesignSystem.Colors.primary)
+                        Image(systemName: "plus")
+                            .font(.system(size: 14, weight: .regular))
+                            .foregroundStyle(DesignSystem.Colors.ink)
+                            .frame(width: 34, height: 34)
+                            .background(DesignSystem.Colors.card)
+                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .stroke(DesignSystem.Colors.cardEdge, lineWidth: 1)
+                            }
                     }
                 }
-                .padding(.horizontal, DesignSystem.Spacing.md)
+                .padding(.horizontal, DesignSystem.Spacing.padPage)
 
                 if templates.isEmpty {
-                    Text("No templates yet. Create one or import from Strong.")
-                        .font(DesignSystem.Typography.body)
-                        .foregroundStyle(DesignSystem.Colors.textSecondary)
-                        .padding(.horizontal, DesignSystem.Spacing.md)
+                    Text("No templates yet. Lay your first one.")
+                        .font(DesignSystem.Typography.italicBody)
+                        .foregroundStyle(DesignSystem.Colors.ink3)
+                        .padding(.horizontal, DesignSystem.Spacing.padCardOuter)
                 } else {
-                    LazyVStack(spacing: DesignSystem.Spacing.md) {
+                    LazyVStack(spacing: DesignSystem.Spacing.gapCard) {
                         ForEach(templates) { template in
                             let historySummary = WorkoutHistoryService.templateSummary(
                                 for: template.name,
@@ -67,12 +76,14 @@ struct StartWorkoutView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, DesignSystem.Spacing.md)
+                    .padding(.horizontal, DesignSystem.Spacing.padCardOuter)
                 }
+
+                Color.clear.frame(height: 80)
             }
             .padding(.vertical, DesignSystem.Spacing.md)
         }
-        .grainedBackground()
+        .grainedBackground(DesignSystem.Colors.bg)
         .sheet(isPresented: $showTemplateEditor) {
             TemplateEditorView()
         }

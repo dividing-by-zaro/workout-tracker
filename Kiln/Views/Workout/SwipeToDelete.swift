@@ -20,14 +20,14 @@ struct SwipeToDelete<Content: View>: View {
                     }
                     onDelete()
                 } label: {
-                    Image(systemName: "trash.fill")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.white)
+                    Text("Delete")
+                        .font(DesignSystem.Typography.button)
+                        .foregroundStyle(DesignSystem.Colors.brickText)
                         .frame(width: deleteWidth)
                         .frame(maxHeight: .infinity)
-                        .background(DesignSystem.Colors.destructive)
+                        .background(DesignSystem.Colors.red)
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.brick))
             }
 
             // Main content

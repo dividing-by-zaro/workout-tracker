@@ -20,45 +20,74 @@ struct ExercisePickerView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                if filteredExercises.isEmpty && !searchText.isEmpty {
-                    Button {
-                        newExerciseName = searchText
-                        showCreateExercise = true
-                    } label: {
-                        Label("Create \"\(searchText)\"", systemImage: DesignSystem.Icon.add)
-                    }
-                }
-
-                ForEach(filteredExercises) { exercise in
-                    Button {
-                        onSelect(exercise)
-                        dismiss()
-                    } label: {
-                        HStack {
-                            Text(exercise.name)
-                                .foregroundStyle(DesignSystem.Colors.textPrimary)
-                            Spacer()
-                            Text(exercise.resolvedEquipmentType.displayName)
-                                .font(DesignSystem.Typography.caption)
-                                .foregroundStyle(DesignSystem.Colors.textSecondary)
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    if filteredExercises.isEmpty && !searchText.isEmpty {
+                        Button {
+                            newExerciseName = searchText
+                            showCreateExercise = true
+                        } label: {
+                            HStack(spacing: DesignSystem.Spacing.sm) {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 13, weight: .regular))
+                                    .foregroundStyle(DesignSystem.Colors.ink2)
+                                Text("Create \"\(searchText)\"")
+                                    .font(DesignSystem.Typography.button)
+                                    .foregroundStyle(DesignSystem.Colors.brick1)
+                                Spacer()
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 12)
                         }
+                        .buttonStyle(.plain)
+                        Divider()
+                            .background(DesignSystem.Colors.hair)
+                    }
+
+                    ForEach(filteredExercises) { exercise in
+                        Button {
+                            onSelect(exercise)
+                            dismiss()
+                        } label: {
+                            HStack {
+                                Text(exercise.name)
+                                    .font(DesignSystem.Typography.sans(14, weight: .regular))
+                                    .foregroundStyle(DesignSystem.Colors.ink)
+                                Spacer()
+                                Text(exercise.resolvedEquipmentType.displayName)
+                                    .font(DesignSystem.Typography.helper)
+                                    .foregroundStyle(DesignSystem.Colors.ink3)
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 12)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        Divider()
+                            .background(DesignSystem.Colors.hair)
                     }
                 }
             }
+            .background(
+                DesignSystem.Colors.bg.ignoresSafeArea()
+            )
+            .grainedBackground(DesignSystem.Colors.bg)
             .searchable(text: $searchText, prompt: "Search exercises")
             .navigationTitle("Select Exercise")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .font(DesignSystem.Typography.button)
+                        .foregroundStyle(DesignSystem.Colors.ink2)
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         showCreateExercise = true
                         newExerciseName = ""
                     } label: {
-                        Image(systemName: DesignSystem.Icon.add)
+                        Image(systemName: "plus")
+                            .foregroundStyle(DesignSystem.Colors.ink)
                     }
                 }
             }
@@ -96,6 +125,8 @@ struct ExercisePickerView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { showCreateExercise = false }
+                        .font(DesignSystem.Typography.button)
+                        .foregroundStyle(DesignSystem.Colors.ink2)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Create") {
@@ -114,6 +145,8 @@ struct ExercisePickerView: View {
                         onSelect(exercise)
                         dismiss()
                     }
+                    .font(DesignSystem.Typography.button)
+                    .foregroundStyle(DesignSystem.Colors.brick2)
                     .disabled(newExerciseName.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }

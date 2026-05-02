@@ -33,12 +33,7 @@ struct CustomChartCard: View {
         return points.min(by: { abs($0.date.timeIntervalSince(selectedDate)) < abs($1.date.timeIntervalSince(selectedDate)) })
     }
 
-    private var accentColor: Color {
-        switch config.metric {
-        case .totalVolume: return DesignSystem.Colors.chartLine
-        case .estimatedOneRepMax: return DesignSystem.Colors.success
-        }
-    }
+    private var accentColor: Color { DesignSystem.Colors.chartLine }
 
     private var accentAreaGradient: LinearGradient {
         LinearGradient(
@@ -57,12 +52,13 @@ struct CustomChartCard: View {
         }
         .padding(DesignSystem.Spacing.md)
         .background(
-            ZStack {
-                DesignSystem.Colors.surface
-                CardGrainOverlay()
-            }
+            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card)
+                .fill(DesignSystem.Colors.card)
         )
-        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card)
+                .strokeBorder(DesignSystem.Colors.cardEdge, lineWidth: 1)
+        )
         .cardShadow()
     }
 
@@ -72,12 +68,12 @@ struct CustomChartCard: View {
         HStack(alignment: .top, spacing: DesignSystem.Spacing.sm) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(config.exerciseName)
-                    .font(DesignSystem.Typography.headline)
-                    .foregroundStyle(DesignSystem.Colors.textPrimary)
+                    .font(DesignSystem.Typography.sans(14, weight: .semibold))
+                    .foregroundStyle(DesignSystem.Colors.ink)
                     .lineLimit(1)
                 Text(config.metric.displayName)
-                    .font(DesignSystem.Typography.caption)
-                    .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    .font(DesignSystem.Typography.helper12)
+                    .foregroundStyle(DesignSystem.Colors.ink3)
             }
             Spacer()
             Menu {
@@ -109,8 +105,8 @@ struct CustomChartCard: View {
                 }
             } label: {
                 Image(systemName: "ellipsis")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    .font(.system(size: 16, weight: .regular))
+                    .foregroundStyle(DesignSystem.Colors.ink3)
                     .frame(width: 28, height: 28)
                     .contentShape(Rectangle())
             }
@@ -119,12 +115,14 @@ struct CustomChartCard: View {
 
     private var rangeChip: some View {
         Text(config.range.displayName)
-            .font(DesignSystem.Typography.caption.weight(.semibold))
-            .foregroundStyle(accentColor)
+            .font(DesignSystem.Typography.helper12)
+            .foregroundStyle(DesignSystem.Colors.ink2)
             .padding(.horizontal, DesignSystem.Spacing.sm)
             .padding(.vertical, DesignSystem.Spacing.xs)
-            .background(accentColor.opacity(0.12))
-            .clipShape(Capsule())
+            .background(
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button)
+                    .fill(DesignSystem.Colors.bgDeeper)
+            )
     }
 
     // MARK: - Big value + delta
@@ -133,22 +131,22 @@ struct CustomChartCard: View {
         HStack(alignment: .firstTextBaseline, spacing: DesignSystem.Spacing.sm) {
             if let shown = selectedPoint?.value ?? latestValue {
                 Text(Self.formatValue(shown))
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                    .foregroundStyle(DesignSystem.Colors.textPrimary)
+                    .font(DesignSystem.Typography.mono(28, weight: .bold))
+                    .foregroundStyle(DesignSystem.Colors.ink)
                     .contentTransition(.numericText())
                 Text(config.metric.shortUnit)
-                    .font(DesignSystem.Typography.caption)
-                    .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    .font(DesignSystem.Typography.helper12)
+                    .foregroundStyle(DesignSystem.Colors.ink3)
             } else {
                 Text("—")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                    .foregroundStyle(DesignSystem.Colors.textSecondary.opacity(0.5))
+                    .font(DesignSystem.Typography.mono(28, weight: .bold))
+                    .foregroundStyle(DesignSystem.Colors.ink3)
             }
             Spacer()
             if let selected = selectedPoint {
                 Text(selected.date.formatted(.dateTime.month(.abbreviated).day().year()))
-                    .font(DesignSystem.Typography.caption)
-                    .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    .font(DesignSystem.Typography.mono(13, weight: .semibold))
+                    .foregroundStyle(DesignSystem.Colors.ink3)
             } else if let d = delta, let p = deltaPercent, points.count > 1 {
                 deltaBadge(delta: d, percent: p)
             }
@@ -157,18 +155,20 @@ struct CustomChartCard: View {
 
     private func deltaBadge(delta: Double, percent: Double) -> some View {
         let positive = delta >= 0
-        let color = positive ? DesignSystem.Colors.success : DesignSystem.Colors.destructive
+        let color = positive ? DesignSystem.Colors.brick1 : DesignSystem.Colors.red
         return HStack(spacing: 2) {
             Image(systemName: positive ? "arrow.up.right" : "arrow.down.right")
                 .font(.system(size: 10, weight: .bold))
             Text(String(format: "%+.1f%%", percent))
-                .font(DesignSystem.Typography.caption.weight(.semibold))
+                .font(DesignSystem.Typography.mono(13, weight: .semibold))
         }
         .foregroundStyle(color)
         .padding(.horizontal, DesignSystem.Spacing.sm)
         .padding(.vertical, DesignSystem.Spacing.xs)
-        .background(color.opacity(0.10))
-        .clipShape(Capsule())
+        .background(
+            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button)
+                .fill(color.opacity(0.10))
+        )
     }
 
     // MARK: - Chart
@@ -209,7 +209,7 @@ struct CustomChartCard: View {
 
                 if let selected = selectedPoint {
                     RuleMark(x: .value("Date", selected.date))
-                        .foregroundStyle(DesignSystem.Colors.textSecondary.opacity(0.25))
+                        .foregroundStyle(DesignSystem.Colors.chartGrid)
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
                     PointMark(
                         x: .value("Date", selected.date),
@@ -226,8 +226,8 @@ struct CustomChartCard: View {
                     AxisGridLine()
                         .foregroundStyle(DesignSystem.Colors.chartGrid)
                     AxisValueLabel()
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+                        .font(DesignSystem.Typography.sans(10, weight: .medium))
+                        .foregroundStyle(DesignSystem.Colors.ink3)
                 }
             }
             .chartXAxis {
@@ -238,8 +238,8 @@ struct CustomChartCard: View {
                     AxisValueLabel(centered: false, anchor: .top) {
                         if let date = value.as(Date.self) {
                             Text(Self.monthYearLabel(date))
-                                .font(DesignSystem.Typography.caption)
-                                .foregroundStyle(DesignSystem.Colors.textSecondary)
+                                .font(DesignSystem.Typography.sans(10, weight: .medium))
+                                .foregroundStyle(DesignSystem.Colors.ink3)
                         }
                     }
                 }
@@ -257,14 +257,14 @@ struct CustomChartCard: View {
     private var emptyChart: some View {
         ZStack {
             RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button)
-                .fill(DesignSystem.Colors.surfaceSecondary.opacity(0.5))
+                .fill(DesignSystem.Colors.bgDeeper.opacity(0.5))
             VStack(spacing: DesignSystem.Spacing.xs) {
                 Image(systemName: "chart.xyaxis.line")
                     .font(.system(size: 24))
-                    .foregroundStyle(DesignSystem.Colors.textSecondary.opacity(0.5))
+                    .foregroundStyle(DesignSystem.Colors.ink3)
                 Text("No data in range")
-                    .font(DesignSystem.Typography.caption)
-                    .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    .font(DesignSystem.Typography.helper12)
+                    .foregroundStyle(DesignSystem.Colors.ink3)
             }
         }
         .frame(height: 180)
@@ -276,11 +276,11 @@ struct CustomChartCard: View {
         HStack {
             if points.isEmpty {
                 Text(" ")
-                    .font(DesignSystem.Typography.caption)
+                    .font(DesignSystem.Typography.helper12)
             } else {
                 Text("\(points.count) session\(points.count == 1 ? "" : "s")")
-                    .font(DesignSystem.Typography.caption)
-                    .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    .font(DesignSystem.Typography.helper12)
+                    .foregroundStyle(DesignSystem.Colors.ink3)
             }
             Spacer()
         }
@@ -288,9 +288,6 @@ struct CustomChartCard: View {
 
     // MARK: - Axis helpers
 
-    /// Domain clamped to the first-of-month of the earliest point through
-    /// the first-of-next-month after the latest point. Lines the left-most
-    /// month tick up with the left edge of the plot.
     private var xAxisDomain: ClosedRange<Date> {
         let calendar = Calendar.current
         guard let first = points.first?.date, let last = points.last?.date else {
@@ -306,7 +303,6 @@ struct CustomChartCard: View {
         return start...end
     }
 
-    /// Pick a stride so labels don't collide. Aim for ≤ 6 labels across the visible span.
     private var xAxisMonthStride: Int {
         let calendar = Calendar.current
         let domain = xAxisDomain
@@ -320,8 +316,6 @@ struct CustomChartCard: View {
         }
     }
 
-    /// 3-letter month code ("Mar", "Apr"), except January shows the full year ("2026")
-    /// so the reader always has an anchor.
     static func monthYearLabel(_ date: Date) -> String {
         let calendar = Calendar.current
         let comps = calendar.dateComponents([.year, .month], from: date)
@@ -331,8 +325,6 @@ struct CustomChartCard: View {
         }
         return date.formatted(.dateTime.month(.abbreviated))
     }
-
-    // MARK: - Formatting
 
     static func formatValue(_ value: Double) -> String {
         if value >= 10_000 {

@@ -13,71 +13,123 @@ struct ExerciseHistoryView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: DesignSystem.Spacing.md) {
-                NotesSection(
-                    title: "Exercise Note",
-                    placeholder: "Add exercise note",
-                    notes: $exercise.notes,
-                    onSave: {
-                        try? modelContext.save()
-                        sessionManager.syncService?.syncExerciseMetadataChange(
-                            for: exercise, in: modelContext
-                        )
-                    }
-                )
-                .padding(DesignSystem.Spacing.md)
-                .background(DesignSystem.Colors.surface)
-                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
-                .cardShadow()
-                .padding(.horizontal, DesignSystem.Spacing.md)
+            VStack(alignment: .leading, spacing: 16) {
+                noteHeader
 
                 if finishedSessions.isEmpty {
-                    ContentUnavailableView(
-                        "No History Yet",
-                        systemImage: "clock",
-                        description: Text("Complete a workout with this exercise to see your history.")
-                    )
-                    .padding(.top, DesignSystem.Spacing.xl)
+                    emptyState
                 } else {
-                    ForEach(finishedSessions) { session in
-                        sessionCard(session.workout, session.workoutExercise)
+                    LazyVStack(spacing: 12) {
+                        ForEach(finishedSessions) { session in
+                            sessionCard(session.workout, session.workoutExercise)
+                        }
                     }
+                    .padding(.horizontal, 14)
                 }
+
+                Color.clear.frame(height: 80)
             }
-            .padding(.vertical, DesignSystem.Spacing.md)
+            .padding(.vertical, 16)
         }
-        .grainedBackground()
+        .grainedBackground(DesignSystem.Colors.bg)
         .navigationTitle(exercise.name)
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func sessionCard(_ workout: Workout, _ workoutExercise: WorkoutExercise) -> some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-            Text(workout.startedAt, format: .dateTime.weekday(.wide).month().day().year())
-                .font(DesignSystem.Typography.caption)
-                .foregroundStyle(DesignSystem.Colors.textSecondary)
+    // MARK: - Note header (inline, §3.2 pattern)
 
-            ForEach(workoutExercise.sortedSets.filter(\.isCompleted)) { set in
-                HStack {
-                    Text("Set \(set.order + 1)")
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundStyle(DesignSystem.Colors.textSecondary)
-                        .frame(width: 50, alignment: .leading)
+    private var noteHeader: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(exercise.resolvedEquipmentType.displayName)
+                .font(DesignSystem.Typography.helper12)
+                .foregroundStyle(DesignSystem.Colors.ink3)
 
-                    Spacer()
-
-                    DetailedSetLabelView(
-                        set: set,
-                        equipmentType: exercise.resolvedEquipmentType,
-                        style: .exerciseHistory
+            NotesSection(
+                title: "Exercise Note",
+                placeholder: "A note for this exercise\u{2026}",
+                notes: $exercise.notes,
+                onSave: {
+                    try? modelContext.save()
+                    sessionManager.syncService?.syncExerciseMetadataChange(
+                        for: exercise, in: modelContext
                     )
+                },
+                style: .standalone
+            )
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, 8)
+    }
+
+    // MARK: - Empty state
+
+    private var emptyState: some View {
+        VStack(spacing: 8) {
+            Text("No bricks laid for this exercise yet.")
+                .font(DesignSystem.Typography.italicBody)
+                .foregroundStyle(DesignSystem.Colors.ink3)
+                .multilineTextAlignment(.center)
+            Text("Complete a workout with this exercise to see your history.")
+                .font(DesignSystem.Typography.helper)
+                .foregroundStyle(DesignSystem.Colors.ink3)
+                .multilineTextAlignment(.center)
+        }
+        .padding(.top, 48)
+        .padding(.horizontal, 24)
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Session card
+
+    private func sessionCard(_ workout: Workout, _ workoutExercise: WorkoutExercise) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(eyebrow(for: workout.startedAt))
+                .font(DesignSystem.Typography.eyebrow)
+                .tracking(2)
+                .textCase(.uppercase)
+                .foregroundStyle(DesignSystem.Colors.ink3)
+
+            VStack(alignment: .leading, spacing: 6) {
+                ForEach(workoutExercise.sortedSets.filter(\.isCompleted)) { set in
+                    HStack(spacing: 10) {
+                        Text(setIndexLabel(for: set.order))
+                            .font(DesignSystem.Typography.setIndex)
+                            .tracking(1.2)
+                            .foregroundStyle(DesignSystem.Colors.ink)
+                            .monospacedDigit()
+
+                        DetailedSetLabelView(
+                            set: set,
+                            equipmentType: exercise.resolvedEquipmentType,
+                            style: .exerciseHistory
+                        )
+
+                        Spacer(minLength: 0)
+                    }
                 }
             }
         }
-        .padding(DesignSystem.Spacing.md)
-        .background(DesignSystem.Colors.surface)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(DesignSystem.Colors.card)
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card)
+                .strokeBorder(DesignSystem.Colors.cardEdge, lineWidth: 1)
+        )
         .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
         .cardShadow()
-        .padding(.horizontal, DesignSystem.Spacing.md)
+    }
+
+    // MARK: - Helpers
+
+    private func eyebrow(for date: Date) -> String {
+        let formatted = date.formatted(
+            .dateTime.weekday(.abbreviated).month(.abbreviated).day()
+        )
+        return "SESSION \u{00B7} \(formatted)"
+    }
+
+    private func setIndexLabel(for order: Int) -> String {
+        String(format: "%02d", order + 1)
     }
 }

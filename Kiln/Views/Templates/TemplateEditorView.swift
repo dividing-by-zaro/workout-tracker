@@ -20,12 +20,15 @@ struct TemplateEditorView: View {
             Form {
                 Section("Template Name") {
                     TextField("e.g. Push Day", text: $name)
+                        .font(DesignSystem.Typography.sans(15, weight: .regular))
+                        .foregroundStyle(DesignSystem.Colors.ink)
                 }
 
                 Section("Exercises") {
                     if templateExercises.isEmpty {
                         Text("No exercises added yet")
-                            .foregroundStyle(DesignSystem.Colors.textSecondary)
+                            .font(DesignSystem.Typography.italicBody)
+                            .foregroundStyle(DesignSystem.Colors.ink3)
                     } else {
                         ForEach(templateExercises) { te in
                             TemplateExerciseRow(templateExercise: te)
@@ -45,20 +48,30 @@ struct TemplateEditorView: View {
                         showExercisePicker = true
                     } label: {
                         Label("Add Exercise", systemImage: "plus")
+                            .font(DesignSystem.Typography.button)
+                            .foregroundStyle(DesignSystem.Colors.brick2)
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(DesignSystem.Colors.bg)
             .navigationTitle(existingTemplate == nil ? "New Template" : "Edit Template")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(DesignSystem.Colors.bg, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .font(DesignSystem.Typography.button)
+                        .foregroundStyle(DesignSystem.Colors.ink2)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         saveTemplate()
                         dismiss()
                     }
+                    .font(DesignSystem.Typography.button)
+                    .foregroundStyle(DesignSystem.Colors.brick2)
                     .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }

@@ -9,35 +9,57 @@ struct LoginView: View {
     private var canConnect: Bool { !apiKey.trimmingCharacters(in: .whitespaces).isEmpty && !isLoading }
 
     var body: some View {
-        VStack(spacing: DesignSystem.Spacing.xxl) {
+        VStack(spacing: DesignSystem.Spacing.xl) {
             Spacer()
 
             // Branding
             VStack(spacing: DesignSystem.Spacing.md) {
-                Image(systemName: "flame.fill")
-                    .font(.system(size: 64))
-                    .foregroundStyle(DesignSystem.Colors.primary)
+                ZStack {
+                    BrickFill(cornerRadius: 6)
+                        .frame(width: 96, height: 42)
+                        .mortarShadow()
+                    Text("K")
+                        .font(DesignSystem.Typography.display(32))
+                        .foregroundStyle(DesignSystem.Colors.brickText)
+                }
 
                 Text("Kiln")
-                    .font(.system(size: 40, weight: .bold))
-                    .foregroundStyle(DesignSystem.Colors.textPrimary)
+                    .font(DesignSystem.Typography.display(56))
+                    .foregroundStyle(DesignSystem.Colors.ink)
             }
 
-            // Instruction
-            Text("Enter your API key to get started")
-                .font(DesignSystem.Typography.body)
-                .foregroundStyle(DesignSystem.Colors.textSecondary)
+            // Tagline (metaphor)
+            Text("You're firing yourself in the kiln and becoming hard as a brick.")
+                .font(DesignSystem.Typography.serifItalic(14))
+                .foregroundStyle(DesignSystem.Colors.ink3)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
 
             // Input + Button
             VStack(spacing: DesignSystem.Spacing.md) {
+                Text("Enter your API key to begin.")
+                    .font(DesignSystem.Typography.helper)
+                    .foregroundStyle(DesignSystem.Colors.ink3)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 16)
+
                 TextField("API key", text: $apiKey)
                     .textContentType(.password)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
-                    .padding(DesignSystem.Spacing.md)
-                    .background(DesignSystem.Colors.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
-                    .cardShadow()
+                    .font(DesignSystem.Typography.mono(14, weight: .regular))
+                    .foregroundStyle(DesignSystem.Colors.ink)
+                    .tint(DesignSystem.Colors.brick1)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button)
+                            .fill(DesignSystem.Colors.card)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button)
+                            .strokeBorder(DesignSystem.Colors.cardEdge, lineWidth: 1)
+                    )
                     .focused($isFieldFocused)
 
                 Button {
@@ -49,24 +71,28 @@ struct LoginView: View {
                     HStack(spacing: DesignSystem.Spacing.sm) {
                         if isLoading {
                             ProgressView()
-                                .tint(DesignSystem.Colors.textOnPrimary)
+                                .tint(DesignSystem.Colors.brickText)
                         }
                         Text(isLoading ? "Connecting..." : "Connect")
-                            .font(DesignSystem.Typography.headline)
+                            .font(DesignSystem.Typography.buttonLarge)
+                            .foregroundStyle(DesignSystem.Colors.brickText)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(DesignSystem.Spacing.md)
-                    .background(canConnect ? DesignSystem.Colors.primary : DesignSystem.Colors.primary.opacity(0.4))
-                    .foregroundStyle(DesignSystem.Colors.textOnPrimary)
-                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
+                    .frame(height: 48)
+                    .background(
+                        BrickButtonBackground(cornerRadius: DesignSystem.CornerRadius.button)
+                    )
+                    .opacity(canConnect ? 1 : 0.5)
+                    .mortarShadow()
                 }
+                .buttonStyle(.plain)
                 .disabled(!canConnect)
 
                 // Error message
                 if let error = authService.errorMessage {
                     Text(error)
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundStyle(DesignSystem.Colors.destructive)
+                        .font(DesignSystem.Typography.helper)
+                        .foregroundStyle(DesignSystem.Colors.red)
                         .multilineTextAlignment(.center)
                 }
             }
@@ -75,7 +101,7 @@ struct LoginView: View {
             Spacer()
             Spacer()
         }
-        .grainedBackground()
+        .grainedBackground(DesignSystem.Colors.bg)
         .onTapGesture {
             isFieldFocused = false
         }

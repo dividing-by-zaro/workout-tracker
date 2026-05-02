@@ -14,25 +14,21 @@ struct TemplateCardView: View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
             HStack(alignment: .top) {
                 Text(template.name)
-                    .font(DesignSystem.Typography.headline)
-                    .foregroundStyle(DesignSystem.Colors.textPrimary)
+                    .font(DesignSystem.Typography.h2Display)
+                    .foregroundStyle(DesignSystem.Colors.ink)
                     .lineLimit(2)
 
                 Spacer()
 
                 if let onStart {
                     Button(action: onStart) {
-                        HStack(spacing: DesignSystem.Spacing.xs) {
-                            Text("Start")
-                                .font(.system(size: 13, weight: .semibold))
-                            Image(systemName: "play.fill")
-                                .font(.system(size: 10))
-                        }
-                        .foregroundStyle(DesignSystem.Colors.textOnPrimary)
-                        .padding(.horizontal, DesignSystem.Spacing.sm + 2)
-                        .padding(.vertical, DesignSystem.Spacing.xs + 2)
-                        .background(DesignSystem.Colors.primary)
-                        .clipShape(Capsule())
+                        Text("Start")
+                            .font(DesignSystem.Typography.button)
+                            .foregroundStyle(DesignSystem.Colors.brickText)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(BrickButtonBackground(cornerRadius: 8))
+                            .mortarShadow()
                     }
                 }
             }
@@ -47,21 +43,20 @@ struct TemplateCardView: View {
                 }
                 if template.exercises.count > 4 {
                     Text("+\(template.exercises.count - 4) more")
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+                        .font(DesignSystem.Typography.helper)
+                        .foregroundStyle(DesignSystem.Colors.ink3)
                         .padding(.leading, 24)
                 }
             }
         }
-        .padding(DesignSystem.Spacing.md)
+        .padding(DesignSystem.Spacing.padCardInner)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background {
-            ZStack {
-                DesignSystem.Colors.surface
-                CardGrainOverlay()
-            }
+        .background(DesignSystem.Colors.card)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card, style: .continuous)
+                .stroke(DesignSystem.Colors.cardEdge, lineWidth: 1)
         }
-        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
         .cardShadow()
         .contentShape(Rectangle())
         .onTapGesture { showDetail = true }
@@ -83,11 +78,11 @@ struct TemplateCardView: View {
             Image(exercise.resolvedBodyPart.iconAsset)
                 .resizable()
                 .scaledToFit()
-                .foregroundStyle(DesignSystem.Colors.primary)
+                .foregroundStyle(DesignSystem.Colors.ink3)
                 .frame(width: 16, height: 16)
             Text("\(templateExercise.defaultSets) \u{00d7} \(exercise.name)")
-                .font(DesignSystem.Typography.caption)
-                .foregroundStyle(DesignSystem.Colors.textSecondary)
+                .font(DesignSystem.Typography.helper12)
+                .foregroundStyle(DesignSystem.Colors.ink2)
                 .lineLimit(1)
         }
     }
@@ -120,8 +115,8 @@ private struct TemplateDetailSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
                     Text(template.name)
-                        .font(DesignSystem.Typography.title)
-                        .foregroundStyle(DesignSystem.Colors.textPrimary)
+                        .font(DesignSystem.Typography.h1Display)
+                        .foregroundStyle(DesignSystem.Colors.ink)
 
                     HStack(spacing: DesignSystem.Spacing.sm) {
                         TemplateMetadataPill("\(template.exercises.count) exercises")
@@ -143,11 +138,16 @@ private struct TemplateDetailSheet: View {
                                     Image(exercise.resolvedBodyPart.iconAsset)
                                         .resizable()
                                         .scaledToFit()
-                                        .foregroundStyle(DesignSystem.Colors.primary)
+                                        .foregroundStyle(DesignSystem.Colors.ink3)
                                         .frame(width: 20, height: 20)
-                                    Text("\(templateExercise.defaultSets) \u{00d7} \(exercise.name)")
-                                        .font(DesignSystem.Typography.body)
-                                        .foregroundStyle(DesignSystem.Colors.textPrimary)
+                                    HStack(spacing: 6) {
+                                        Text("\(templateExercise.defaultSets)")
+                                            .font(DesignSystem.Typography.mono(13, weight: .semibold))
+                                            .foregroundStyle(DesignSystem.Colors.ink)
+                                        Text(exercise.name)
+                                            .font(DesignSystem.Typography.body)
+                                            .foregroundStyle(DesignSystem.Colors.ink)
+                                    }
                                 }
                             }
                         }
@@ -162,19 +162,19 @@ private struct TemplateDetailSheet: View {
                     dismiss()
                     onStart()
                 } label: {
-                    Text("Start Workout")
-                        .font(DesignSystem.Typography.body.bold())
-                        .foregroundStyle(DesignSystem.Colors.textOnPrimary)
+                    Text("Start")
+                        .font(DesignSystem.Typography.buttonLarge)
+                        .foregroundStyle(DesignSystem.Colors.brickText)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, DesignSystem.Spacing.md)
-                        .background(DesignSystem.Colors.primary)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .padding(.vertical, 14)
+                        .background(BrickButtonBackground(cornerRadius: 8))
+                        .mortarShadow()
                 }
                 .padding(.horizontal, DesignSystem.Spacing.lg)
                 .padding(.bottom, DesignSystem.Spacing.lg)
             }
         }
-        .grainedBackground()
+        .grainedBackground(DesignSystem.Colors.bg)
     }
 }
 
@@ -187,11 +187,11 @@ private struct TemplateMetadataPill: View {
 
     var body: some View {
         Text(text)
-            .font(DesignSystem.Typography.caption)
-            .foregroundStyle(DesignSystem.Colors.textSecondary)
-            .padding(.horizontal, DesignSystem.Spacing.sm)
-            .padding(.vertical, DesignSystem.Spacing.xxs)
-            .background(DesignSystem.Colors.surfaceSecondary)
+            .font(DesignSystem.Typography.helper)
+            .foregroundStyle(DesignSystem.Colors.ink3)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 2)
+            .background(DesignSystem.Colors.bgDeeper)
             .clipShape(Capsule())
     }
 }

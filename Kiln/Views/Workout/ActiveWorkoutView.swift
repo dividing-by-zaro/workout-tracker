@@ -10,6 +10,7 @@ struct ActiveWorkoutView: View {
     @State private var showReorderSheet = false
     @State private var templateDiff: TemplateDiff?
     @State private var preFillCache: [UUID: [PreFillData]] = [:]
+    @State private var sessionNumber: Int = 1
 
     var body: some View {
         if let workout = sessionManager.activeWorkout {
@@ -17,7 +18,7 @@ struct ActiveWorkoutView: View {
                 header(workout: workout)
 
                 ScrollView {
-                    VStack(spacing: DesignSystem.Spacing.md) {
+                    VStack(spacing: DesignSystem.Spacing.gapCard) {
                         ForEach(workout.sortedExercises) { workoutExercise in
                             let preFill = preFillCache[workoutExercise.id] ?? []
                             ExerciseCardView(
@@ -41,13 +42,13 @@ struct ActiveWorkoutView: View {
                                     sessionManager.skipRestTimer()
                                 }
                             )
-                            .padding(.horizontal, DesignSystem.Spacing.md)
+                            .padding(.horizontal, DesignSystem.Spacing.padCardOuter)
                         }
                     }
                     .padding(.vertical, DesignSystem.Spacing.md)
                 }
             }
-            .grainedBackground()
+            .brickWallBackground()
             .sheet(isPresented: $showExercisePicker) {
                 ExercisePickerView { exercise in
                     addExercise(exercise, to: workout)
@@ -69,12 +70,16 @@ struct ActiveWorkoutView: View {
             .overlay(alignment: .top) {
                 if sessionManager.showResumedToast {
                     Text("Workout resumed")
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundStyle(DesignSystem.Colors.textOnPrimary)
+                        .font(DesignSystem.Typography.helper)
+                        .foregroundStyle(DesignSystem.Colors.ink2)
                         .padding(.horizontal, DesignSystem.Spacing.md)
                         .padding(.vertical, DesignSystem.Spacing.sm)
-                        .background(DesignSystem.Colors.secondary)
+                        .background(DesignSystem.Colors.card)
+                        .overlay(
+                            Capsule().stroke(DesignSystem.Colors.cardEdge, lineWidth: 1)
+                        )
                         .clipShape(Capsule())
+                        .cardShadow()
                         .transition(.move(edge: .top).combined(with: .opacity))
                         .onAppear {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -84,73 +89,129 @@ struct ActiveWorkoutView: View {
                 }
             }
             .animation(.easeInOut(duration: 0.3), value: sessionManager.showResumedToast)
-            .onAppear { refreshPreFillCache() }
+            .onAppear {
+                refreshPreFillCache()
+                refreshSessionNumber()
+            }
             .onChange(of: workout.exercises.count) { refreshPreFillCache() }
         }
     }
 
+    // MARK: - Header
+
     private func header(workout: Workout) -> some View {
         @Bindable var bindableWorkout = workout
-        return VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-            HStack {
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
-                    Text(workout.name)
-                        .font(DesignSystem.Typography.headline)
-                        .foregroundStyle(DesignSystem.Colors.textPrimary)
-                    Text(sessionManager.formattedElapsedTime)
-                        .font(DesignSystem.Typography.body)
-                        .foregroundStyle(DesignSystem.Colors.textSecondary)
-                        .monospacedDigit()
-                }
+        return VStack(alignment: .leading, spacing: 8) {
+            // Eyebrow row
+            HStack(alignment: .center) {
+                Text(String(format: "SESSION NO. %d", sessionNumber))
+                    .font(DesignSystem.Typography.eyebrow)
+                    .tracking(2)
+                    .foregroundStyle(DesignSystem.Colors.ink3)
                 Spacer()
+                firingPill
+            }
+
+            // Title row
+            HStack(alignment: .center, spacing: 8) {
+                Text(workout.name)
+                    .font(DesignSystem.Typography.h1Display)
+                    .tracking(-0.6)
+                    .foregroundStyle(DesignSystem.Colors.ink)
+                    .lineSpacing(0)
+
+                Spacer()
+
                 Button {
                     showExercisePicker = true
                 } label: {
-                    Image(systemName: DesignSystem.Icon.add)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(DesignSystem.Colors.textOnPrimary)
-                        .frame(width: 36, height: 36)
-                        .background(DesignSystem.Colors.success)
-                        .clipShape(Circle())
+                    Image(systemName: "plus")
+                        .font(.system(size: 14, weight: .regular))
+                        .foregroundStyle(DesignSystem.Colors.ink)
+                        .frame(width: 34, height: 34)
+                        .background(DesignSystem.Colors.card)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button)
+                                .stroke(DesignSystem.Colors.cardEdge, lineWidth: 1)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
                 }
+
                 Button {
                     showReorderSheet = true
                 } label: {
                     Image(systemName: "arrow.up.arrow.down")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(DesignSystem.Colors.textOnPrimary)
-                        .frame(width: 36, height: 36)
-                        .background(DesignSystem.Colors.secondary)
-                        .clipShape(Circle())
+                        .font(.system(size: 14, weight: .regular))
+                        .foregroundStyle(DesignSystem.Colors.ink)
+                        .frame(width: 34, height: 34)
+                        .background(DesignSystem.Colors.card)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button)
+                                .stroke(DesignSystem.Colors.cardEdge, lineWidth: 1)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
                 }
+
                 Button {
                     templateDiff = sessionManager.computeTemplateDiff(context: modelContext)
                     showEndConfirmation = true
                 } label: {
-                    HStack(spacing: DesignSystem.Spacing.xs) {
-                        Image(systemName: "stop.fill")
-                            .font(.system(size: 10))
+                    HStack(spacing: 6) {
+                        Rectangle()
+                            .fill(Color.white)
+                            .frame(width: 6, height: 6)
                         Text("End")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(DesignSystem.Typography.button)
+                            .foregroundStyle(DesignSystem.Colors.brickText)
                     }
-                    .foregroundStyle(DesignSystem.Colors.textOnPrimary)
-                    .frame(height: 36)
-                    .padding(.horizontal, DesignSystem.Spacing.sm + 2)
-                    .background(DesignSystem.Colors.primary)
-                    .clipShape(Capsule())
+                    .frame(height: 34)
+                    .padding(.horizontal, 14)
+                    .background(DesignSystem.Colors.red)
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
                 }
             }
 
             NotesSection(
                 title: "Workout Note",
-                placeholder: "Add workout note",
+                placeholder: "A note for today's session…",
                 notes: $bindableWorkout.notes,
-                onSave: { try? modelContext.save() }
+                onSave: { try? modelContext.save() },
+                style: .standalone
             )
+            .padding(.top, 10)
         }
-        .padding(DesignSystem.Spacing.md)
-        .background(DesignSystem.Colors.surface)
+        .padding(.horizontal, DesignSystem.Spacing.padPage)
+        .padding(.vertical, 14)
     }
+
+    private var firingPill: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(DesignSystem.Colors.brick1)
+                .frame(width: 6, height: 6)
+                .overlay(
+                    Circle()
+                        .stroke(DesignSystem.Colors.brick1.opacity(0.18), lineWidth: 3)
+                )
+            Text("FIRING")
+                .font(DesignSystem.Typography.sectionLabel)
+                .tracking(1.4)
+                .foregroundStyle(DesignSystem.Colors.brick2)
+            Rectangle()
+                .fill(DesignSystem.Colors.brick2.opacity(0.3))
+                .frame(width: 1, height: 9)
+            Text(sessionManager.formattedElapsedTime)
+                .font(DesignSystem.Typography.mono(11, weight: .semibold))
+                .monospacedDigit()
+                .foregroundStyle(DesignSystem.Colors.brick2)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
+        .background(DesignSystem.Colors.brick1.opacity(0.10))
+        .clipShape(Capsule())
+    }
+
+    // MARK: - End Workout overlay
 
     private var endWorkoutOverlay: some View {
         let diff = templateDiff
@@ -162,20 +223,21 @@ struct ActiveWorkoutView: View {
 
             VStack(spacing: DesignSystem.Spacing.md) {
                 Text("End Workout")
-                    .font(DesignSystem.Typography.headline)
-                    .foregroundStyle(DesignSystem.Colors.textPrimary)
+                    .font(DesignSystem.Typography.h2Display)
+                    .foregroundStyle(DesignSystem.Colors.ink)
 
                 Button {
                     showEndConfirmation = false
                     sessionManager.finishWorkout(context: modelContext)
                 } label: {
                     Text("Finish")
-                        .font(DesignSystem.Typography.body.bold())
+                        .font(DesignSystem.Typography.buttonLarge)
+                        .foregroundStyle(DesignSystem.Colors.brickText)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, DesignSystem.Spacing.sm + 2)
-                        .foregroundStyle(DesignSystem.Colors.textOnPrimary)
-                        .background(DesignSystem.Colors.success)
+                        .padding(.vertical, 12)
+                        .background(BrickButtonBackground(cornerRadius: DesignSystem.CornerRadius.button))
                         .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
+                        .mortarShadow()
                 }
 
                 if let diff, diff.hasChanges {
@@ -183,17 +245,22 @@ struct ActiveWorkoutView: View {
                         showEndConfirmation = false
                         sessionManager.finishAndUpdateTemplate(context: modelContext)
                     } label: {
-                        VStack(spacing: DesignSystem.Spacing.xxs) {
+                        VStack(spacing: 2) {
                             Text("Finish & Update Template")
-                                .font(DesignSystem.Typography.body.bold())
+                                .font(DesignSystem.Typography.buttonLarge)
+                                .foregroundStyle(DesignSystem.Colors.brickText)
                             Text(diff.description)
-                                .font(DesignSystem.Typography.caption)
+                                .font(DesignSystem.Typography.helper)
+                                .foregroundStyle(DesignSystem.Colors.brickText.opacity(0.85))
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, DesignSystem.Spacing.sm + 2)
-                        .foregroundStyle(DesignSystem.Colors.textOnPrimary)
-                        .background(DesignSystem.Colors.secondary)
+                        .padding(.vertical, 12)
+                        .background(
+                            BrickFill(cornerRadius: DesignSystem.CornerRadius.button)
+                                .opacity(0.85)
+                        )
                         .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
+                        .mortarShadow()
                     }
                 }
 
@@ -202,11 +269,11 @@ struct ActiveWorkoutView: View {
                     sessionManager.discardWorkout(context: modelContext)
                 } label: {
                     Text("Discard")
-                        .font(DesignSystem.Typography.body)
+                        .font(DesignSystem.Typography.button)
+                        .foregroundStyle(DesignSystem.Colors.red)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, DesignSystem.Spacing.sm + 2)
-                        .foregroundStyle(DesignSystem.Colors.destructive)
-                        .background(DesignSystem.Colors.surfaceSecondary)
+                        .padding(.vertical, 12)
+                        .background(DesignSystem.Colors.bgDeeper)
                         .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
                 }
 
@@ -214,22 +281,22 @@ struct ActiveWorkoutView: View {
                     showEndConfirmation = false
                 } label: {
                     Text("Cancel")
-                        .font(DesignSystem.Typography.body)
-                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+                        .font(DesignSystem.Typography.button)
+                        .foregroundStyle(DesignSystem.Colors.ink3)
                 }
             }
             .padding(DesignSystem.Spacing.lg)
-            .background {
-                ZStack {
-                    DesignSystem.Colors.surface
-                    CardGrainOverlay()
-                }
-            }
+            .background(
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card)
+                    .fill(DesignSystem.Colors.card)
+            )
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
             .cardShadow()
             .padding(.horizontal, DesignSystem.Spacing.xxl)
         }
     }
+
+    // MARK: - Helpers
 
     private func addExercise(_ exercise: Exercise, to workout: Workout) {
         PreFillService.insertPrefilledExercise(exercise, into: workout, in: modelContext)
@@ -262,5 +329,10 @@ struct ActiveWorkoutView: View {
             )
         }
         preFillCache = cache
+    }
+
+    private func refreshSessionNumber() {
+        let completed = WorkoutHistoryService.fetchCompletedWorkouts(context: modelContext)?.count ?? 0
+        sessionNumber = completed + 1
     }
 }

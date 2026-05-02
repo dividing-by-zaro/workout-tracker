@@ -8,33 +8,39 @@ struct CompleteView: View {
         VStack(spacing: 8) {
             Spacer()
 
-            Image(systemName: "flame.fill")
-                .font(.system(size: 28))
-                .foregroundColor(Color("WidgetPrimary"))
+            // Three small bricks instead of the flame icon.
+            HStack(spacing: 4) {
+                BrickFill(cornerRadius: 4).frame(width: 28, height: 14)
+                BrickFill(cornerRadius: 4).frame(width: 28, height: 14)
+                BrickFill(cornerRadius: 4).frame(width: 28, height: 14)
+            }
+            .mortarShadow()
 
             Text("All Sets Complete")
-                .font(.system(size: 18, weight: .bold))
-                .foregroundColor(Color("WidgetTextPrimary"))
+                .font(WidgetDesign.Typo.display(22))
+                .foregroundColor(WidgetDesign.Color.textPrimary)
 
             HStack(spacing: 6) {
                 Text(context.attributes.workoutName)
-                    .font(.system(size: 14, weight: .medium))
-                Text("•")
-                    .font(.system(size: 14))
+                    .font(WidgetDesign.Typo.sans(13, .medium))
+                Text("·")
+                    .font(WidgetDesign.Typo.sans(13))
                 Text(context.attributes.workoutStartedAt, style: .timer)
-                    .font(.system(size: 14).monospacedDigit())
+                    .font(WidgetDesign.Typo.mono(13))
             }
-            .foregroundColor(Color("WidgetTextSecondary"))
+            .foregroundColor(WidgetDesign.Color.textSecondary)
 
             Text("Tap to open app and finish")
-                .font(.system(size: 11))
-                .foregroundColor(Color("WidgetTextSecondary"))
+                .font(WidgetDesign.Typo.sans(11))
+                .italic()
+                .foregroundColor(WidgetDesign.Color.textSecondary)
 
             Spacer()
         }
         .frame(maxWidth: .infinity)
-        .padding(14)
-        .activityBackgroundTint(Color("WidgetBackground"))
-        .activitySystemActionForegroundColor(Color("WidgetPrimary"))
+        .padding(.vertical, 12)
+        .padding(.horizontal, 14)
+        .activityBackgroundTint(WidgetDesign.Color.background)
+        .activitySystemActionForegroundColor(WidgetDesign.Color.brick2)
     }
 }

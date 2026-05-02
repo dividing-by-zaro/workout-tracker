@@ -15,33 +15,47 @@ struct ExerciseReorderView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(exercises) { exercise in
-                    HStack {
-                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
-                            Text(exercise.exercise?.name ?? "Unknown")
-                                .font(DesignSystem.Typography.body)
-                                .foregroundStyle(DesignSystem.Colors.textPrimary)
-                            Text("\(exercise.sets.count) sets")
-                                .font(DesignSystem.Typography.caption)
-                                .foregroundStyle(DesignSystem.Colors.textSecondary)
+            VStack(spacing: 0) {
+                Capsule()
+                    .fill(DesignSystem.Colors.ink3.opacity(0.4))
+                    .frame(width: 36, height: 4)
+                    .padding(.top, 8)
+                    .padding(.bottom, 12)
+
+                List {
+                    ForEach(exercises) { exercise in
+                        HStack(spacing: DesignSystem.Spacing.sm) {
+                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
+                                Text(exercise.exercise?.name ?? "Unknown")
+                                    .font(DesignSystem.Typography.sans(14, weight: .regular))
+                                    .foregroundStyle(DesignSystem.Colors.ink)
+                                Text("\(exercise.sets.count) sets")
+                                    .font(DesignSystem.Typography.helper)
+                                    .foregroundStyle(DesignSystem.Colors.ink3)
+                            }
+                            Spacer()
+                            Image(systemName: "line.3.horizontal")
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundStyle(DesignSystem.Colors.ink3)
                         }
-                        Spacer()
+                        .padding(.vertical, DesignSystem.Spacing.xxs)
+                        .listRowBackground(DesignSystem.Colors.card)
                     }
-                    .padding(.vertical, DesignSystem.Spacing.xxs)
-                }
-                .onMove { from, to in
-                    exercises.move(fromOffsets: from, toOffset: to)
-                }
-                .onDelete { offsets in
-                    let toRemove = offsets.map { exercises[$0] }
-                    exercises.remove(atOffsets: offsets)
-                    for exercise in toRemove {
-                        sessionManager.removeExercise(exercise, context: modelContext)
+                    .onMove { from, to in
+                        exercises.move(fromOffsets: from, toOffset: to)
+                    }
+                    .onDelete { offsets in
+                        let toRemove = offsets.map { exercises[$0] }
+                        exercises.remove(atOffsets: offsets)
+                        for exercise in toRemove {
+                            sessionManager.removeExercise(exercise, context: modelContext)
+                        }
                     }
                 }
+                .scrollContentBackground(.hidden)
+                .environment(\.editMode, .constant(.active))
             }
-            .environment(\.editMode, .constant(.active))
+            .background(DesignSystem.Colors.bg.ignoresSafeArea())
             .navigationTitle("Reorder Exercises")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -50,6 +64,8 @@ struct ExerciseReorderView: View {
                         sessionManager.reorderExercises(exercises, context: modelContext)
                         dismiss()
                     }
+                    .font(DesignSystem.Typography.button)
+                    .foregroundStyle(DesignSystem.Colors.brick2)
                 }
             }
         }

@@ -6,43 +6,58 @@ struct RestTimerView: View {
 
     var body: some View {
         if restTimer.isRunning {
-            HStack(spacing: DesignSystem.Spacing.md) {
+            HStack(spacing: 10) {
                 ZStack {
                     Circle()
-                        .stroke(DesignSystem.Colors.timerBackground, lineWidth: 4)
+                        .stroke(DesignSystem.Colors.brick1.opacity(0.2), lineWidth: 2.5)
                     Circle()
                         .trim(from: 0, to: restTimer.progress)
-                        .stroke(DesignSystem.Colors.timerActive, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                        .stroke(
+                            DesignSystem.Colors.brick1,
+                            style: StrokeStyle(lineWidth: 2.5, lineCap: .round)
+                        )
                         .rotationEffect(.degrees(-90))
                         .animation(.linear(duration: 0.5), value: restTimer.progress)
                 }
-                .frame(width: 36, height: 36)
+                .frame(width: 28, height: 28)
 
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
-                    Text("Rest Timer")
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("COOLING")
+                        .font(DesignSystem.Typography.sectionLabel)
+                        .tracking(1.4)
+                        .foregroundStyle(DesignSystem.Colors.brick2)
                     Text(formatTime(restTimer.remainingSeconds))
-                        .font(DesignSystem.Typography.headline)
-                        .foregroundStyle(DesignSystem.Colors.textPrimary)
+                        .font(DesignSystem.Typography.restTimer)
+                        .tracking(-0.4)
+                        .foregroundStyle(DesignSystem.Colors.ink)
                         .monospacedDigit()
+                        .lineSpacing(0)
                 }
 
                 Spacer()
 
-                Button("Skip") {
+                Button {
                     if let onSkip {
                         onSkip()
                     } else {
                         restTimer.stop()
                     }
+                } label: {
+                    Text("Skip")
+                        .font(DesignSystem.Typography.button)
+                        .foregroundStyle(DesignSystem.Colors.red)
                 }
-                .font(DesignSystem.Typography.body)
-                .foregroundStyle(DesignSystem.Colors.primary)
+                .buttonStyle(.plain)
             }
-            .padding(DesignSystem.Spacing.md)
-            .background(DesignSystem.Colors.timerBackground)
-            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.card))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(DesignSystem.Colors.mortar)
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.brick)
+                    .stroke(DesignSystem.Colors.brick1.opacity(0.25), lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.brick))
+            .padding(.horizontal, DesignSystem.Spacing.brickInset)
         }
     }
 

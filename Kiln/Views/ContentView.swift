@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import UIKit
 
 struct ContentView: View {
     @Environment(WorkoutSessionManager.self) private var sessionManager
@@ -8,55 +7,44 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var selectedTab = 0
 
-    init() {
-        let tabBarAppearance = UITabBarAppearance()
-        tabBarAppearance.configureWithOpaqueBackground()
-        tabBarAppearance.backgroundColor = UIColor(DesignSystem.Colors.tabBar)
-        tabBarAppearance.stackedLayoutAppearance.normal.iconColor = UIColor(DesignSystem.Colors.tabInactive)
-        tabBarAppearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor(DesignSystem.Colors.tabInactive)]
-        UITabBar.appearance().standardAppearance = tabBarAppearance
-        UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
-    }
+    private let tabs: [KilnTabBar.TabConfig] = [
+        .init(icon: "dumbbell", label: "Workouts", tag: 0),
+        .init(icon: "clock", label: "History", tag: 1),
+        .init(icon: "list.bullet", label: "Exercises", tag: 2),
+        .init(icon: "person", label: "Profile", tag: 3)
+    ]
 
     var body: some View {
-        TabView(selection: $selectedTab) {
+        ZStack(alignment: .bottom) {
             Group {
-                if sessionManager.isWorkoutInProgress {
-                    ActiveWorkoutView()
-                } else {
-                    StartWorkoutView()
+                switch selectedTab {
+                case 0:
+                    if sessionManager.isWorkoutInProgress {
+                        ActiveWorkoutView()
+                    } else {
+                        StartWorkoutView()
+                    }
+                case 1:
+                    NavigationStack {
+                        HistoryListView()
+                    }
+                case 2:
+                    NavigationStack {
+                        ExerciseListView()
+                    }
+                case 3:
+                    NavigationStack {
+                        ProfileView()
+                    }
+                default:
+                    EmptyView()
                 }
             }
-            .tabItem {
-                Label("Workouts", systemImage: DesignSystem.Icon.workout)
-            }
-            .tag(0)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            NavigationStack {
-                HistoryListView()
-            }
-            .tabItem {
-                Label("History", systemImage: DesignSystem.Icon.history)
-            }
-            .tag(1)
-
-            NavigationStack {
-                ExerciseListView()
-            }
-            .tabItem {
-                Label("Exercises", systemImage: DesignSystem.Icon.exercises)
-            }
-            .tag(2)
-
-            NavigationStack {
-                ProfileView()
-            }
-            .tabItem {
-                Label("Profile", systemImage: DesignSystem.Icon.profile)
-            }
-            .tag(3)
+            KilnTabBar(selection: $selectedTab, tabs: tabs)
         }
-        .tint(DesignSystem.Colors.primary)
+        .tint(DesignSystem.Colors.brick2)
         .fullScreenCover(isPresented: Binding(
             get: { sessionManager.celebrationData != nil },
             set: { if !$0 { sessionManager.celebrationData = nil } }
@@ -81,5 +69,66 @@ struct ContentView: View {
                 sessionManager.shouldSwitchToWorkoutTab = false
             }
         }
+    }
+}
+
+// MARK: - KilnTabBar
+
+private struct KilnTabBar: View {
+    struct TabConfig: Identifiable {
+        let icon: String
+        let label: String
+        let tag: Int
+        var id: Int { tag }
+    }
+
+    @Binding var selection: Int
+    let tabs: [TabConfig]
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(tabs) { tab in
+                Button {
+                    selection = tab.tag
+                } label: {
+                    VStack(spacing: 2) {
+                        Image(systemName: tab.icon)
+                            .font(.system(size: 18, weight: .regular))
+                            .foregroundStyle(
+                                selection == tab.tag
+                                    ? DesignSystem.Colors.brick2
+                                    : DesignSystem.Colors.ink3
+                            )
+                        Text(tab.label)
+                            .font(DesignSystem.Typography.sans(10, weight: .semibold))
+                            .foregroundStyle(
+                                selection == tab.tag
+                                    ? DesignSystem.Colors.brick2
+                                    : DesignSystem.Colors.ink3
+                            )
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background {
+                        if selection == tab.tag {
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(DesignSystem.Colors.tabActiveBg)
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(6)
+        .background(.ultraThinMaterial)
+        .background(DesignSystem.Colors.card.opacity(0.94))
+        .overlay {
+            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.tabBar)
+                .strokeBorder(DesignSystem.Colors.cardEdge, lineWidth: 1)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.tabBar))
+        .elevatedShadow()
+        .padding(.horizontal, 14)
+        .padding(.bottom, 18)
     }
 }

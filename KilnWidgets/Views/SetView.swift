@@ -6,40 +6,40 @@ struct SetView: View {
     let context: ActivityViewContext<WorkoutActivityAttributes>
 
     var body: some View {
-        VStack(spacing: 6) {
-            // Row 1: Exercise name + Complete button
-            HStack {
+        VStack(spacing: 0) {
+            // Row 1: Exercise name + Done brick
+            HStack(alignment: .firstTextBaseline) {
                 Text(context.state.exerciseName)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(Color("WidgetTextPrimary"))
+                    .font(WidgetDesign.Typo.display(22))
+                    .foregroundColor(WidgetDesign.Color.textPrimary)
                     .lineLimit(1)
-                Spacer()
+                Spacer(minLength: 8)
                 Button(intent: CompleteSetIntent()) {
-                    HStack(spacing: 5) {
-                        Image(systemName: "flame.fill")
-                            .font(.system(size: 13))
-                        Text("Done")
-                            .font(.system(size: 14, weight: .bold))
-                    }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 7)
-                    .background(Color("WidgetPrimary"))
-                    .clipShape(Capsule())
+                    Text("Done")
+                        .font(WidgetDesign.Typo.sans(13, .bold))
+                        .foregroundColor(WidgetDesign.Color.brickText)
+                        .frame(width: 72, height: 32)
+                        .background(BrickFill(cornerRadius: 4))
+                        .mortarShadow()
                 }
                 .buttonStyle(.plain)
             }
+
+            Spacer().frame(height: 14)
 
             // Row 2: Inline set summaries (wraps when too wide)
             setSummariesRow
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            // Row 4: Input fields with +/- buttons
+            Spacer().frame(height: 14)
+
+            // Row 3: Stepper bins
             inputFieldsRow
         }
-        .padding(14)
-        .activityBackgroundTint(Color("WidgetBackground"))
-        .activitySystemActionForegroundColor(Color("WidgetPrimary"))
+        .padding(.vertical, 12)
+        .padding(.horizontal, 14)
+        .activityBackgroundTint(WidgetDesign.Color.background)
+        .activitySystemActionForegroundColor(WidgetDesign.Color.brick2)
     }
 
     @ViewBuilder
@@ -49,16 +49,19 @@ struct SetView: View {
             ForEach(Array(context.state.setSummaries.enumerated()), id: \.offset) { index, summary in
                 if index == currentIndex {
                     Text(summary.label)
-                        .font(.system(size: 12, weight: .bold).monospacedDigit())
-                        .foregroundColor(Color("WidgetPrimary"))
+                        .font(WidgetDesign.Typo.mono(12, .bold))
+                        .foregroundColor(WidgetDesign.Color.brick2)
+                        .lineLimit(1)
                 } else if summary.isCompleted {
                     Text(summary.label)
-                        .font(.system(size: 11).monospacedDigit())
-                        .foregroundColor(Color("WidgetTextSecondary").opacity(0.55))
+                        .font(WidgetDesign.Typo.mono(11))
+                        .foregroundColor(WidgetDesign.Color.textSecondary.opacity(0.55))
+                        .lineLimit(1)
                 } else {
                     Text(summary.label)
-                        .font(.system(size: 11).monospacedDigit())
-                        .foregroundColor(Color("WidgetTextSecondary"))
+                        .font(WidgetDesign.Typo.mono(11))
+                        .foregroundColor(WidgetDesign.Color.textSecondary)
+                        .lineLimit(1)
                 }
             }
         }
@@ -68,8 +71,8 @@ struct SetView: View {
     private var inputFieldsRow: some View {
         let category = context.state.equipmentCategory
         HStack(spacing: 8) {
-            if category == "weightReps" || category == "weightDistance" {
-                adjustableField(
+            if category == "weightReps" || category == "weightDistance" || category == "weightedBodyweight" {
+                stepperBin(
                     label: "WEIGHT",
                     value: (context.state.weight ?? 0).formattedWeight,
                     unit: "lbs",
@@ -78,8 +81,8 @@ struct SetView: View {
                 )
             }
 
-            if category == "weightReps" || category == "repsOnly" {
-                adjustableField(
+            if category == "weightReps" || category == "repsOnly" || category == "weightedBodyweight" {
+                stepperBin(
                     label: "REPS",
                     value: "\(context.state.reps ?? 0)",
                     unit: nil,
@@ -89,7 +92,7 @@ struct SetView: View {
             }
 
             if category == "duration" {
-                adjustableField(
+                stepperBin(
                     label: "SECONDS",
                     value: "\(Int(context.state.duration ?? 0))",
                     unit: "s",
@@ -99,7 +102,7 @@ struct SetView: View {
             }
 
             if category == "distance" || category == "weightDistance" {
-                adjustableField(
+                stepperBin(
                     label: "DISTANCE",
                     value: String(format: "%.1f", context.state.distance ?? 0),
                     unit: "mi",
@@ -110,7 +113,9 @@ struct SetView: View {
         }
     }
 
-    private func adjustableField<D: AppIntent, I: AppIntent>(
+    /// Cream "stepper bin" with a hair stroke. Minus/plus buttons are
+    /// neutral circles — red is reserved for destructive actions per §9.2.
+    private func stepperBin<D: AppIntent, I: AppIntent>(
         label: String,
         value: String,
         unit: String?,
@@ -119,37 +124,48 @@ struct SetView: View {
     ) -> some View {
         VStack(spacing: 2) {
             Text(label)
-                .font(.system(size: 9, weight: .semibold))
-                .foregroundColor(Color("WidgetTextSecondary"))
+                .font(WidgetDesign.Typo.sans(8, .bold))
+                .tracking(1.2)
+                .foregroundColor(WidgetDesign.Color.textSecondary)
 
-            HStack(spacing: 4) {
-                Button(intent: decrementIntent) {
-                    Image(systemName: "minus.circle.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(Color("WidgetTextSecondary"))
-                }
-                .buttonStyle(.plain)
+            HStack(spacing: 6) {
+                stepperButton(systemName: "minus", intent: decrementIntent)
 
-                HStack(spacing: 1) {
+                HStack(spacing: 2) {
                     Text(value)
-                        .font(.system(size: 18, weight: .bold).monospacedDigit())
-                        .foregroundColor(Color("WidgetTextPrimary"))
+                        .font(WidgetDesign.Typo.mono(16, .bold))
+                        .foregroundColor(WidgetDesign.Color.textPrimary)
                     if let unit {
                         Text(unit)
-                            .font(.system(size: 10))
-                            .foregroundColor(Color("WidgetTextSecondary"))
+                            .font(WidgetDesign.Typo.sans(9, .semibold))
+                            .foregroundColor(WidgetDesign.Color.textSecondary)
                     }
                 }
 
-                Button(intent: incrementIntent) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(Color("WidgetPrimary"))
-                }
-                .buttonStyle(.plain)
+                stepperButton(systemName: "plus", intent: incrementIntent)
             }
         }
         .frame(maxWidth: .infinity)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 8)
+        .background(WidgetDesign.Color.surface)
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(WidgetDesign.Color.hair, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
+    private func stepperButton<I: AppIntent>(systemName: String, intent: I) -> some View {
+        Button(intent: intent) {
+            Image(systemName: systemName)
+                .font(.system(size: 11, weight: .bold))
+                .foregroundColor(WidgetDesign.Color.textSecondary)
+                .frame(width: 22, height: 22)
+                .background(Color.white)
+                .overlay(Circle().strokeBorder(WidgetDesign.Color.hair, lineWidth: 1))
+                .clipShape(Circle())
+        }
+        .buttonStyle(.plain)
+    }
 }

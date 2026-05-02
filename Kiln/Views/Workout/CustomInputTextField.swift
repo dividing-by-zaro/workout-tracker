@@ -14,11 +14,12 @@ struct CustomInputTextField: UIViewRepresentable {
     func makeUIView(context: Context) -> UITextField {
         let textField = UITextField()
         textField.placeholder = placeholder
-        textField.borderStyle = .roundedRect
+        textField.borderStyle = .none
         textField.textAlignment = .center
-        textField.font = UIFont.systemFont(ofSize: 16)
+        textField.font = UIFont.monospacedSystemFont(ofSize: 15, weight: .bold)
+        textField.textColor = UIColor(DesignSystem.Colors.ink)
         textField.delegate = context.coordinator
-        textField.tintColor = UIColor(DesignSystem.Colors.primary)
+        textField.tintColor = UIColor(DesignSystem.Colors.brick1)
         textField.setContentHuggingPriority(.defaultHigh, for: .horizontal)
 
         let hostingController = makeKeyboardHostingController(for: textField, coordinator: context.coordinator)
@@ -206,7 +207,12 @@ struct NumericInputField: View {
             ),
             onValueChanged: onValueChanged
         )
-        .frame(width: 60, height: 34)
+        .frame(width: 56, height: 30)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(DesignSystem.Colors.ink)
+                .frame(height: 1.5)
+        }
     }
 }
 
@@ -233,6 +239,11 @@ struct IntInputField: View {
             ),
             onValueChanged: onValueChanged
         )
-        .frame(width: 60, height: 34)
+        .frame(width: 56, height: 30)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(DesignSystem.Colors.ink)
+                .frame(height: 1.5)
+        }
     }
 }

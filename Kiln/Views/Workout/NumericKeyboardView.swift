@@ -19,13 +19,15 @@ struct NumericKeyboardView: View {
     var onDecrement: () -> Void
 
     private let keyHeight: CGFloat = 52
-    private let spacing: CGFloat = 1
+    private let spacing: CGFloat = 6
 
     var body: some View {
         VStack(spacing: 0) {
-            Divider()
+            Rectangle()
+                .fill(DesignSystem.Colors.hair)
+                .frame(height: 1)
+
             HStack(spacing: spacing) {
-                // Left 3-column numpad
                 VStack(spacing: spacing) {
                     numpadRow(keys: [1, 2, 3])
                     numpadRow(keys: [4, 5, 6])
@@ -33,15 +35,15 @@ struct NumericKeyboardView: View {
                     bottomRow
                 }
 
-                // Right action column
                 VStack(spacing: spacing) {
-                    dismissButton
                     incrementButton
                     decrementButton
+                    dismissButton
                 }
                 .frame(width: 80)
             }
-            .background(Color(red: 0.82, green: 0.79, blue: 0.76))
+            .padding(spacing)
+            .background(DesignSystem.Colors.bgDeeper)
         }
         .frame(height: 260)
     }
@@ -51,7 +53,7 @@ struct NumericKeyboardView: View {
     private func numpadRow(keys: [Int]) -> some View {
         HStack(spacing: spacing) {
             ForEach(keys, id: \.self) { digit in
-                keyButton(label: "\(digit)") {
+                digitKey(label: "\(digit)") {
                     onKeyTap(.digit(digit))
                 }
             }
@@ -61,17 +63,16 @@ struct NumericKeyboardView: View {
     private var bottomRow: some View {
         HStack(spacing: spacing) {
             if config.showDecimalKey {
-                keyButton(label: ".") {
+                digitKey(label: ".") {
                     onKeyTap(.decimal)
                 }
             } else {
-                Color(red: 0.90, green: 0.87, blue: 0.84)
-                    .frame(height: keyHeight)
+                Color.clear.frame(height: keyHeight)
             }
-            keyButton(label: "0") {
+            digitKey(label: "0") {
                 onKeyTap(.digit(0))
             }
-            keyButton(systemImage: "delete.left.fill") {
+            iconKey(systemImage: "delete.left") {
                 onKeyTap(.backspace)
             }
         }
@@ -84,12 +85,14 @@ struct NumericKeyboardView: View {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             onDismiss()
         } label: {
-            Image(systemName: "keyboard.chevron.compact.down")
-                .font(.system(size: 20))
-                .foregroundStyle(DesignSystem.Colors.textPrimary)
+            Text("Done")
+                .font(DesignSystem.Typography.button)
+                .foregroundStyle(DesignSystem.Colors.brickText)
                 .frame(maxWidth: .infinity)
                 .frame(height: keyHeight)
-                .background(Color(red: 0.90, green: 0.87, blue: 0.84))
+                .background(BrickButtonBackground(cornerRadius: DesignSystem.CornerRadius.button))
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
+                .mortarShadow()
         }
     }
 
@@ -98,12 +101,22 @@ struct NumericKeyboardView: View {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             onDecrement()
         } label: {
-            Text("−")
-                .font(.system(size: 28, weight: .medium))
-                .foregroundStyle(DesignSystem.Colors.textOnPrimary)
-                .frame(maxWidth: .infinity)
-                .frame(height: keyHeight * 1.5 + spacing * 0.5)
-                .background(DesignSystem.Colors.primary)
+            HStack(spacing: 4) {
+                Text("−")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(DesignSystem.Colors.ink)
+                Text("Less")
+                    .font(DesignSystem.Typography.helper)
+                    .foregroundStyle(DesignSystem.Colors.ink2)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: keyHeight)
+            .background(DesignSystem.Colors.card)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(DesignSystem.Colors.cardEdge, lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 10))
         }
     }
 
@@ -112,42 +125,62 @@ struct NumericKeyboardView: View {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             onIncrement()
         } label: {
-            Text("+")
-                .font(.system(size: 28, weight: .medium))
-                .foregroundStyle(DesignSystem.Colors.textOnPrimary)
-                .frame(maxWidth: .infinity)
-                .frame(height: keyHeight * 1.5 + spacing * 0.5)
-                .background(DesignSystem.Colors.primary)
+            HStack(spacing: 4) {
+                Text("+")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(DesignSystem.Colors.ink)
+                Text("More")
+                    .font(DesignSystem.Typography.helper)
+                    .foregroundStyle(DesignSystem.Colors.ink2)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: keyHeight)
+            .background(DesignSystem.Colors.card)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(DesignSystem.Colors.cardEdge, lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 10))
         }
     }
 
     // MARK: - Key Button Helpers
 
-    private func keyButton(label: String, action: @escaping () -> Void) -> some View {
+    private func digitKey(label: String, action: @escaping () -> Void) -> some View {
         Button {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             action()
         } label: {
             Text(label)
-                .font(.system(size: 24, weight: .regular))
-                .foregroundStyle(DesignSystem.Colors.textPrimary)
+                .font(DesignSystem.Typography.mono(22, weight: .semibold))
+                .foregroundStyle(DesignSystem.Colors.ink)
                 .frame(maxWidth: .infinity)
                 .frame(height: keyHeight)
-                .background(Color.white)
+                .background(DesignSystem.Colors.card)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(DesignSystem.Colors.cardEdge, lineWidth: 1)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 10))
         }
     }
 
-    private func keyButton(systemImage: String, action: @escaping () -> Void) -> some View {
+    private func iconKey(systemImage: String, action: @escaping () -> Void) -> some View {
         Button {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             action()
         } label: {
             Image(systemName: systemImage)
-                .font(.system(size: 20))
-                .foregroundStyle(DesignSystem.Colors.textPrimary)
+                .font(.system(size: 18, weight: .regular))
+                .foregroundStyle(DesignSystem.Colors.ink)
                 .frame(maxWidth: .infinity)
                 .frame(height: keyHeight)
-                .background(Color.white)
+                .background(DesignSystem.Colors.card)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(DesignSystem.Colors.cardEdge, lineWidth: 1)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 10))
         }
     }
 }

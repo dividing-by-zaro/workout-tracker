@@ -6,48 +6,52 @@ struct TimerView: View {
     let context: ActivityViewContext<WorkoutActivityAttributes>
 
     var body: some View {
-        VStack(spacing: 6) {
-            // Row 1: Exercise name + Skip button
-            HStack {
+        VStack(spacing: 0) {
+            // Row 1: Exercise name + Skip text
+            HStack(alignment: .firstTextBaseline) {
                 Text(context.state.exerciseName)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(Color("WidgetTextPrimary"))
+                    .font(WidgetDesign.Typo.display(22))
+                    .foregroundColor(WidgetDesign.Color.textPrimary)
                     .lineLimit(1)
-                Spacer()
+                Spacer(minLength: 8)
                 Button(intent: SkipRestIntent()) {
                     Text("Skip")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(Color("WidgetDestructive"))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Color("WidgetSurface").opacity(0.8))
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .font(WidgetDesign.Typo.sans(13, .bold))
+                        .foregroundColor(WidgetDesign.Color.brick2)
                 }
                 .buttonStyle(.plain)
             }
 
-            // Row 2: Inline set summaries (wraps when too wide)
+            Spacer().frame(height: 14)
+
+            // Row 2: Set summaries — current set highlighted in brick2.
             setSummariesRow
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            // Row 3: Large countdown timer
-            Text(timerInterval: timerStart...context.state.restTimerEndDate, countsDown: true)
-                .font(.system(size: 40, weight: .bold).monospacedDigit())
-                .foregroundColor(Color("WidgetPrimary"))
-                .frame(maxWidth: .infinity)
+            Spacer().frame(height: 8)
 
-            // Row 4: Auto-updating progress bar
+            // Row 3: Large countdown numerals (ink).
+            Text(timerInterval: timerStart...context.state.restTimerEndDate, countsDown: true)
+                .font(WidgetDesign.Typo.mono(38, .bold))
+                .foregroundColor(WidgetDesign.Color.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Spacer().frame(height: 6)
+
+            // Row 4: Auto-updating progress bar tinted brick1. SwiftUI has
+            // no first-class "timer-driven width" primitive in a widget,
+            // so we use the system `ProgressView(timerInterval:)` and tint
+            // it. The native bar already has rounded ends.
             ProgressView(
                 timerInterval: timerStart...context.state.restTimerEndDate,
                 countsDown: false
             )
-            .tint(Color("WidgetPrimary"))
-
-
+            .tint(WidgetDesign.Color.brick1)
         }
-        .padding(14)
-        .activityBackgroundTint(Color("WidgetBackground"))
-        .activitySystemActionForegroundColor(Color("WidgetPrimary"))
+        .padding(.vertical, 12)
+        .padding(.horizontal, 14)
+        .activityBackgroundTint(WidgetDesign.Color.background)
+        .activitySystemActionForegroundColor(WidgetDesign.Color.brick2)
     }
 
     @ViewBuilder
@@ -57,16 +61,19 @@ struct TimerView: View {
             ForEach(Array(context.state.setSummaries.enumerated()), id: \.offset) { index, summary in
                 if index == currentIndex {
                     Text(summary.label)
-                        .font(.system(size: 12, weight: .bold).monospacedDigit())
-                        .foregroundColor(Color("WidgetPrimary"))
+                        .font(WidgetDesign.Typo.mono(12, .bold))
+                        .foregroundColor(WidgetDesign.Color.brick2)
+                        .lineLimit(1)
                 } else if summary.isCompleted {
                     Text(summary.label)
-                        .font(.system(size: 11).monospacedDigit())
-                        .foregroundColor(Color("WidgetTextSecondary").opacity(0.55))
+                        .font(WidgetDesign.Typo.mono(11))
+                        .foregroundColor(WidgetDesign.Color.textSecondary.opacity(0.55))
+                        .lineLimit(1)
                 } else {
                     Text(summary.label)
-                        .font(.system(size: 11).monospacedDigit())
-                        .foregroundColor(Color("WidgetTextSecondary"))
+                        .font(WidgetDesign.Typo.mono(11))
+                        .foregroundColor(WidgetDesign.Color.textSecondary)
+                        .lineLimit(1)
                 }
             }
         }
