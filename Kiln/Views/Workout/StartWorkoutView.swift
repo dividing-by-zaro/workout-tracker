@@ -83,7 +83,7 @@ struct StartWorkoutView: View {
             }
             .padding(.vertical, DesignSystem.Spacing.md)
         }
-        .grainedBackground(DesignSystem.Colors.bg)
+        .brickWallBackground()
         .sheet(isPresented: $showTemplateEditor) {
             TemplateEditorView()
         }

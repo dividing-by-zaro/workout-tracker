@@ -71,7 +71,7 @@ struct ExercisePickerView: View {
             .background(
                 DesignSystem.Colors.bg.ignoresSafeArea()
             )
-            .grainedBackground(DesignSystem.Colors.bg)
+            .brickWallBackground()
             .searchable(text: $searchText, prompt: "Search exercises")
             .navigationTitle("Select Exercise")
             .navigationBarTitleDisplayMode(.inline)

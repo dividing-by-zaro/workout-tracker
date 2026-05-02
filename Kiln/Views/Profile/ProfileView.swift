@@ -73,7 +73,7 @@ struct ProfileView: View {
                 Color.clear.frame(height: 80)
             }
         }
-        .grainedBackground(DesignSystem.Colors.bg)
+        .brickWallBackground()
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             syncService.totalCompletedCount = completedWorkouts.count

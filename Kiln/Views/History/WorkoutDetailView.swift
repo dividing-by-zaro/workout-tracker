@@ -79,7 +79,7 @@ struct WorkoutDetailView: View {
             }
             .padding(.vertical, 16)
         }
-        .grainedBackground(DesignSystem.Colors.bg)
+        .brickWallBackground()
         .navigationTitle(workout.name)
         .navigationBarTitleDisplayMode(.inline)
     }

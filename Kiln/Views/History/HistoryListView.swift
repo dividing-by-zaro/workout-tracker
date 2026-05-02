@@ -69,7 +69,7 @@ struct HistoryListView: View {
                 }
             }
         }
-        .grainedBackground(DesignSystem.Colors.bg)
+        .brickWallBackground()
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)

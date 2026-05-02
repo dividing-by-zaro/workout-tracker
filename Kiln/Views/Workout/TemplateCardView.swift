@@ -174,7 +174,7 @@ private struct TemplateDetailSheet: View {
                 .padding(.bottom, DesignSystem.Spacing.lg)
             }
         }
-        .grainedBackground(DesignSystem.Colors.bg)
+        .brickWallBackground()
     }
 }
 

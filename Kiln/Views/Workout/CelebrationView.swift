@@ -113,7 +113,7 @@ struct CelebrationView: View {
                 }
             }
         }
-        .grainedBackground(DesignSystem.Colors.bg)
+        .brickWallBackground()
         .onAppear {
             spawnEmbers()
             withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {

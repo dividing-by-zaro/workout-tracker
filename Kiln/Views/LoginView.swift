@@ -101,7 +101,7 @@ struct LoginView: View {
             Spacer()
             Spacer()
         }
-        .grainedBackground(DesignSystem.Colors.bg)
+        .brickWallBackground()
         .onTapGesture {
             isFieldFocused = false
         }

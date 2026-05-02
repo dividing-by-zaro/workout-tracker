@@ -25,7 +25,7 @@ struct KilnApp: App {
                 } else if authService.state == .checking {
                     // Brief loading state while checking Keychain
                     Color.clear
-                        .grainedBackground()
+                        .brickWallBackground()
                 } else {
                     LoginView()
                 }

@@ -31,7 +31,7 @@ struct ExerciseHistoryView: View {
             }
             .padding(.vertical, 16)
         }
-        .grainedBackground(DesignSystem.Colors.bg)
+        .brickWallBackground()
         .navigationTitle(exercise.name)
         .navigationBarTitleDisplayMode(.inline)
     }

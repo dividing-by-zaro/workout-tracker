@@ -23,7 +23,7 @@ struct ExerciseListView: View {
                 Color.clear.frame(height: 80)
             }
         }
-        .grainedBackground(DesignSystem.Colors.bg)
+        .brickWallBackground()
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
     }

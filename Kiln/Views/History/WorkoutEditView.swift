@@ -64,7 +64,7 @@ struct WorkoutEditView: View {
                 }
                 .padding(.vertical, DesignSystem.Spacing.md)
             }
-            .grainedBackground(DesignSystem.Colors.bg)
+            .brickWallBackground()
             .navigationTitle("Edit Workout")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
