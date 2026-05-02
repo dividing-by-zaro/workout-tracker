@@ -1,62 +1,67 @@
 import SwiftUI
 
 /// Running-bond brick wall texture used as the Active Workout screen background.
-/// Tile is 60×30 with mortar lines drawn into the bgDeeper fill.
+///
+/// Tile is 60×30 with mortar lines drawn over a `bgDeeper` base. Rendered with a
+/// `Canvas` sized to its parent. Use either as a ZStack base or via the
+/// `.brickWallBackground()` modifier.
 struct BrickWallBackground: View {
     var body: some View {
-        Canvas { context, size in
-            // Fill base
-            context.fill(
-                Path(CGRect(origin: .zero, size: size)),
-                with: .color(DesignSystem.Colors.bgDeeper)
-            )
+        ZStack {
+            // Solid base — guarantees the fired-clay parchment shows even if the
+            // Canvas can't render (e.g. on a constrained widget surface).
+            DesignSystem.Colors.bgDeeper
 
-            let mortar = Color(red: 60/255.0, green: 40/255.0, blue: 25/255.0).opacity(0.13)
-            let strokeStyle = StrokeStyle(lineWidth: 1, lineCap: .square)
+            Canvas { context, size in
+                let mortar = Color(red: 60/255.0, green: 40/255.0, blue: 25/255.0).opacity(0.20)
+                let strokeStyle = StrokeStyle(lineWidth: 1, lineCap: .square)
 
-            let tileW: CGFloat = 60
-            let tileH: CGFloat = 30
-            let halfH: CGFloat = 15
+                let tileW: CGFloat = 60
+                let halfH: CGFloat = 15
 
-            // Horizontal mortar lines every 15 px
-            var y: CGFloat = 0
-            while y <= size.height + 1 {
-                var p = Path()
-                p.move(to: CGPoint(x: 0, y: y))
-                p.addLine(to: CGPoint(x: size.width, y: y))
-                context.stroke(p, with: .color(mortar), style: strokeStyle)
-                y += halfH
-            }
-
-            // Vertical mortar lines, alternating per row.
-            var rowTop: CGFloat = 0
-            var rowIdx = 0
-            while rowTop < size.height {
-                let rowBottom = rowTop + halfH
-                // Row 0 (and even): joints at x = 0, 30, 60, … (multiples of tileW)
-                // Row 1 (odd):       joints at x = 15, 45, 75, …
-                let xOffset: CGFloat = (rowIdx % 2 == 0) ? 0 : 15
-                var x = xOffset
-                while x <= size.width + 1 {
+                // Horizontal mortar lines every 15 px.
+                var y: CGFloat = 0
+                while y <= size.height + 1 {
                     var p = Path()
-                    p.move(to: CGPoint(x: x, y: rowTop))
-                    p.addLine(to: CGPoint(x: x, y: rowBottom))
+                    p.move(to: CGPoint(x: 0, y: y))
+                    p.addLine(to: CGPoint(x: size.width, y: y))
                     context.stroke(p, with: .color(mortar), style: strokeStyle)
-                    x += tileW
+                    y += halfH
                 }
-                rowTop += halfH
-                rowIdx += 1
+
+                // Vertical mortar lines, alternating per row (running bond).
+                var rowTop: CGFloat = 0
+                var rowIdx = 0
+                while rowTop < size.height {
+                    let rowBottom = rowTop + halfH
+                    let xOffset: CGFloat = (rowIdx % 2 == 0) ? 0 : 15
+                    var x = xOffset
+                    while x <= size.width + 1 {
+                        var p = Path()
+                        p.move(to: CGPoint(x: x, y: rowTop))
+                        p.addLine(to: CGPoint(x: x, y: rowBottom))
+                        context.stroke(p, with: .color(mortar), style: strokeStyle)
+                        x += tileW
+                    }
+                    rowTop += halfH
+                    rowIdx += 1
+                }
             }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
         }
         .ignoresSafeArea()
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
     }
 }
 
 extension View {
     /// Tile a running-bond brick wall behind this view.
+    /// Implemented via a ZStack base (not `.background(…)`) because `.background`
+    /// does not propagate `.ignoresSafeArea` from the inner view.
     func brickWallBackground() -> some View {
-        background(BrickWallBackground())
+        ZStack {
+            BrickWallBackground()
+            self
+        }
     }
 }
