@@ -182,7 +182,6 @@ final class WorkoutSessionManager {
             }
         }
 
-        template.lastUsedAt = .now
         persistenceController.saveNow(using: context)
 
         activeWorkout = workout
@@ -487,6 +486,16 @@ final class WorkoutSessionManager {
         workout.isInProgress = false
         workout.completedAt = .now
         workout.durationSeconds = Int(Date.now.timeIntervalSince(workout.startedAt))
+
+        if let templateId = workout.templateId {
+            let descriptor = FetchDescriptor<WorkoutTemplate>(
+                predicate: #Predicate<WorkoutTemplate> { $0.id == templateId }
+            )
+            if let template = try? context.fetch(descriptor).first {
+                template.lastUsedAt = .now
+            }
+        }
+
         persistenceController.saveNow(using: context)
 
         computeCelebrationData(for: workout, context: context)

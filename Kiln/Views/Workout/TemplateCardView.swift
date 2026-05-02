@@ -5,6 +5,7 @@ struct TemplateCardView: View {
     let template: WorkoutTemplate
     var averageDuration: String?
     var timesCompleted: Int = 0
+    var lastCompletedAt: Date?
     var onStart: (() -> Void)?
 
     @State private var showDetail = false
@@ -69,6 +70,7 @@ struct TemplateCardView: View {
                 template: template,
                 averageDuration: averageDuration,
                 timesCompleted: timesCompleted,
+                lastCompletedAt: lastCompletedAt,
                 onStart: onStart
             )
             .presentationDetents([.medium, .large])
@@ -96,7 +98,7 @@ struct TemplateCardView: View {
             if let avg = averageDuration {
                 TemplateMetadataPill(avg)
             }
-            if let lastUsed = template.lastUsedAt {
+            if let lastUsed = lastCompletedAt {
                 TemplateMetadataPill(relativeUsageLabel(lastUsed))
             }
         }
@@ -109,6 +111,7 @@ private struct TemplateDetailSheet: View {
     let template: WorkoutTemplate
     var averageDuration: String?
     var timesCompleted: Int = 0
+    var lastCompletedAt: Date?
     var onStart: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
 
@@ -128,7 +131,7 @@ private struct TemplateDetailSheet: View {
                         if timesCompleted > 0 {
                             TemplateMetadataPill("\(timesCompleted)x done")
                         }
-                        if let lastUsed = template.lastUsedAt {
+                        if let lastUsed = lastCompletedAt {
                             TemplateMetadataPill(relativeUsageLabel(lastUsed))
                         }
                     }

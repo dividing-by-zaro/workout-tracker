@@ -39,10 +39,15 @@ struct StartWorkoutView: View {
                                 for: template.name,
                                 in: completedWorkouts
                             )
+                            let lastCompletedAt = completedWorkouts
+                                .filter { $0.templateId == template.id }
+                                .compactMap(\.completedAt)
+                                .max()
                             TemplateCardView(
                                 template: template,
                                 averageDuration: historySummary.averageDuration,
                                 timesCompleted: historySummary.workoutCount,
+                                lastCompletedAt: lastCompletedAt,
                                 onStart: {
                                     sessionManager.startWorkout(from: template, context: modelContext)
                                 }
