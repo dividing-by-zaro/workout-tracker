@@ -26,11 +26,9 @@ struct TimerView: View {
                 .buttonStyle(.plain)
             }
 
-            // Row 2: Inline set summaries
-            HStack(spacing: 0) {
-                setSummariesRow
-                Spacer()
-            }
+            // Row 2: Inline set summaries (wraps when too wide)
+            setSummariesRow
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             // Row 3: Large countdown timer
             Text(timerInterval: timerStart...context.state.restTimerEndDate, countsDown: true)
@@ -55,28 +53,19 @@ struct TimerView: View {
     @ViewBuilder
     private var setSummariesRow: some View {
         let currentIndex = context.state.setNumber - 1
-        HStack(spacing: 0) {
+        SetSummariesFlow(horizontalSpacing: 10, verticalSpacing: 4) {
             ForEach(Array(context.state.setSummaries.enumerated()), id: \.offset) { index, summary in
-                if index > 0 {
-                    Spacer(minLength: 6)
-                }
-                if summary.isCompleted {
-                    HStack(spacing: 2) {
-                        Image("brick_icon")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 12, height: 12)
-                        Text(summary.label)
-                            .font(.system(size: 16).monospacedDigit())
-                    }
-                    .foregroundColor(Color("WidgetTextSecondary").opacity(0.6))
-                } else if index == currentIndex {
+                if index == currentIndex {
                     Text(summary.label)
-                        .font(.system(size: 18, weight: .bold).monospacedDigit())
+                        .font(.system(size: 12, weight: .bold).monospacedDigit())
                         .foregroundColor(Color("WidgetPrimary"))
+                } else if summary.isCompleted {
+                    Text(summary.label)
+                        .font(.system(size: 11).monospacedDigit())
+                        .foregroundColor(Color("WidgetTextSecondary").opacity(0.55))
                 } else {
                     Text(summary.label)
-                        .font(.system(size: 16).monospacedDigit())
+                        .font(.system(size: 11).monospacedDigit())
                         .foregroundColor(Color("WidgetTextSecondary"))
                 }
             }

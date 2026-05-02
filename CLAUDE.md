@@ -101,7 +101,8 @@ screenshots/                       # Framed screenshots + banner for README (com
 
 KilnWidgets/
 ├── KilnWidgetBundle.swift         # @main WidgetBundle + ActivityConfiguration
-├── Views/                         # SetView, TimerView, CompleteView (lock screen presentations)
+├── Views/                         # SetView, TimerView, CompleteView (lock screen presentations),
+│                                  #   SetSummariesFlow (wrapping space-around Layout for the set row)
 ├── WorkoutLiveActivityIntents+Widget.swift  # Stub perform() bodies
 └── Assets.xcassets/               # 7 widget color sets (WidgetPrimary, WidgetBackground, etc.)
 ```

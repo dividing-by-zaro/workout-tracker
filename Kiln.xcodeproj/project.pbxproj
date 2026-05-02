@@ -11,6 +11,7 @@
 		07B5219F183A0308BF45EDB8 /* WorkoutSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33DD78D988B1619D49175217 /* WorkoutSessionManager.swift */; };
 		0CCD4FD9A2D5E2D46C939974 /* WorkoutActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25E942BED8928D67E3E344B4 /* WorkoutActivityAttributes.swift */; };
 		0D36B92C2AE7EAF056E3B18D /* RestTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18C7BF4C5770B304C2B78194 /* RestTimerView.swift */; };
+		1679747666E0F0A30FE4C3A0 /* SetSummariesFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6ABB19FA27E7D3D8D67EC2C /* SetSummariesFlow.swift */; };
 		193516A01622F9DA2B15B9AE /* SetRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09E71B0F76C3D78DA87982FF /* SetRowView.swift */; };
 		1ACF46B8624F2F66D08852E0 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA496475B5378C23CA07E83 /* ContentView.swift */; };
 		1B986DF942399688FC9F09C4 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B705F94180BA1ABD9857C4A0 /* NotificationService.swift */; };
@@ -182,13 +183,14 @@
 		D14373FE4C329747FA0DE780 /* Formatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatters.swift; sourceTree = "<group>"; };
 		D49D243FD1618B81474A58D5 /* ChartMetric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartMetric.swift; sourceTree = "<group>"; };
 		D67B8481533CEAE0D365B0CE /* PreFillService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreFillService.swift; sourceTree = "<group>"; };
+		D6ABB19FA27E7D3D8D67EC2C /* SetSummariesFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetSummariesFlow.swift; sourceTree = "<group>"; };
 		DDF663B68A131B6AD8775B29 /* SetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetView.swift; sourceTree = "<group>"; };
 		DE25A40638BBB5CA39BEE5BB /* ExerciseHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseHistoryView.swift; sourceTree = "<group>"; };
 		E748F31F939B0EF1F118FB9D /* KilnApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KilnApp.swift; sourceTree = "<group>"; };
 		ED930F72F14339C0595891BB /* WorkoutLiveActivityIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutLiveActivityIntents.swift; sourceTree = "<group>"; };
 		FC9B36FAFB73E7A84B2EBF2B /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		FE83C57D250533B71E6B8FF5 /* WorkoutLiveActivityIntents+Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkoutLiveActivityIntents+Widget.swift"; sourceTree = "<group>"; };
-		"TEMP_A80E76C7-D8D3-45BA-9A3D-1E11C46954F4" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_CFE5527D-31CC-4622-AFA9-1A88560C20BB" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -339,6 +341,7 @@
 			isa = PBXGroup;
 			children = (
 				259A3675721A5E65293B23C0 /* CompleteView.swift */,
+				D6ABB19FA27E7D3D8D67EC2C /* SetSummariesFlow.swift */,
 				DDF663B68A131B6AD8775B29 /* SetView.swift */,
 				B6ABFEC49D0E51B1D1EC789E /* TimerView.swift */,
 			);
@@ -412,10 +415,10 @@
 			);
 			sourceTree = "<group>";
 		};
-		"TEMP_46785309-2A03-4FD5-9C46-2AA384F491B0" /* workout-tracker */ = {
+		"TEMP_342E0D45-4E92-48A6-AEE4-CF1F5F774749" /* workout-tracker */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_A80E76C7-D8D3-45BA-9A3D-1E11C46954F4" /* Secrets.xcconfig */,
+				"TEMP_CFE5527D-31CC-4622-AFA9-1A88560C20BB" /* Secrets.xcconfig */,
 			);
 			path = "workout-tracker";
 			sourceTree = "<group>";
@@ -597,6 +600,7 @@
 				5E40EBFE867A47C6A5390AFB /* CompleteView.swift in Sources */,
 				5DA90AD94BCB51BAA158FCD0 /* Formatters.swift in Sources */,
 				C05CF76A876390340E793840 /* KilnWidgetBundle.swift in Sources */,
+				1679747666E0F0A30FE4C3A0 /* SetSummariesFlow.swift in Sources */,
 				7FF2F1C3B13C2E1895D05C1A /* SetView.swift in Sources */,
 				DD0A452958B3DBBEBA6AC501 /* TimerView.swift in Sources */,
 				0CCD4FD9A2D5E2D46C939974 /* WorkoutActivityAttributes.swift in Sources */,
@@ -618,7 +622,7 @@
 /* Begin XCBuildConfiguration section */
 		00819B2D95689EC0CA9D55F3 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_A80E76C7-D8D3-45BA-9A3D-1E11C46954F4" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_CFE5527D-31CC-4622-AFA9-1A88560C20BB" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -704,7 +708,7 @@
 		};
 		4B79A099121FCF4CBC38B849 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_A80E76C7-D8D3-45BA-9A3D-1E11C46954F4" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_CFE5527D-31CC-4622-AFA9-1A88560C20BB" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

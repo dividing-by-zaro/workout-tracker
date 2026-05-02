@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Issue #44 — Live Activity Set Summary Mockups</title>
+<style>
+  :root {
+    --bg: #1c1c1e;
+    --card: #fbf6ee;          /* WidgetBackground */
+    --primary: #bf3326;       /* WidgetPrimary */
+    --text-primary: #2a1f1a;  /* WidgetTextPrimary */
+    --text-secondary: #6b5d54;/* WidgetTextSecondary */
+    --surface: #efe5d6;       /* WidgetSurface */
+    --destructive: #bf3326;
+    --brick: #8a6f5d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+    background: #2a2a2c;
+    color: #ddd;
+    margin: 0;
+    padding: 32px 24px 64px;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    letter-spacing: -0.02em;
+  }
+  .lede {
+    font-size: 13px;
+    color: #999;
+    max-width: 680px;
+    line-height: 1.5;
+    margin: 0 0 32px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 28px;
+  }
+  .card {
+    background: linear-gradient(#202022, #1a1a1c);
+    border-radius: 18px;
+    padding: 22px;
+    border: 1px solid #333;
+  }
+  .card h2 {
+    font-size: 15px;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+    color: #fff;
+  }
+  .card .desc {
+    font-size: 12px;
+    color: #aaa;
+    line-height: 1.45;
+    margin: 0 0 18px;
+    min-height: 52px;
+  }
+  /* Lock-screen Live Activity card */
+  .la {
+    background: var(--card);
+    border-radius: 22px;
+    padding: 14px;
+    color: var(--text-primary);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    /* approximate lock screen width */
+    max-width: 360px;
+  }
+  .la-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .exercise-name {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .skip-btn {
+    background: rgba(239,229,214,0.8);
+    color: var(--destructive);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: none;
+  }
+  .timer {
+    font-size: 40px;
+    font-weight: 700;
+    color: var(--primary);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    margin: 4px 0 6px;
+    letter-spacing: -0.02em;
+  }
+  .progress {
+    height: 4px;
+    background: rgba(0,0,0,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .progress > span {
+    display: block;
+    width: 18%;
+    height: 100%;
+    background: var(--primary);
+  }
+
+  /* Set summary base styles */
+  .summaries {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    margin-bottom: 6px;
+  }
+  .summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .summary.completed {
+    color: var(--text-secondary);
+    opacity: 0.6;
+    font-size: 16px;
+  }
+  .summary.upcoming {
+    color: var(--text-secondary);
+    font-size: 16px;
+  }
+  .summary.current {
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 18px;
+  }
+  .brick {
+    width: 12px;
+    height: 12px;
+    background: var(--brick);
+    border-radius: 2px;
+    display: inline-block;
+    /* approximation of brick_icon */
+    background-image: linear-gradient(45deg, #6b5341 25%, transparent 25%, transparent 75%, #6b5341 75%),
+                      linear-gradient(45deg, #6b5341 25%, transparent 25%, transparent 75%, #6b5341 75%);
+    background-size: 6px 6px;
+    background-position: 0 0, 3px 3px;
+    background-color: #8a6f5d;
+  }
+
+  /* === Current (broken) baseline === */
+  .baseline .summaries .summary {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 22%;
+  }
+
+  /* === Option 1: Wrap to two rows === */
+  .opt1 .summaries {
+    flex-wrap: wrap;
+    row-gap: 4px;
+    column-gap: 12px;
+  }
+
+  /* === Option 2: Current-set hero, others as chips === */
+  .opt2 .hero {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .opt2 .hero .label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .opt2 .hero .value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .opt2 .pips {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .opt2 .pip {
+    height: 6px;
+    border-radius: 3px;
+    flex: 1;
+    background: rgba(0,0,0,0.1);
+  }
+  .opt2 .pip.completed { background: var(--brick); opacity: 0.6; }
+  .opt2 .pip.current   { background: var(--primary); height: 8px; }
+
+  /* === Option 3: Reps-only chips for non-current sets === */
+  .opt3 .summaries {
+    gap: 6px;
+  }
+  .opt3 .summary.completed,
+  .opt3 .summary.upcoming {
+    background: rgba(0,0,0,0.04);
+    padding: 3px 7px;
+    border-radius: 999px;
+    font-size: 14px;
+  }
+  .opt3 .summary.current {
+    font-size: 18px;
+  }
+
+  /* === Option 4: No icons, just red current set, slightly larger === */
+  .opt4 .summaries {
+    gap: 14px;
+  }
+  .opt4 .summary.completed,
+  .opt4 .summary.upcoming {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0.55;
+  }
+  .opt4 .summary.current {
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 17px;
+  }
+
+  .legend {
+    margin-top: 18px;
+    font-size: 11px;
+    color: #999;
+    line-height: 1.5;
+  }
+  .legend strong { color: #ddd; }
+  .pros, .cons { margin: 8px 0; padding-left: 18px; }
+  .pros li::marker { color: #4ade80; }
+  .cons li::marker { color: #f87171; }
+</style>
+</head>
+<body>
+
+  <h1>Issue #44 — Live Activity multi-set display</h1>
+  <p class="lede">
+    Today the inline set summaries truncate to <code>"50 lbs..."</code> when there are 4+ sets in an exercise.
+    Three layout options below, each preserving the brick icon for completed sets, primary-color emphasis on the
+    current set, monospaced digits, and the <code>"110 lbs × 8"</code> format. Open in browser; the card width
+    matches the lock-screen Live Activity.
+  </p>
+
+  <div class="grid">
+
+    <!-- Baseline: today -->
+    <div class="card">
+      <h2>Today (broken)</h2>
+      <p class="desc">For reference: 4 sets, all labels truncated mid-word.</p>
+      <div class="la baseline">
+        <div class="la-header">
+          <div class="exercise-name">Hip Thrust (Barbell)</div>
+          <button class="skip-btn">Skip</button>
+        </div>
+        <div class="summaries">
+          <span class="summary completed"><span class="brick"></span>50 lbs...</span>
+          <span class="summary completed"><span class="brick"></span>110 lbs...</span>
+          <span class="summary completed"><span class="brick"></span>110 lb...</span>
+          <span class="summary current">110 lbs...</span>
+        </div>
+        <div class="timer">1:52</div>
+        <div class="progress"><span></span></div>
+      </div>
+    </div>
+
+    <!-- Option 1 -->
+    <div class="card">
+      <h2>Option 1 — Wrap to two rows</h2>
+      <p class="desc">Smallest change. Set summaries wrap onto a second line when they overflow. Same fonts, same emphasis. Adds at most ~24pt of vertical height.</p>
+      <div class="la opt1">
+        <div class="la-header">
+          <div class="exercise-name">Hip Thrust (Barbell)</div>
+          <button class="skip-btn">Skip</button>
+        </div>
+        <div class="summaries">
+          <span class="summary completed"><span class="brick"></span>50 lbs × 8</span>
+          <span class="summary completed"><span class="brick"></span>110 lbs × 8</span>
+          <span class="summary completed"><span class="brick"></span>110 lbs × 8</span>
+          <span class="summary current">110 lbs × 8</span>
+        </div>
+        <div class="timer">1:52</div>
+        <div class="progress"><span></span></div>
+      </div>
+      <div class="legend">
+        <ul class="pros"><li>Lowest risk: same components, just a wrapping container.</li><li>Reads identically to today for ≤3-set exercises.</li></ul>
+        <ul class="cons"><li>Card grows taller as set count grows; could hit lock-screen height limits at 8+ sets.</li><li>Wrapping isn't visually predictable — split point depends on label widths.</li></ul>
+      </div>
+    </div>
+
+    <!-- Option 2 -->
+    <div class="card">
+      <h2>Option 2 — Current-set hero + progress pips</h2>
+      <p class="desc">The set you're about to do is the only thing that needs to be readable at-a-glance. Show it big, replace the row of labels with a thin progress strip (one pip per set, current pip taller).</p>
+      <div class="la opt2">
+        <div class="la-header">
+          <div class="exercise-name">Hip Thrust (Barbell)</div>
+          <button class="skip-btn">Skip</button>
+        </div>
+        <div class="hero">
+          <span class="label">Set 4 / 4</span>
+          <span class="value">110 lbs × 8</span>
+        </div>
+        <div class="pips">
+          <span class="pip completed"></span>
+          <span class="pip completed"></span>
+          <span class="pip completed"></span>
+          <span class="pip current"></span>
+        </div>
+        <div class="timer">1:52</div>
+        <div class="progress"><span></span></div>
+      </div>
+      <div class="legend">
+        <ul class="pros"><li>Scales gracefully to any number of sets — pips just get thinner.</li><li>Strongest readability of the next-up target weight × reps.</li><li>Constant card height regardless of set count.</li></ul>
+        <ul class="cons"><li>Loses the historical "what did I do for set 1 vs set 3" glance.</li><li>Bigger visual departure from current design — needs a stronger product call.</li></ul>
+      </div>
+    </div>
+
+    <!-- Option 3 -->
+    <div class="card">
+      <h2>Option 3 — Reps-only chips for non-current sets</h2>
+      <p class="desc">Most lifters keep weight constant across sets. Drop "lbs" from completed/upcoming chips — show just <code>×8</code> — and reserve the full <code>110 lbs × 8</code> label for the current set only.</p>
+      <div class="la opt3">
+        <div class="la-header">
+          <div class="exercise-name">Hip Thrust (Barbell)</div>
+          <button class="skip-btn">Skip</button>
+        </div>
+        <div class="summaries">
+          <span class="summary completed"><span class="brick"></span>×8</span>
+          <span class="summary completed"><span class="brick"></span>×8</span>
+          <span class="summary completed"><span class="brick"></span>×8</span>
+          <span class="summary current">110 lbs × 8</span>
+        </div>
+        <div class="timer">1:52</div>
+        <div class="progress"><span></span></div>
+      </div>
+      <div class="legend">
+        <ul class="pros"><li>Fits comfortably on one row up to ~6 sets.</li><li>Keeps the inline historical row that the original design intended.</li><li>Minimal departure from current visual language.</li></ul>
+        <ul class="cons"><li>If a lifter ramps weight (50 → 110 → 110 → 110), the chip row hides that — they'd need to remember weight changed.</li><li>Could conditionally show weight only when it differs from the current set; adds branching logic.</li></ul>
+      </div>
+    </div>
+
+    <!-- Option 4 -->
+    <div class="card">
+      <h2>Option 4 — Stripped: red current set, no icons</h2>
+      <p class="desc">No brick icons, no flame. Completed and upcoming sets are quiet gray text; the current set is red and slightly larger. Lets the typography do all the work.</p>
+      <div class="la opt4">
+        <div class="la-header">
+          <div class="exercise-name">Hip Thrust (Barbell)</div>
+          <button class="skip-btn">Skip</button>
+        </div>
+        <div class="summaries">
+          <span class="summary completed">50 lbs × 8</span>
+          <span class="summary completed">110 lbs × 8</span>
+          <span class="summary completed">110 lbs × 8</span>
+          <span class="summary current">110 lbs × 8</span>
+        </div>
+        <div class="timer">1:52</div>
+        <div class="progress"><span></span></div>
+      </div>
+      <div class="legend">
+        <ul class="pros"><li>Cleanest, calmest visual — no decorative elements competing with the timer.</li><li>Without icons, more horizontal room for the labels themselves.</li><li>Color + weight contrast alone is enough to find the current set.</li></ul>
+        <ul class="cons"><li>Loses the brick-icon completion cue that's used elsewhere in the app — small consistency cost.</li><li>Still wraps/truncates at high set counts; pair with Option 1's wrap or Option 3's chip if needed.</li></ul>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
