@@ -23,6 +23,20 @@ enum LiveActivityCache {
     // MARK: - Write full state from app
 
     static func cache(_ state: ContentState, setId: UUID?, restDuration: Int) {
+        writeState(state, setId: setId, restDuration: restDuration)
+        suite.set(false, forKey: dirtyKey)
+        suite.removeObject(forKey: dirtySetIdKey)
+    }
+
+    /// Same as `cache(_:setId:restDuration:)` but preserves dirty markers.
+    /// Use this on the Live Activity completion intent path so any pre-completion
+    /// +/- adjustments survive until the app foregrounds and `syncCacheToSwiftData`
+    /// drains them. Clearing dirty markers is the job of `consumePendingSync()`.
+    static func updatePreservingDirty(_ state: ContentState, setId: UUID?, restDuration: Int) {
+        writeState(state, setId: setId, restDuration: restDuration)
+    }
+
+    private static func writeState(_ state: ContentState, setId: UUID?, restDuration: Int) {
         if let data = try? JSONEncoder().encode(state) {
             suite.set(data, forKey: stateKey)
         }
@@ -32,8 +46,6 @@ enum LiveActivityCache {
             suite.removeObject(forKey: setIdKey)
         }
         suite.set(restDuration, forKey: restDurationKey)
-        suite.set(false, forKey: dirtyKey)
-        suite.removeObject(forKey: dirtySetIdKey)
     }
 
     static func clearRest() {

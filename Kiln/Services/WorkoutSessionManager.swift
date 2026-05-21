@@ -288,7 +288,7 @@ final class WorkoutSessionManager {
 
         if transition.isLastSetInExercise {
             updateLiveActivity()
-            cacheCurrentState()
+            cacheCurrentState(preserveDirty: recordPendingCompletion)
             return
         }
 
@@ -303,15 +303,26 @@ final class WorkoutSessionManager {
                 cachedState.setSummaries[completedIndex].isCompleted = true
             }
             cachedState.setNumber += 1
-            LiveActivityCache.cache(
-                cachedState,
-                setId: findCurrentSet()?.1.id,
-                restDuration: transition.restDuration
-            )
+            // On the intent path (recordPendingCompletion), preserve dirty markers so
+            // any pre-completion +/- adjustments survive until the app foregrounds.
+            let nextSetId = findCurrentSet()?.1.id
+            if recordPendingCompletion {
+                LiveActivityCache.updatePreservingDirty(
+                    cachedState,
+                    setId: nextSetId,
+                    restDuration: transition.restDuration
+                )
+            } else {
+                LiveActivityCache.cache(
+                    cachedState,
+                    setId: nextSetId,
+                    restDuration: transition.restDuration
+                )
+            }
             updateLiveActivity(with: cachedState)
         } else {
             updateLiveActivity()
-            cacheCurrentState()
+            cacheCurrentState(preserveDirty: recordPendingCompletion)
         }
 
         sendTimerScheduleToBackend(duration: transition.restDuration)
@@ -655,12 +666,19 @@ final class WorkoutSessionManager {
         }
     }
 
-    private func cacheCurrentState(using state: WorkoutActivityAttributes.ContentState? = nil) {
+    private func cacheCurrentState(
+        using state: WorkoutActivityAttributes.ContentState? = nil,
+        preserveDirty: Bool = false
+    ) {
         let resolvedState = state ?? liveActivityService.buildContentState(from: self)
         let current = findCurrentSet()
         let setId = current?.1.id
         let restDuration = current?.0.exercise?.defaultRestSeconds ?? 120
-        LiveActivityCache.cache(resolvedState, setId: setId, restDuration: restDuration)
+        if preserveDirty {
+            LiveActivityCache.updatePreservingDirty(resolvedState, setId: setId, restDuration: restDuration)
+        } else {
+            LiveActivityCache.cache(resolvedState, setId: setId, restDuration: restDuration)
+        }
     }
 
     // MARK: - Intent Handlers (called from LiveActivityIntents)
