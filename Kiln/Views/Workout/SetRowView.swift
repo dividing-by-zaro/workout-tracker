@@ -68,9 +68,13 @@ struct SetRowView: View {
                 .tracking(1.2)
                 .foregroundStyle(DesignSystem.Colors.brickText.opacity(0.7))
                 .frame(width: 14, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture { handleTap() }
 
             previousLabelBrick
                 .frame(maxWidth: .infinity, alignment: .center)
+                .contentShape(Rectangle())
+                .onTapGesture { handleTap() }
 
             brickValueBlock
         }
@@ -81,8 +85,6 @@ struct SetRowView: View {
         .mortarShadow()
         .brickStagger(offset: brickOffset)
         .frame(maxWidth: .infinity)
-        .contentShape(Rectangle())
-        .onTapGesture { handleTap() }
         .transition(.opacity)
     }
 
@@ -157,6 +159,7 @@ struct SetRowView: View {
 
     @ViewBuilder
     private var brickValueBlock: some View {
+        let sync: () -> Void = { sessionManager.handleSetValueChange(for: workoutSet) }
         HStack(spacing: 10) {
             if equipmentType.tracksWeight && equipmentType.tracksReps {
                 if equipmentType == .weightedBodyweight {
@@ -164,85 +167,90 @@ struct SetRowView: View {
                         .font(DesignSystem.Typography.sans(10, weight: .regular))
                         .foregroundStyle(DesignSystem.Colors.brickText.opacity(0.5))
                 }
-                weightCell(workoutSet.weight)
-                repsCell(workoutSet.reps)
+                brickWeightInput(sync: sync)
+                brickRepsInput(sync: sync)
             } else if equipmentType == .repsOnly {
                 Text("BW")
                     .font(DesignSystem.Typography.sans(10, weight: .regular))
                     .foregroundStyle(DesignSystem.Colors.brickText.opacity(0.5))
-                repsCell(workoutSet.reps)
+                brickRepsInput(sync: sync)
             } else if equipmentType == .weightedDistance {
-                weightCell(workoutSet.weight)
-                distanceCell(workoutSet.distance)
+                brickWeightInput(sync: sync)
+                brickDistanceInput(sync: sync)
             } else if equipmentType == .distance {
-                distanceCell(workoutSet.distance)
+                brickDistanceInput(sync: sync)
             } else if equipmentType == .duration {
-                durationCell(workoutSet.seconds)
+                brickDurationInput(sync: sync)
             }
         }
     }
 
-    private func weightCell(_ weight: Double?) -> some View {
+    private func brickWeightInput(sync: @escaping () -> Void) -> some View {
         HStack(spacing: 2) {
-            Text(weight.map { formatWeight($0) } ?? "—")
-                .font(DesignSystem.Typography.brickValue)
-                .tracking(-0.3)
-                .foregroundStyle(DesignSystem.Colors.brickText)
-                .monospacedDigit()
+            NumericInputField(
+                value: $workoutSet.weight,
+                placeholder: "lb",
+                incrementStep: 1.0,
+                onValueChanged: sync,
+                textColor: DesignSystem.Colors.brickText,
+                showUnderline: false,
+                width: 44
+            )
             Text("lb")
                 .font(DesignSystem.Typography.sans(10, weight: .regular))
                 .foregroundStyle(DesignSystem.Colors.brickText.opacity(0.5))
         }
-        .lineLimit(1)
-        .fixedSize(horizontal: true, vertical: false)
     }
 
-    private func repsCell(_ reps: Int?) -> some View {
-        Text("\u{00D7} \(reps.map(String.init) ?? "—")")
-            .font(DesignSystem.Typography.brickValue)
-            .tracking(-0.3)
-            .foregroundStyle(DesignSystem.Colors.brickText)
-            .monospacedDigit()
-            .frame(minWidth: 32, alignment: .trailing)
-            .lineLimit(1)
-            .fixedSize(horizontal: true, vertical: false)
-    }
-
-    private func distanceCell(_ distance: Double?) -> some View {
+    private func brickRepsInput(sync: @escaping () -> Void) -> some View {
         HStack(spacing: 2) {
-            Text(distance.map { String(format: "%.1f", $0) } ?? "—")
+            Text("\u{00D7}")
                 .font(DesignSystem.Typography.brickValue)
-                .tracking(-0.3)
                 .foregroundStyle(DesignSystem.Colors.brickText)
-                .monospacedDigit()
+            IntInputField(
+                value: $workoutSet.reps,
+                placeholder: "reps",
+                incrementStep: 1.0,
+                onValueChanged: sync,
+                textColor: DesignSystem.Colors.brickText,
+                showUnderline: false,
+                width: 36
+            )
+        }
+    }
+
+    private func brickDistanceInput(sync: @escaping () -> Void) -> some View {
+        HStack(spacing: 2) {
+            NumericInputField(
+                value: $workoutSet.distance,
+                placeholder: "mi",
+                incrementStep: 0.1,
+                onValueChanged: sync,
+                textColor: DesignSystem.Colors.brickText,
+                showUnderline: false,
+                width: 44
+            )
             Text("mi")
                 .font(DesignSystem.Typography.sans(10, weight: .regular))
                 .foregroundStyle(DesignSystem.Colors.brickText.opacity(0.5))
         }
-        .lineLimit(1)
-        .fixedSize(horizontal: true, vertical: false)
     }
 
-    private func durationCell(_ seconds: Double?) -> some View {
+    private func brickDurationInput(sync: @escaping () -> Void) -> some View {
         HStack(spacing: 2) {
-            Text(seconds.map { String(format: "%.0f", $0) } ?? "—")
-                .font(DesignSystem.Typography.brickValue)
-                .tracking(-0.3)
-                .foregroundStyle(DesignSystem.Colors.brickText)
-                .monospacedDigit()
+            NumericInputField(
+                value: $workoutSet.seconds,
+                placeholder: "sec",
+                incrementStep: 5.0,
+                onValueChanged: sync,
+                textColor: DesignSystem.Colors.brickText,
+                showUnderline: false,
+                width: 44
+            )
             Text("s")
                 .font(DesignSystem.Typography.sans(10, weight: .regular))
                 .foregroundStyle(DesignSystem.Colors.brickText.opacity(0.5))
         }
-        .lineLimit(1)
-        .fixedSize(horizontal: true, vertical: false)
-    }
-
-    private func formatWeight(_ w: Double) -> String {
-        if w == w.rounded() {
-            return "\(Int(w))"
-        }
-        return String(format: "%.1f", w)
     }
 
     // MARK: - Input fields (pending)

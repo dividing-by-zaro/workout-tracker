@@ -6,6 +6,7 @@ struct CustomInputTextField: UIViewRepresentable {
     let placeholder: String
     let config: NumericKeyboardConfig
     var onValueChanged: (() -> Void)? = nil
+    var textColor: Color = DesignSystem.Colors.ink
 
     func makeCoordinator() -> Coordinator {
         Coordinator(value: $value, config: config, onValueChanged: onValueChanged)
@@ -17,7 +18,7 @@ struct CustomInputTextField: UIViewRepresentable {
         textField.borderStyle = .none
         textField.textAlignment = .center
         textField.font = UIFont.monospacedSystemFont(ofSize: 15, weight: .bold)
-        textField.textColor = UIColor(DesignSystem.Colors.ink)
+        textField.textColor = UIColor(textColor)
         textField.delegate = context.coordinator
         textField.tintColor = UIColor(DesignSystem.Colors.brick1)
         textField.setContentHuggingPriority(.defaultHigh, for: .horizontal)
@@ -196,6 +197,9 @@ struct NumericInputField: View {
     let placeholder: String
     var incrementStep: Double = 1.0
     var onValueChanged: (() -> Void)? = nil
+    var textColor: Color = DesignSystem.Colors.ink
+    var showUnderline: Bool = true
+    var width: CGFloat = 56
 
     var body: some View {
         CustomInputTextField(
@@ -205,13 +209,16 @@ struct NumericInputField: View {
                 showDecimalKey: true,
                 incrementStep: incrementStep
             ),
-            onValueChanged: onValueChanged
+            onValueChanged: onValueChanged,
+            textColor: textColor
         )
-        .frame(width: 56, height: 30)
+        .frame(width: width, height: 30)
         .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(DesignSystem.Colors.ink)
-                .frame(height: 1.5)
+            if showUnderline {
+                Rectangle()
+                    .fill(DesignSystem.Colors.ink)
+                    .frame(height: 1.5)
+            }
         }
     }
 }
@@ -221,6 +228,9 @@ struct IntInputField: View {
     let placeholder: String
     var incrementStep: Double = 1.0
     var onValueChanged: (() -> Void)? = nil
+    var textColor: Color = DesignSystem.Colors.ink
+    var showUnderline: Bool = true
+    var width: CGFloat = 56
 
     private var doubleBinding: Binding<Double?> {
         Binding<Double?>(
@@ -237,13 +247,16 @@ struct IntInputField: View {
                 showDecimalKey: false,
                 incrementStep: incrementStep
             ),
-            onValueChanged: onValueChanged
+            onValueChanged: onValueChanged,
+            textColor: textColor
         )
-        .frame(width: 56, height: 30)
+        .frame(width: width, height: 30)
         .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(DesignSystem.Colors.ink)
-                .frame(height: 1.5)
+            if showUnderline {
+                Rectangle()
+                    .fill(DesignSystem.Colors.ink)
+                    .frame(height: 1.5)
+            }
         }
     }
 }
