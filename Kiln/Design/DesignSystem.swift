@@ -173,6 +173,7 @@ enum DesignSystem {
         static let padCardInner: CGFloat  = 14
         static let gapCard: CGFloat       = 12
         static let gapBrick: CGFloat      = 4
+        static let tabBarClearance: CGFloat = 80
 
         // Brick centerline inset (signed offsets sum to 0 around this).
         static let brickInset: CGFloat    = 8

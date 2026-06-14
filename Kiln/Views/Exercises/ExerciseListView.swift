@@ -20,7 +20,7 @@ struct ExerciseListView: View {
 
                 content
 
-                Color.clear.frame(height: 80)
+                Color.clear.frame(height: DesignSystem.Spacing.tabBarClearance)
             }
         }
         .brickWallBackground()

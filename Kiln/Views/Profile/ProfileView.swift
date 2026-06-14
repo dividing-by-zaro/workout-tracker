@@ -70,7 +70,7 @@ struct ProfileView: View {
                 syncAndLogoutCard
                     .padding(.horizontal, DesignSystem.Spacing.md)
 
-                Color.clear.frame(height: 80)
+                Color.clear.frame(height: DesignSystem.Spacing.tabBarClearance)
             }
         }
         .brickWallBackground()

@@ -63,7 +63,7 @@ struct HistoryListView: View {
                             }
                         }
 
-                        Color.clear.frame(height: 80)
+                        Color.clear.frame(height: DesignSystem.Spacing.tabBarClearance)
                     }
                     .padding(.horizontal, 14)
                 }

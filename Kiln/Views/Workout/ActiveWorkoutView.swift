@@ -44,6 +44,9 @@ struct ActiveWorkoutView: View {
                             )
                             .padding(.horizontal, DesignSystem.Spacing.padCardOuter)
                         }
+
+                        Color.clear
+                            .frame(height: DesignSystem.Spacing.tabBarClearance)
                     }
                     .padding(.vertical, DesignSystem.Spacing.md)
                 }

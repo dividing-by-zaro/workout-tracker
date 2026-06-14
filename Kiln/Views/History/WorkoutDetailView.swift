@@ -75,7 +75,7 @@ struct WorkoutDetailView: View {
                     .padding(.horizontal, 14)
                 }
 
-                Color.clear.frame(height: 80)
+                Color.clear.frame(height: DesignSystem.Spacing.tabBarClearance)
             }
             .padding(.vertical, 16)
         }
