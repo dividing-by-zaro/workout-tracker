@@ -50,6 +50,24 @@ enum EquipmentType: String, Codable, CaseIterable {
         self == .duration
     }
 
+    /// Multiplier used for training volume. Dumbbell and kettlebell weights are
+    /// recorded per implement, so a pair contributes twice the entered weight.
+    var volumeMultiplier: Double {
+        switch self {
+        case .dumbbell, .kettlebell:
+            return 2
+        default:
+            return 1
+        }
+    }
+
+    /// Returns this equipment's contribution to total weight lifted. Negative
+    /// values represent assistance and intentionally do not reduce total volume.
+    func trainingVolume(weight: Double?, reps: Int?) -> Double {
+        guard let weight, weight > 0, let reps, reps > 0 else { return 0 }
+        return weight * Double(reps) * volumeMultiplier
+    }
+
     var equipmentCategory: String {
         switch self {
         case .barbell, .dumbbell, .kettlebell, .machineOther, .weightedBodyweight:

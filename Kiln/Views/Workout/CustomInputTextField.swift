@@ -47,7 +47,8 @@ struct CustomInputTextField: UIViewRepresentable {
 
         // Rebuild inputView if config changed
         if context.coordinator.config.incrementStep != config.incrementStep ||
-           context.coordinator.config.showDecimalKey != config.showDecimalKey {
+           context.coordinator.config.showDecimalKey != config.showDecimalKey ||
+           context.coordinator.config.allowsNegative != config.allowsNegative {
             context.coordinator.config = config
             let hc = makeKeyboardHostingController(for: textField, coordinator: context.coordinator)
             textField.inputView = hc.view
@@ -111,7 +112,7 @@ struct CustomInputTextField: UIViewRepresentable {
                 // Integer mode
                 return "\(Int(v))"
             }
-            if v == v.rounded() && v >= 0 {
+            if v == v.rounded() {
                 return "\(Int(v))"
             }
             return String(format: "%.1f", v)
@@ -134,7 +135,18 @@ struct CustomInputTextField: UIViewRepresentable {
                     pendingReplace = false
                 } else if !text.contains(".") {
                     if text.isEmpty { text = "0" }
+                    if text == "-" { text = "-0" }
                     text.append(".")
+                }
+            case .toggleSign:
+                guard config.allowsNegative else { return }
+                if pendingReplace {
+                    text = "-"
+                    pendingReplace = false
+                } else if text.hasPrefix("-") {
+                    text.removeFirst()
+                } else {
+                    text = "-" + text
                 }
             case .backspace:
                 pendingReplace = false
@@ -157,7 +169,8 @@ struct CustomInputTextField: UIViewRepresentable {
 
         func decrement(in textField: UITextField) {
             let current = value.wrappedValue ?? 0
-            let newVal = max(0, current - config.incrementStep)
+            let decremented = current - config.incrementStep
+            let newVal = config.allowsNegative ? decremented : max(0, decremented)
             value.wrappedValue = newVal
             textField.text = format(newVal)
             pendingReplace = true
@@ -165,7 +178,7 @@ struct CustomInputTextField: UIViewRepresentable {
         }
 
         private func syncValue(from text: String) {
-            if text.isEmpty {
+            if text.isEmpty || text == "-" {
                 value.wrappedValue = nil
             } else if let parsed = Double(text) {
                 value.wrappedValue = parsed
@@ -200,6 +213,7 @@ struct NumericInputField: View {
     var textColor: Color = DesignSystem.Colors.ink
     var showUnderline: Bool = true
     var width: CGFloat = 56
+    var allowsNegative: Bool = false
 
     var body: some View {
         CustomInputTextField(
@@ -207,7 +221,8 @@ struct NumericInputField: View {
             placeholder: placeholder,
             config: NumericKeyboardConfig(
                 showDecimalKey: true,
-                incrementStep: incrementStep
+                incrementStep: incrementStep,
+                allowsNegative: allowsNegative
             ),
             onValueChanged: onValueChanged,
             textColor: textColor

@@ -23,8 +23,9 @@ enum ChartMetric: String, CaseIterable, Identifiable {
 
         switch self {
         case .totalVolume:
+            let equipmentType = workoutExercise.exercise?.resolvedEquipmentType ?? .machineOther
             let total = completed.reduce(0.0) { sum, set in
-                sum + (set.weight ?? 0) * Double(set.reps ?? 0)
+                sum + equipmentType.trainingVolume(weight: set.weight, reps: set.reps)
             }
             return total > 0 ? total : nil
 

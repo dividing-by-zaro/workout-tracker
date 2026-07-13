@@ -194,7 +194,8 @@ struct SetRowView: View {
                 onValueChanged: sync,
                 textColor: DesignSystem.Colors.brickText,
                 showUnderline: false,
-                width: 44
+                width: 44,
+                allowsNegative: true
             )
             Text("lb")
                 .font(DesignSystem.Typography.sans(10, weight: .regular))
@@ -265,7 +266,7 @@ struct SetRowView: View {
                     .foregroundStyle(DesignSystem.Colors.ink3)
                     .frame(width: 28)
                     .allowsHitTesting(false)
-                NumericInputField(value: $workoutSet.weight, placeholder: "lb", incrementStep: 1.0, onValueChanged: sync)
+                NumericInputField(value: $workoutSet.weight, placeholder: "lb", incrementStep: 1.0, onValueChanged: sync, allowsNegative: true)
                 Text("\u{00D7}")
                     .font(DesignSystem.Typography.helper)
                     .foregroundStyle(DesignSystem.Colors.ink3)
@@ -275,7 +276,7 @@ struct SetRowView: View {
             }
         } else if equipmentType.tracksWeight && equipmentType.tracksReps {
             HStack(spacing: 6) {
-                NumericInputField(value: $workoutSet.weight, placeholder: "lb", incrementStep: 1.0, onValueChanged: sync)
+                NumericInputField(value: $workoutSet.weight, placeholder: "lb", incrementStep: 1.0, onValueChanged: sync, allowsNegative: true)
                 Text("\u{00D7}")
                     .font(DesignSystem.Typography.helper)
                     .foregroundStyle(DesignSystem.Colors.ink3)
@@ -299,7 +300,7 @@ struct SetRowView: View {
             }
         } else if equipmentType == .weightedDistance {
             HStack(spacing: 6) {
-                NumericInputField(value: $workoutSet.weight, placeholder: "lb", incrementStep: 1.0, onValueChanged: sync)
+                NumericInputField(value: $workoutSet.weight, placeholder: "lb", incrementStep: 1.0, onValueChanged: sync, allowsNegative: true)
                 NumericInputField(value: $workoutSet.distance, placeholder: "mi", incrementStep: 0.1, onValueChanged: sync)
             }
         } else if equipmentType == .distance {

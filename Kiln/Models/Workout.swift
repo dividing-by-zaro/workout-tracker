@@ -20,8 +20,12 @@ final class Workout {
     }
 
     var totalVolume: Double {
-        exercises.flatMap { $0.sets }.filter(\.isCompleted).reduce(0.0) { total, set in
-            total + (set.weight ?? 0) * Double(set.reps ?? 0)
+        exercises.reduce(0.0) { workoutTotal, workoutExercise in
+            let equipmentType = workoutExercise.exercise?.resolvedEquipmentType ?? .machineOther
+            let exerciseTotal = workoutExercise.sets.filter(\.isCompleted).reduce(0.0) { setTotal, set in
+                setTotal + equipmentType.trainingVolume(weight: set.weight, reps: set.reps)
+            }
+            return workoutTotal + exerciseTotal
         }
     }
 

@@ -3,11 +3,13 @@ import SwiftUI
 struct NumericKeyboardConfig {
     var showDecimalKey: Bool = true
     var incrementStep: Double = 1.0
+    var allowsNegative: Bool = false
 }
 
 enum NumericKey {
     case digit(Int)
     case decimal
+    case toggleSign
     case backspace
 }
 
@@ -62,11 +64,17 @@ struct NumericKeyboardView: View {
 
     private var bottomRow: some View {
         HStack(spacing: spacing) {
+            if config.allowsNegative {
+                digitKey(label: "−") {
+                    onKeyTap(.toggleSign)
+                }
+                .accessibilityLabel("Toggle negative sign")
+            }
             if config.showDecimalKey {
                 digitKey(label: ".") {
                     onKeyTap(.decimal)
                 }
-            } else {
+            } else if !config.allowsNegative {
                 Color.clear.frame(height: keyHeight)
             }
             digitKey(label: "0") {

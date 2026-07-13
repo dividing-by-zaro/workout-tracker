@@ -101,7 +101,7 @@ enum LiveActivityCache {
         guard var s = state else { return nil }
         switch s.equipmentCategory {
         case "weightReps", "weightDistance":
-            s.weight = max(0, (s.weight ?? 0) + delta)
+            s.weight = (s.weight ?? 0) + delta
         case "duration":
             s.duration = max(0, (s.duration ?? 0) + delta)
         case "distance":
