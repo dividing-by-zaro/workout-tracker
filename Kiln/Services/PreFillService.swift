@@ -35,7 +35,7 @@ struct PreFillService {
 
     static func preFillSets(for exercise: Exercise, setCount: Int, in workouts: [Workout]) -> [PreFillData] {
         guard let match = WorkoutHistoryService.mostRecentHistoricalMatch(
-            for: exercise.name,
+            forExerciseId: exercise.id,
             in: workouts,
             defaultSetCount: setCount
         ),
@@ -49,7 +49,7 @@ struct PreFillService {
 
     static func recommendation(for exercise: Exercise, in workouts: [Workout], defaultCount: Int = 3) -> PreFillRecommendation {
         guard let match = WorkoutHistoryService.mostRecentHistoricalMatch(
-            for: exercise.name,
+            forExerciseId: exercise.id,
             in: workouts,
             defaultSetCount: defaultCount
         ) else {

@@ -131,7 +131,11 @@ async def _upsert_exercises(db, user_id, exercises, now):
         if ex.exercise_notes is not None:
             set_doc["notes"] = ex.exercise_notes
         await db["exercises"].update_one(
-            {"user_id": user_id, "name": ex.exercise_name},
+            {
+                "user_id": user_id,
+                "name": ex.exercise_name,
+                "equipment_type": ex.equipment_type,
+            },
             {
                 "$set": set_doc,
                 "$setOnInsert": {
@@ -149,6 +153,9 @@ def _build_exercises_doc(exercises):
         {
             "order": ex.order,
             "exercise_name": ex.exercise_name,
+            "exercise_type": ex.exercise_type,
+            "body_part": ex.body_part,
+            "equipment_type": ex.equipment_type,
             "exercise_notes": ex.exercise_notes,
             "sets": [
                 {
@@ -265,6 +272,38 @@ async def delete_workout(local_id: str, request: Request):
         asyncio.create_task(delete_workout_from_glade(local_id))
 
     return {"status": "deleted", "local_id": local_id}
+
+
+@app.delete("/api/exercises")
+async def delete_exercise_metadata(
+    name: str,
+    request: Request,
+    equipment_type: str | None = None,
+):
+    """Remove obsolete exercise metadata after a client rename, merge, or delete.
+
+    Workout documents are updated separately and remain the source of truth for
+    historical exercise data.
+    """
+    user = request.state.user
+    db = get_db()
+    result = await db["exercises"].delete_one({
+        "user_id": user["_id"],
+        "name": name,
+        "equipment_type": equipment_type,
+    })
+
+    if result.deleted_count == 0:
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Exercise not found"},
+        )
+
+    return {
+        "status": "deleted",
+        "name": name,
+        "equipment_type": equipment_type,
+    }
 
 
 @app.get("/api/workouts/status")

@@ -4,7 +4,7 @@ import SwiftData
 @Model
 final class Exercise {
     var id: UUID
-    @Attribute(.unique) var name: String
+    var name: String
     var exerciseType: ExerciseType
     var defaultRestSeconds: Int
     var bodyPart: BodyPart?
@@ -17,6 +17,27 @@ final class Exercise {
 
     var resolvedEquipmentType: EquipmentType {
         equipmentType ?? EquipmentType.infer(from: name, fallback: exerciseType)
+    }
+
+    /// Exercise identity is name + equipment type. Names are normalized so case,
+    /// diacritics, and repeated whitespace do not create accidental duplicates.
+    var identityKey: String {
+        Self.identityKey(name: name, equipmentType: resolvedEquipmentType)
+    }
+
+    static func identityKey(name: String, equipmentType: EquipmentType) -> String {
+        "\(normalizedName(name))\u{001F}\(equipmentType.rawValue)"
+    }
+
+    static func normalizedName(_ name: String) -> String {
+        name
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .split(whereSeparator: \.isWhitespace)
+            .joined(separator: " ")
+            .folding(
+                options: [.caseInsensitive, .diacriticInsensitive],
+                locale: Locale(identifier: "en_US_POSIX")
+            )
     }
 
     init(

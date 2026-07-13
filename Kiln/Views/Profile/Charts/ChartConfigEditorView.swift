@@ -234,8 +234,13 @@ struct ChartConfigEditorView: View {
                         showingExercisePicker = false
                     } label: {
                         HStack {
-                            Text(exercise.name)
-                                .foregroundStyle(DesignSystem.Colors.ink)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(exercise.name)
+                                    .foregroundStyle(DesignSystem.Colors.ink)
+                                Text(exercise.resolvedEquipmentType.displayName)
+                                    .font(DesignSystem.Typography.helper)
+                                    .foregroundStyle(DesignSystem.Colors.ink3)
+                            }
                             Spacer()
                             if selectedExerciseId == exercise.id {
                                 Image(systemName: "checkmark")

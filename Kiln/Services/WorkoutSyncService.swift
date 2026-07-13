@@ -18,6 +18,10 @@ final class WorkoutSyncService {
         didSet { persistSet(pendingDeleteWorkoutIds, key: "pendingDeleteWorkoutIds") }
     }
 
+    private var pendingDeletedExerciseIdentities: Set<String> {
+        didSet { persistSet(pendingDeletedExerciseIdentities, key: "pendingDeletedExerciseIdentities") }
+    }
+
     var syncedCount: Int { syncedWorkoutIds.count }
     var totalCompletedCount: Int = 0
     var pendingCount: Int { max(0, totalCompletedCount - syncedWorkoutIds.count) }
@@ -34,6 +38,7 @@ final class WorkoutSyncService {
         self.syncedWorkoutIds = Self.loadSet(key: "syncedWorkoutIds")
         self.pendingEditWorkoutIds = Self.loadSet(key: "pendingEditWorkoutIds")
         self.pendingDeleteWorkoutIds = Self.loadSet(key: "pendingDeleteWorkoutIds")
+        self.pendingDeletedExerciseIdentities = Self.loadSet(key: "pendingDeletedExerciseIdentities")
     }
 
     // MARK: - Bulk Sync
@@ -90,6 +95,23 @@ final class WorkoutSyncService {
             }
             let success = await updateWorkout(workout)
             if !success { break }
+        }
+
+        // Exercise metadata removals come last. Their workout payloads must be
+        // updated before an old name is removed from the exercise collection.
+        if pendingEditWorkoutIds.isEmpty {
+            for storageKey in pendingDeletedExerciseIdentities {
+                guard let identity = ExerciseRemoteIdentity(storageKey: storageKey) else {
+                    pendingDeletedExerciseIdentities.remove(storageKey)
+                    continue
+                }
+                let success = await deleteExerciseMetadataFromServer(identity: identity)
+                if success {
+                    pendingDeletedExerciseIdentities.remove(storageKey)
+                } else {
+                    break
+                }
+            }
         }
     }
 
@@ -236,7 +258,7 @@ final class WorkoutSyncService {
                 "exercise_name": exercise?.name ?? "Unknown",
                 "exercise_type": exercise?.exerciseType.rawValue ?? "strength",
                 "body_part": exercise?.bodyPart?.rawValue as Any,
-                "equipment_type": exercise?.equipmentType?.rawValue as Any,
+                "equipment_type": exercise?.resolvedEquipmentType.rawValue as Any,
                 "sets": sets.map { dict in
                     dict.compactMapValues { $0 }
                 },
@@ -284,6 +306,59 @@ final class WorkoutSyncService {
 
         markWorkoutEdited(recent)
         Task { await updateWorkout(recent) }
+    }
+
+    /// Re-uploads every completed workout affected by an exercise rename, merge,
+    /// or deletion, then removes obsolete exercise metadata from the backup.
+    /// Workout updates run first so the server never temporarily loses the only
+    /// metadata record for a renamed or merged exercise.
+    func syncExerciseMutation(_ result: ExerciseMutationResult) {
+        for workout in result.affectedFinishedWorkouts {
+            markWorkoutEdited(workout)
+        }
+        if let identity = result.removedExerciseIdentity {
+            pendingDeletedExerciseIdentities.insert(identity.storageKey)
+        }
+
+        Task {
+            var allUpdatesSucceeded = true
+            for workout in result.affectedFinishedWorkouts {
+                if !(await updateWorkout(workout)) {
+                    allUpdatesSucceeded = false
+                }
+            }
+            if allUpdatesSucceeded, let identity = result.removedExerciseIdentity {
+                if await deleteExerciseMetadataFromServer(identity: identity) {
+                    pendingDeletedExerciseIdentities.remove(identity.storageKey)
+                }
+            }
+        }
+    }
+
+    @discardableResult
+    private func deleteExerciseMetadataFromServer(identity: ExerciseRemoteIdentity) async -> Bool {
+        guard !apiKey.isEmpty,
+              var components = URLComponents(string: baseURL + "/api/exercises") else { return false }
+        components.queryItems = [URLQueryItem(name: "name", value: identity.name)]
+        if let equipmentTypeRaw = identity.equipmentTypeRaw {
+            components.queryItems?.append(
+                URLQueryItem(name: "equipment_type", value: equipmentTypeRaw)
+            )
+        }
+        guard let url = components.url else { return false }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse else { return false }
+            return http.statusCode == 200 || http.statusCode == 404
+        } catch {
+            print("WorkoutSync: exercise metadata delete error: \(error.localizedDescription)")
+            return false
+        }
     }
 
     // MARK: - Server Sync Status

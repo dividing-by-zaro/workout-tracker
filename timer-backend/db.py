@@ -27,8 +27,15 @@ async def ensure_indexes():
     db = get_db()
 
     await db["users"].create_index("api_key", unique=True)
+
+    # Exercise identity used to be user + name. Drop that constraint before
+    # replacing it with user + normalized client name + equipment type, allowing
+    # e.g. Chest Press (Dumbbell) and Chest Press (Machine/Other).
+    exercise_indexes = await db["exercises"].index_information()
+    if "user_id_1_name_1" in exercise_indexes:
+        await db["exercises"].drop_index("user_id_1_name_1")
     await db["exercises"].create_index(
-        [("user_id", 1), ("name", 1)], unique=True
+        [("user_id", 1), ("name", 1), ("equipment_type", 1)], unique=True
     )
     await db["workouts"].create_index(
         [("user_id", 1), ("local_id", 1)], unique=True

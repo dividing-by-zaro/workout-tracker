@@ -9,9 +9,16 @@ struct TemplateExerciseRow: View {
             Image(systemName: "line.3.horizontal")
                 .foregroundStyle(DesignSystem.Colors.ink3)
 
-            Text(templateExercise.exercise?.name ?? "Unknown")
-                .font(DesignSystem.Typography.sans(14, weight: .regular))
-                .foregroundStyle(DesignSystem.Colors.ink)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(templateExercise.exercise?.name ?? "Unknown")
+                    .font(DesignSystem.Typography.sans(14, weight: .regular))
+                    .foregroundStyle(DesignSystem.Colors.ink)
+                if let exercise = templateExercise.exercise {
+                    Text(exercise.resolvedEquipmentType.displayName)
+                        .font(DesignSystem.Typography.helper)
+                        .foregroundStyle(DesignSystem.Colors.ink3)
+                }
+            }
 
             Spacer()
 

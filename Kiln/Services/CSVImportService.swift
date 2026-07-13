@@ -26,7 +26,7 @@ actor CSVImportService {
 
         // Load existing exercises
         if let existing = try? modelContext.fetch(FetchDescriptor<Exercise>()) {
-            for ex in existing { exerciseCache[ex.name] = ex }
+            for ex in existing { exerciseCache[ex.identityKey] = ex }
         }
 
         // Parse CSV (skip header)
@@ -79,29 +79,34 @@ actor CSVImportService {
             modelContext.insert(workout)
             recentWorkoutsByName[workoutName] = workout
 
-            // Group rows by exercise name
-            var exerciseGroups: [(name: String, rows: [[String]])] = []
+            // Group rows by exercise identity (name + equipment type).
+            var exerciseGroups: [(key: String, name: String, rows: [[String]])] = []
+            var currentExKey = ""
             var currentExName = ""
             var currentExRows: [[String]] = []
 
             for row in group.rows {
                 let exName = row[3]
-                if exName != currentExName {
-                    if !currentExName.isEmpty {
-                        exerciseGroups.append((name: currentExName, rows: currentExRows))
+                let equipment = row.count > 11 ? EquipmentType(rawValue: row[11]) : nil
+                let resolvedEquipment = equipment ?? .barbell
+                let exKey = Exercise.identityKey(name: exName, equipmentType: resolvedEquipment)
+                if exKey != currentExKey {
+                    if !currentExKey.isEmpty {
+                        exerciseGroups.append((key: currentExKey, name: currentExName, rows: currentExRows))
                     }
+                    currentExKey = exKey
                     currentExName = exName
                     currentExRows = []
                 }
                 currentExRows.append(row)
             }
-            if !currentExName.isEmpty {
-                exerciseGroups.append((name: currentExName, rows: currentExRows))
+            if !currentExKey.isEmpty {
+                exerciseGroups.append((key: currentExKey, name: currentExName, rows: currentExRows))
             }
 
             for (exIndex, exGroup) in exerciseGroups.enumerated() {
                 let exercise: Exercise
-                if let cached = exerciseCache[exGroup.name] {
+                if let cached = exerciseCache[exGroup.key] {
                     exercise = cached
                 } else {
                     let firstRow = exGroup.rows[0]
@@ -117,7 +122,7 @@ actor CSVImportService {
                         equipmentType: equipType
                     )
                     modelContext.insert(exercise)
-                    exerciseCache[exGroup.name] = exercise
+                    exerciseCache[exGroup.key] = exercise
                     exercisesCreated += 1
                 }
 

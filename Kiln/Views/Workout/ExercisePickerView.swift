@@ -18,6 +18,21 @@ struct ExercisePickerView: View {
         return exercises.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
     }
 
+    private var trimmedNewExerciseName: String {
+        newExerciseName
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .split(whereSeparator: \.isWhitespace)
+            .joined(separator: " ")
+    }
+
+    private var duplicateNewExercise: Exercise? {
+        let key = Exercise.identityKey(
+            name: trimmedNewExerciseName,
+            equipmentType: newEquipmentType
+        )
+        return exercises.first { $0.identityKey == key }
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -111,6 +126,12 @@ struct ExercisePickerView: View {
                     }
                     .pickerStyle(.menu)
                 }
+                if let duplicateNewExercise {
+                    Section {
+                        Text("\(duplicateNewExercise.name) (\(duplicateNewExercise.resolvedEquipmentType.displayName)) already exists.")
+                            .foregroundStyle(DesignSystem.Colors.brick2)
+                    }
+                }
                 Section("Body Part") {
                     Picker("Body Part", selection: $newBodyPart) {
                         ForEach(BodyPart.allCases, id: \.self) { part in
@@ -130,11 +151,11 @@ struct ExercisePickerView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Create") {
-                        guard !newExerciseName.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+                        guard !trimmedNewExerciseName.isEmpty, duplicateNewExercise == nil else { return }
                         let exerciseType: ExerciseType = newEquipmentType.tracksWeight ? .strength :
                             (newEquipmentType == .repsOnly ? .bodyweight : .cardio)
                         let exercise = Exercise(
-                            name: newExerciseName,
+                            name: trimmedNewExerciseName,
                             exerciseType: exerciseType,
                             bodyPart: newBodyPart,
                             equipmentType: newEquipmentType
@@ -147,7 +168,7 @@ struct ExercisePickerView: View {
                     }
                     .font(DesignSystem.Typography.button)
                     .foregroundStyle(DesignSystem.Colors.brick2)
-                    .disabled(newExerciseName.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(trimmedNewExerciseName.isEmpty || duplicateNewExercise != nil)
                 }
             }
         }

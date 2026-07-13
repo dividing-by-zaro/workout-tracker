@@ -435,6 +435,26 @@ final class WorkoutSessionManager {
         rescheduleBackendTimerIfNeeded()
     }
 
+    /// Refreshes active-workout state after a library-level exercise rename,
+    /// merge, or deletion. A direct deletion can remove the set that owns the
+    /// current rest timer, so clear that timer before rebuilding Live Activity.
+    func handleExerciseLibraryMutation(context: ModelContext) {
+        persistenceController.bind(context)
+        cancelPendingLiveActivitySync()
+
+        if let completedId = lastCompletedSetId,
+           activeWorkout?.exercises.flatMap(\.sets).contains(where: { $0.id == completedId }) != true {
+            stopRestTimer(cancelBackend: true)
+        }
+
+        persistenceController.saveNow(using: context)
+        guard activeWorkout != nil else { return }
+        let state = liveActivityService.buildContentState(from: self)
+        updateLiveActivity(with: state)
+        cacheCurrentState(using: state)
+        rescheduleBackendTimerIfNeeded()
+    }
+
     // MARK: - Reset
 
     func reset() {

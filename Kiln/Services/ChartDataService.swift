@@ -53,7 +53,7 @@ enum WorkoutHistoryService {
     }
 
     static func mostRecentHistoricalMatch(
-        for exerciseName: String,
+        forExerciseId exerciseId: UUID,
         in workouts: [Workout],
         defaultSetCount: Int
     ) -> HistoricalExerciseMatch? {
@@ -61,7 +61,7 @@ enum WorkoutHistoryService {
         var sourceSets: [WorkoutSet]?
 
         for workout in workouts {
-            guard let workoutExercise = workout.exercises.first(where: { $0.exercise?.name == exerciseName }) else {
+            guard let workoutExercise = workout.exercises.first(where: { $0.exercise?.id == exerciseId }) else {
                 continue
             }
 

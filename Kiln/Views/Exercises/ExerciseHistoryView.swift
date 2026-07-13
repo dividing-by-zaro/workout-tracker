@@ -3,9 +3,21 @@ import SwiftData
 
 struct ExerciseHistoryView: View {
     @Bindable var exercise: Exercise
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(WorkoutSessionManager.self) private var sessionManager
-    @Query(filter: #Predicate<Workout> { !$0.isInProgress }) private var finishedWorkouts: [Workout]
+    @Query(sort: \Exercise.name) private var allExercises: [Exercise]
+    @Query(sort: \Workout.startedAt, order: .reverse) private var allWorkouts: [Workout]
+    @Query(sort: \WorkoutTemplate.name) private var templates: [WorkoutTemplate]
+    @Query private var charts: [ProfileChartConfig]
+    @State private var showingRename = false
+    @State private var showingDeleteOptions = false
+    @State private var showingMerge = false
+    @State private var operationError: String?
+
+    private var finishedWorkouts: [Workout] {
+        allWorkouts.filter { !$0.isInProgress }
+    }
 
     private var finishedSessions: [ExerciseHistorySession] {
         WorkoutHistoryService.exerciseSessions(for: exercise, in: finishedWorkouts)
@@ -34,15 +46,89 @@ struct ExerciseHistoryView: View {
         .brickWallBackground()
         .navigationTitle(exercise.name)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button {
+                        showingRename = true
+                    } label: {
+                        Label("Rename", systemImage: "pencil")
+                    }
+                    Button(role: .destructive) {
+                        showingDeleteOptions = true
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+                .accessibilityLabel("Exercise actions")
+            }
+        }
+        .sheet(isPresented: $showingRename) {
+            ExerciseRenameSheet(currentName: exercise.name) { newName in
+                let result = try ExerciseManagementService.rename(
+                    exercise,
+                    to: newName,
+                    allExercises: allExercises,
+                    workouts: allWorkouts,
+                    charts: charts,
+                    context: modelContext
+                )
+                sessionManager.handleExerciseLibraryMutation(context: modelContext)
+                sessionManager.syncService?.syncExerciseMutation(result)
+            }
+        }
+        .sheet(isPresented: $showingMerge) {
+            ExerciseMergeFlowView(source: exercise) {
+                dismiss()
+            }
+        }
+        .confirmationDialog(
+            "Delete \(exercise.name) (\(exercise.resolvedEquipmentType.displayName))?",
+            isPresented: $showingDeleteOptions,
+            titleVisibility: .visible
+        ) {
+            if allExercises.count > 1 {
+                Button("Merge into Another Exercise") {
+                    showingMerge = true
+                }
+            }
+            Button(deletionPreview.completedLogCount > 0 ? "Delete Exercise & Logs" : "Delete Exercise", role: .destructive) {
+                deleteExercise()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(deletionMessage)
+        }
+        .alert(
+            "Exercise Could Not Be Changed",
+            isPresented: Binding(
+                get: { operationError != nil },
+                set: { if !$0 { operationError = nil } }
+            )
+        ) {
+            Button("OK") { operationError = nil }
+        } message: {
+            Text(operationError ?? "Unknown error")
+        }
     }
 
     // MARK: - Note header (inline, §3.2 pattern)
 
     private var noteHeader: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(exercise.resolvedEquipmentType.displayName)
-                .font(DesignSystem.Typography.helper12)
-                .foregroundStyle(DesignSystem.Colors.ink3)
+            HStack(spacing: 8) {
+                Text(exercise.resolvedEquipmentType.displayName)
+                    .font(DesignSystem.Typography.helper12)
+                    .foregroundStyle(DesignSystem.Colors.ink3)
+                Text("·")
+                    .foregroundStyle(DesignSystem.Colors.ink3)
+                Text("Logged \(finishedSessions.count) time\(finishedSessions.count == 1 ? "" : "s")")
+                    .font(DesignSystem.Typography.helper12)
+                    .foregroundStyle(DesignSystem.Colors.ink3)
+                    .accessibilityLabel("Logged \(finishedSessions.count) time\(finishedSessions.count == 1 ? "" : "s")")
+            }
 
             NotesSection(
                 title: "Exercise Note",
@@ -131,5 +217,58 @@ struct ExerciseHistoryView: View {
 
     private func setIndexLabel(for order: Int) -> String {
         String(format: "%02d", order + 1)
+    }
+
+    // MARK: - Exercise management
+
+    private var deletionPreview: ExerciseDeletionPreview {
+        ExerciseManagementService.deletionPreview(
+            for: exercise,
+            workouts: allWorkouts,
+            templates: templates,
+            charts: charts
+        )
+    }
+
+    private var deletionMessage: String {
+        let impact = deletionPreview
+        var parts: [String] = []
+        if impact.completedLogCount > 0 {
+            parts.append("\(impact.completedLogCount) logged workout\(impact.completedLogCount == 1 ? "" : "s")")
+        }
+        if impact.workoutEntryCount > 0 {
+            parts.append("\(impact.workoutEntryCount) workout entr\(impact.workoutEntryCount == 1 ? "y" : "ies")")
+        }
+        if impact.setCount > 0 {
+            parts.append("\(impact.setCount) set\(impact.setCount == 1 ? "" : "s")")
+        }
+        if impact.templateCount > 0 {
+            parts.append("\(impact.templateCount) template entr\(impact.templateCount == 1 ? "y" : "ies")")
+        }
+        if impact.chartCount > 0 {
+            parts.append("\(impact.chartCount) custom graph\(impact.chartCount == 1 ? "" : "s")")
+        }
+
+        if parts.isEmpty {
+            return "This exercise is unused and will be permanently deleted."
+        }
+        return "Deleting without merging permanently removes " + parts.joined(separator: ", ") + ". Merge instead to preserve this data."
+    }
+
+    private func deleteExercise() {
+        do {
+            let result = try ExerciseManagementService.delete(
+                exercise,
+                workouts: allWorkouts,
+                templates: templates,
+                charts: charts,
+                context: modelContext
+            )
+            sessionManager.handleExerciseLibraryMutation(context: modelContext)
+            sessionManager.syncService?.syncExerciseMutation(result)
+            dismiss()
+        } catch {
+            operationError = error.localizedDescription
+        }
     }
 }

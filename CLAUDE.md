@@ -116,7 +116,7 @@ KilnWidgets/
 - Exercises seeded from Strong CSV import + created on-the-fly
 - Weight in lbs only
 - Templates auto-created from import for "New Legs/full Body A" and "New Legs/full Body B" only
-- Pre-fill from most recent workout containing that exercise (matched by unique exercise name, not persistentModelID); previous column shows "55 lbs x 8" format. Pre-fill data cached in `@State` dict on views (keyed by exercise UUID) — computed once on appear and on exercise add/swap/remove, not on every re-render.
+- Exercise identity is normalized name + resolved equipment type, so same-name variants such as Chest Press (Dumbbell) and Chest Press (Machine/Other) can coexist. Historical relationships and pre-fill match by exercise UUID, preventing data from crossing between variants. Pre-fill data is cached in `@State` dictionaries keyed by exercise UUID.
 - **EquipmentType** (9 cases) with `equipmentCategory` computed property mapping to 5 display categories: weightReps, repsOnly, duration, distance, weightDistance — used by Live Activity for adaptive input fields
 - **BodyPart** (9 cases) with custom PNG icons in asset catalog (template rendering mode for tint color)
 - Body part + equipment type are pre-enriched in the CSV — no runtime inference needed for imported data
