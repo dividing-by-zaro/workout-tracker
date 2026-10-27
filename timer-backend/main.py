@@ -353,7 +353,10 @@ async def schedule_timer(req: ScheduleRequest):
         except Exception as e:
             print(f"APNS send failed: {e}")
         finally:
-            pending_timers.pop(req.device_id, None)
+            # Only drop our own entry — a newer timer for this device may have replaced it
+            entry = pending_timers.get(req.device_id)
+            if entry is not None and entry.task is asyncio.current_task():
+                pending_timers.pop(req.device_id, None)
 
     task = asyncio.create_task(_fire())
     pending_timers[req.device_id] = PendingTimer(task=task)

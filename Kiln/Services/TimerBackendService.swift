@@ -10,6 +10,7 @@ final class TimerBackendService {
 
     init() {
         self.baseURL = Bundle.main.object(forInfoDictionaryKey: "TimerBackendURL") as? String ?? ""
+        KeychainService.upgradeAccessibility(key: "api-key")
     }
 
     func scheduleTimer(

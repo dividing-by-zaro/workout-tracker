@@ -32,8 +32,7 @@ final class LiveActivityService {
 
     func updateActivity(
         _ activity: Activity<WorkoutActivityAttributes>,
-        state: WorkoutActivityAttributes.ContentState,
-        alertConfiguration: AlertConfiguration? = nil
+        state: WorkoutActivityAttributes.ContentState
     ) {
         let content = ActivityContent(state: state, staleDate: nil)
         var bgTask: UIBackgroundTaskIdentifier = .invalid
@@ -44,7 +43,7 @@ final class LiveActivityService {
             }
         }
         Task.detached(priority: .userInitiated) {
-            await activity.update(content, alertConfiguration: alertConfiguration)
+            await activity.update(content)
             await MainActor.run {
                 if bgTask != .invalid {
                     UIApplication.shared.endBackgroundTask(bgTask)
@@ -65,37 +64,72 @@ final class LiveActivityService {
     }
 
     func buildContentState(from sessionManager: WorkoutSessionManager) -> WorkoutActivityAttributes.ContentState {
-        if let (exercise, set) = sessionManager.findCurrentSet() {
-            let equipmentType = exercise.exercise?.resolvedEquipmentType ?? .barbell
-            let category = equipmentType.equipmentCategory
-            let setIndex = exercise.sortedSets.firstIndex(where: { $0.id == set.id }) ?? 0
+        guard let (exercise, set) = sessionManager.findCurrentSet() else {
+            return completedContentState()
+        }
+        var state = contentState(for: set, in: exercise)
+        applyRestTimer(sessionManager.restTimer, to: &state)
+        return state
+    }
 
-            let summaries = exercise.sortedSets.map { s in
-                SetSummary(
-                    label: formatSetSummaryLabel(for: s, category: category),
-                    isCompleted: s.isCompleted
-                )
+    /// Every incomplete set in progression order (current set first), so lock screen
+    /// intents can advance the Live Activity from the cache without touching SwiftData.
+    func buildQueue(from sessionManager: WorkoutSessionManager) -> [LiveActivityCache.QueuedSet] {
+        guard let workout = sessionManager.activeWorkout else { return [] }
+        var queue: [LiveActivityCache.QueuedSet] = []
+        for exercise in workout.sortedExercises {
+            let restDuration = exercise.exercise?.defaultRestSeconds ?? 120
+            for set in exercise.sortedSets where !set.isCompleted {
+                queue.append(LiveActivityCache.QueuedSet(
+                    setId: set.id,
+                    workoutExerciseId: exercise.id,
+                    restDuration: restDuration,
+                    state: contentState(for: set, in: exercise)
+                ))
             }
+        }
+        return queue
+    }
 
-            return WorkoutActivityAttributes.ContentState(
-                exerciseName: exercise.exercise?.name ?? "Exercise",
-                setNumber: setIndex + 1,
-                totalSetsInExercise: exercise.sortedSets.count,
-                setSummaries: summaries,
-                weight: set.weight,
-                reps: set.reps,
-                duration: set.seconds,
-                distance: set.distance,
-                equipmentCategory: category,
-                isRestTimerActive: sessionManager.restTimer.isRunning,
-                restTimerEndDate: sessionManager.restTimer.endDate ?? .distantPast,
-                restTotalSeconds: sessionManager.restTimer.totalSeconds,
-                isWorkoutComplete: false
+    func applyRestTimer(_ restTimer: RestTimerService, to state: inout WorkoutActivityAttributes.ContentState) {
+        state.isRestTimerActive = restTimer.isRunning
+        state.restTimerEndDate = restTimer.endDate ?? .distantPast
+        state.restTotalSeconds = restTimer.totalSeconds
+    }
+
+    /// State for `set` as if every set before it in the exercise is done.
+    private func contentState(for set: WorkoutSet, in exercise: WorkoutExercise) -> WorkoutActivityAttributes.ContentState {
+        let equipmentType = exercise.exercise?.resolvedEquipmentType ?? .barbell
+        let category = equipmentType.equipmentCategory
+        let sortedSets = exercise.sortedSets
+        let setIndex = sortedSets.firstIndex(where: { $0.id == set.id }) ?? 0
+
+        let summaries = sortedSets.enumerated().map { index, s in
+            SetSummary(
+                label: formatSetSummaryLabel(for: s, category: category),
+                isCompleted: s.isCompleted || index < setIndex
             )
         }
 
-        // All sets complete
         return WorkoutActivityAttributes.ContentState(
+            exerciseName: exercise.exercise?.name ?? "Exercise",
+            setNumber: setIndex + 1,
+            totalSetsInExercise: sortedSets.count,
+            setSummaries: summaries,
+            weight: set.weight,
+            reps: set.reps,
+            duration: set.seconds,
+            distance: set.distance,
+            equipmentCategory: category,
+            isRestTimerActive: false,
+            restTimerEndDate: .distantPast,
+            restTotalSeconds: 0,
+            isWorkoutComplete: false
+        )
+    }
+
+    func completedContentState() -> WorkoutActivityAttributes.ContentState {
+        WorkoutActivityAttributes.ContentState(
             exerciseName: "",
             setNumber: 0,
             totalSetsInExercise: 0,

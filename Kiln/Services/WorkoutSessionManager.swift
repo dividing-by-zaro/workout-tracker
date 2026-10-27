@@ -134,8 +134,8 @@ final class WorkoutSessionManager {
         }
         activeWorkout = interrupted
         startElapsedTimer()
-        restTimer.syncFromPersistedState()
         syncCacheToSwiftData()
+        restTimer.syncFromPersistedState()
         reconnectLiveActivity()
         showResumedToast = true
     }
@@ -261,71 +261,34 @@ final class WorkoutSessionManager {
         )
     }
 
-    private func buildCompletionTransition(
-        for cachedState: WorkoutActivityAttributes.ContentState,
-        setId: UUID
-    ) -> SetCompletionTransition {
-        SetCompletionTransition(
-            setId: setId,
-            isLastSetInExercise: cachedState.setNumber == cachedState.totalSetsInExercise,
-            restDuration: LiveActivityCache.restDuration > 0 ? LiveActivityCache.restDuration : 120
-        )
-    }
-
+    /// Single canonical set-completion transition. `lockScreenNextState` is set only on
+    /// the Live Activity intent path, which must never touch SwiftData (doing so forces
+    /// FaceID on the lock screen) — it advances through the precomputed cache queue instead.
     private func applySetCompletion(
         _ transition: SetCompletionTransition,
-        cachedState: inout WorkoutActivityAttributes.ContentState?,
-        recordPendingCompletion: Bool
+        lockScreenNextState: WorkoutActivityAttributes.ContentState? = nil
     ) {
         lastCompletedSetId = transition.setId
 
-        if recordPendingCompletion {
+        if !transition.isLastSetInExercise {
+            startRestTimer(duration: transition.restDuration)
+        }
+
+        let state: WorkoutActivityAttributes.ContentState
+        if var nextState = lockScreenNextState {
             LiveActivityCache.recordCompletion(setId: transition.setId)
-            // Mark the set completed in-memory so subsequent content-state rebuilds
-            // advance to the next set before foreground persistence catches up.
-            applyPendingCompletionsInMemory()
-        }
-
-        if transition.isLastSetInExercise {
-            updateLiveActivity()
-            cacheCurrentState(preserveDirty: recordPendingCompletion)
-            return
-        }
-
-        startRestTimer(duration: transition.restDuration)
-
-        if var cachedState {
-            let completedIndex = cachedState.setNumber - 1
-            cachedState.isRestTimerActive = true
-            cachedState.restTimerEndDate = restTimer.endDate ?? Date.now.addingTimeInterval(Double(transition.restDuration))
-            cachedState.restTotalSeconds = transition.restDuration
-            if completedIndex >= 0 && completedIndex < cachedState.setSummaries.count {
-                cachedState.setSummaries[completedIndex].isCompleted = true
-            }
-            cachedState.setNumber += 1
-            // On the intent path (recordPendingCompletion), preserve dirty markers so
-            // any pre-completion +/- adjustments survive until the app foregrounds.
-            let nextSetId = findCurrentSet()?.1.id
-            if recordPendingCompletion {
-                LiveActivityCache.updatePreservingDirty(
-                    cachedState,
-                    setId: nextSetId,
-                    restDuration: transition.restDuration
-                )
-            } else {
-                LiveActivityCache.cache(
-                    cachedState,
-                    setId: nextSetId,
-                    restDuration: transition.restDuration
-                )
-            }
-            updateLiveActivity(with: cachedState)
+            liveActivityService.applyRestTimer(restTimer, to: &nextState)
+            LiveActivityCache.advance(to: nextState)
+            state = nextState
         } else {
-            updateLiveActivity()
-            cacheCurrentState(preserveDirty: recordPendingCompletion)
+            state = liveActivityService.buildContentState(from: self)
+            cacheCurrentState(using: state)
         }
+        updateLiveActivity(with: state)
 
-        sendTimerScheduleToBackend(duration: transition.restDuration)
+        if !transition.isLastSetInExercise {
+            sendTimerScheduleToBackend(duration: transition.restDuration, nextState: state)
+        }
     }
 
     // MARK: - Complete Set
@@ -351,12 +314,7 @@ final class WorkoutSessionManager {
         workoutSet.completedAt = .now
         persistenceController.saveNow(using: context)
 
-        var cachedState: WorkoutActivityAttributes.ContentState?
-        applySetCompletion(
-            buildCompletionTransition(for: workoutSet),
-            cachedState: &cachedState,
-            recordPendingCompletion: false
-        )
+        applySetCompletion(buildCompletionTransition(for: workoutSet))
     }
 
     // MARK: - Delete Set
@@ -640,15 +598,15 @@ final class WorkoutSessionManager {
         cacheCurrentState()
     }
 
-    func updateLiveActivity(alertConfiguration: AlertConfiguration? = nil) {
+    func updateLiveActivity() {
         guard let activity = currentActivity else { return }
         let state = liveActivityService.buildContentState(from: self)
-        liveActivityService.updateActivity(activity, state: state, alertConfiguration: alertConfiguration)
+        liveActivityService.updateActivity(activity, state: state)
     }
 
-    func updateLiveActivity(with state: WorkoutActivityAttributes.ContentState, alertConfiguration: AlertConfiguration? = nil) {
+    func updateLiveActivity(with state: WorkoutActivityAttributes.ContentState) {
         guard let activity = currentActivity else { return }
-        liveActivityService.updateActivity(activity, state: state, alertConfiguration: alertConfiguration)
+        liveActivityService.updateActivity(activity, state: state)
     }
 
     private func endLiveActivity() {
@@ -660,21 +618,30 @@ final class WorkoutSessionManager {
     }
 
     func reconnectLiveActivity() {
-        guard activeWorkout != nil, currentActivity == nil else { return }
-        for activity in Activity<WorkoutActivityAttributes>.activities {
-            currentActivity = activity
-            // Restore persisted push token immediately; also start observing
-            // in case iOS issues a new token for this activity.
-            if currentPushToken == nil, let cached = LiveActivityCache.pushToken {
-                currentPushToken = cached
-            }
-            observePushToken(for: activity)
+        guard activeWorkout != nil else { return }
+        if currentActivity != nil || attachToExistingActivity() {
             updateLiveActivity()
             cacheCurrentState()
             return
         }
         // No existing activity found — start a new one
         startLiveActivity()
+    }
+
+    /// Re-binds to a running Live Activity after the process was relaunched (e.g. by a
+    /// lock screen intent after iOS killed the app). ActivityKit + cache only — no SwiftData.
+    @discardableResult
+    private func attachToExistingActivity() -> Bool {
+        if currentActivity != nil { return true }
+        guard let activity = Activity<WorkoutActivityAttributes>.activities.first else { return false }
+        currentActivity = activity
+        // Restore persisted push token immediately; also start observing
+        // in case iOS issues a new token for this activity.
+        if currentPushToken == nil, let cached = LiveActivityCache.pushToken {
+            currentPushToken = cached
+        }
+        observePushToken(for: activity)
+        return true
     }
 
     private func observePushToken(for activity: Activity<WorkoutActivityAttributes>) {
@@ -686,111 +653,109 @@ final class WorkoutSessionManager {
         }
     }
 
-    private func cacheCurrentState(
-        using state: WorkoutActivityAttributes.ContentState? = nil,
-        preserveDirty: Bool = false
-    ) {
+    /// App-side only (reads SwiftData). Lock screen intents use `LiveActivityCache.advance`.
+    private func cacheCurrentState(using state: WorkoutActivityAttributes.ContentState? = nil) {
         let resolvedState = state ?? liveActivityService.buildContentState(from: self)
-        let current = findCurrentSet()
-        let setId = current?.1.id
-        let restDuration = current?.0.exercise?.defaultRestSeconds ?? 120
-        if preserveDirty {
-            LiveActivityCache.updatePreservingDirty(resolvedState, setId: setId, restDuration: restDuration)
-        } else {
-            LiveActivityCache.cache(resolvedState, setId: setId, restDuration: restDuration)
-        }
+        LiveActivityCache.cache(resolvedState, queue: liveActivityService.buildQueue(from: self))
     }
 
     // MARK: - Intent Handlers (called from LiveActivityIntents)
+    //
+    // These run from the lock screen, possibly in a freshly relaunched process with no
+    // active workout loaded. They must only touch LiveActivityCache, ActivityKit, the rest
+    // timer and notifications — any SwiftData access forces FaceID.
 
     func completeCurrentSetFromIntent() {
+        prepareForIntent()
+        let queue = LiveActivityCache.queue
         guard let state = LiveActivityCache.state,
-              let setId = LiveActivityCache.setId,
-              !state.isWorkoutComplete else { return }
+              !state.isWorkoutComplete,
+              let current = queue.first,
+              current.setId == LiveActivityCache.setId else { return }
 
-        var cachedState: WorkoutActivityAttributes.ContentState? = state
+        let next = queue.dropFirst().first
+        let isLastSetInExercise = next?.workoutExerciseId != current.workoutExerciseId
+        var nextState = next?.state ?? liveActivityService.completedContentState()
+        if !isLastSetInExercise {
+            // Same exercise: carry summaries forward so lock screen adjustments stay visible.
+            var summaries = state.setSummaries
+            let completedIndex = state.setNumber - 1
+            if summaries.indices.contains(completedIndex) {
+                summaries[completedIndex].isCompleted = true
+            }
+            nextState.setSummaries = summaries
+        }
+
         applySetCompletion(
-            buildCompletionTransition(for: state, setId: setId),
-            cachedState: &cachedState,
-            recordPendingCompletion: true
+            SetCompletionTransition(
+                setId: current.setId,
+                isLastSetInExercise: isLastSetInExercise,
+                restDuration: current.restDuration
+            ),
+            lockScreenNextState: nextState
         )
     }
 
     func adjustWeightFromIntent(delta: Double) {
-        if checkAndHandleExpiredTimer() { return }
+        prepareForIntent()
         guard let state = LiveActivityCache.adjustWeight(delta: delta) else { return }
         updateLiveActivity(with: state)
     }
 
     func adjustRepsFromIntent(delta: Int) {
-        if checkAndHandleExpiredTimer() { return }
+        prepareForIntent()
         guard let state = LiveActivityCache.adjustReps(delta: delta) else { return }
         updateLiveActivity(with: state)
     }
 
     func skipRestTimerFromIntent() {
-        skipRestTimerInternal()
+        prepareForIntent()
+        stopRestTimer(cancelBackend: true)
+        LiveActivityCache.clearRest()
+        if let state = LiveActivityCache.state {
+            updateLiveActivity(with: state)
+        }
     }
 
     func skipRestTimer() {
-        skipRestTimerInternal()
-    }
-
-    private func skipRestTimerInternal() {
-        if checkAndHandleExpiredTimer() { return }
         stopRestTimer(cancelBackend: true)
-        applyPendingCompletionsInMemory()
-        LiveActivityCache.clearRest()
-        updateLiveActivity()
-        cacheCurrentState()
+        syncLiveActivityState()
     }
 
-    /// Returns true if the timer had expired and was handled (caller should return early)
-    @discardableResult
-    func checkAndHandleExpiredTimer() -> Bool {
-        guard restTimer.isRunning,
-              let endDate = restTimer.endDate,
-              endDate.timeIntervalSinceNow <= 0 else { return false }
-        restTimer.stop()
-        handleTimerExpired(playSound: true)
-        return true
+    /// Restores process state an intent depends on, and silently clears a rest period
+    /// that already ended (the backend push has likely moved the Live Activity to the
+    /// next set), so the tap applies to the set instead of reviving the timer view.
+    private func prepareForIntent() {
+        attachToExistingActivity()
+        if !restTimer.isRunning {
+            restTimer.syncFromPersistedState()
+        }
+        if restTimer.isRunning, let endDate = restTimer.endDate, endDate.timeIntervalSinceNow <= 0 {
+            restTimer.stop()
+            handleTimerExpired(playSound: false)
+        }
+        if let state = LiveActivityCache.state, state.isRestTimerActive, state.restTimerEndDate <= .now {
+            LiveActivityCache.clearRest()
+        }
     }
 
     // MARK: - Timer Expiry Handler
 
+    /// The rest notification is the single source of the alert sound, so the Live
+    /// Activity update carries no AlertConfiguration. Outside the foreground this is
+    /// cache-only, so it is safe from lock screen intents and background expiry.
     private func handleTimerExpired(playSound: Bool = true) {
         lastCompletedSetId = nil
-
-        applyPendingCompletionsInMemory()
-
-        if playSound {
-            let alert = AlertConfiguration(
-                title: "Rest Complete",
-                body: "Time for your next set!",
-                sound: .default
-            )
-            updateLiveActivity(alertConfiguration: alert)
-        } else {
+        if !playSound {
             notificationService.cancelRestTimer()
-            updateLiveActivity()
         }
-        cacheCurrentState()
-    }
-
-    /// Marks pending completion set IDs as complete in the in-memory model graph
-    /// (no context.save — just so buildContentState traversal sees them).
-    private func applyPendingCompletionsInMemory() {
-        guard let workout = activeWorkout else { return }
-        let pendingIds = LiveActivityCache.pendingCompletionIds
-        guard !pendingIds.isEmpty else { return }
-
-        for exercise in workout.sortedExercises {
-            for set in exercise.sortedSets {
-                if pendingIds.contains(set.id) && !set.isCompleted {
-                    set.isCompleted = true
-                    set.completedAt = .now
-                }
-            }
+        if UIApplication.shared.applicationState == .active, activeWorkout != nil {
+            syncLiveActivityState()
+            return
+        }
+        LiveActivityCache.clearRest()
+        if let state = LiveActivityCache.state {
+            updateLiveActivity(with: state)
         }
     }
 
@@ -798,6 +763,11 @@ final class WorkoutSessionManager {
 
     func handleForegroundResume() {
         cancelPendingLiveActivitySync()
+
+        // Sync cached lock screen changes to SwiftData before anything rebuilds state
+        if isWorkoutInProgress {
+            syncCacheToSwiftData()
+        }
 
         let wasTimerRunning = restTimer.isRunning
         restTimer.syncFromPersistedState()
@@ -807,9 +777,6 @@ final class WorkoutSessionManager {
         }
 
         guard isWorkoutInProgress else { return }
-
-        // Sync cached lock screen changes to SwiftData
-        syncCacheToSwiftData()
 
         if currentActivity == nil {
             reconnectLiveActivity()
@@ -833,18 +800,16 @@ final class WorkoutSessionManager {
             }
         }
 
-        // Apply weight/reps adjustments to the set that was actually adjusted
-        // (not findCurrentSet(), which may have shifted after completions)
-        if pending.isDirty, let cachedState = pending.currentState,
-           let dirtySetId = pending.dirtySetId {
+        // Apply weight/reps adjustments to each set that was adjusted on the lock screen
+        for (adjustedSetId, values) in pending.adjustedValues {
             let descriptor = FetchDescriptor<WorkoutSet>(
-                predicate: #Predicate<WorkoutSet> { $0.id == dirtySetId }
+                predicate: #Predicate<WorkoutSet> { $0.id == adjustedSetId }
             )
             if let adjustedSet = try? context.fetch(descriptor).first {
-                adjustedSet.weight = cachedState.weight
-                adjustedSet.reps = cachedState.reps
-                adjustedSet.seconds = cachedState.duration
-                adjustedSet.distance = cachedState.distance
+                adjustedSet.weight = values.weight
+                adjustedSet.reps = values.reps
+                adjustedSet.seconds = values.duration
+                adjustedSet.distance = values.distance
             }
         }
 
@@ -854,10 +819,10 @@ final class WorkoutSessionManager {
 
     // MARK: - Timer Backend
 
-    private func sendTimerScheduleToBackend(duration: Int) {
+    /// `nextState` is the set shown after rest; the backend pushes it with rest cleared.
+    private func sendTimerScheduleToBackend(duration: Int, nextState: WorkoutActivityAttributes.ContentState) {
         guard let pushToken = currentPushToken else { return }
-        // Build the next-set content state (timer finished, show next set)
-        var nextState = liveActivityService.buildContentState(from: self)
+        var nextState = nextState
         nextState.isRestTimerActive = false
         nextState.restTimerEndDate = .distantPast
         nextState.restTotalSeconds = 0
@@ -885,7 +850,7 @@ final class WorkoutSessionManager {
               let endDate = restTimer.endDate else { return }
         let remaining = Int(endDate.timeIntervalSinceNow)
         guard remaining > 0 else { return }
-        sendTimerScheduleToBackend(duration: remaining)
+        sendTimerScheduleToBackend(duration: remaining, nextState: liveActivityService.buildContentState(from: self))
     }
 
     // MARK: - Elapsed Timer
