@@ -254,14 +254,11 @@ struct ActiveWorkoutView: View {
                                 .foregroundStyle(DesignSystem.Colors.brickText)
                             Text(diff.description)
                                 .font(DesignSystem.Typography.helper)
-                                .foregroundStyle(DesignSystem.Colors.brickText.opacity(0.85))
+                                .foregroundStyle(DesignSystem.Colors.brickText)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(
-                            BrickFill(cornerRadius: DesignSystem.CornerRadius.button)
-                                .opacity(0.85)
-                        )
+                        .background(BrickFill(cornerRadius: DesignSystem.CornerRadius.button))
                         .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.button))
                         .mortarShadow()
                     }

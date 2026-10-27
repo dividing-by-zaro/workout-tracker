@@ -66,7 +66,7 @@ struct SetRowView: View {
             Text(indexLabel)
                 .font(DesignSystem.Typography.setIndex)
                 .tracking(1.2)
-                .foregroundStyle(DesignSystem.Colors.brickText.opacity(0.7))
+                .foregroundStyle(DesignSystem.Colors.brickText)
                 .frame(width: 14, alignment: .leading)
                 .contentShape(Rectangle())
                 .onTapGesture { handleTap() }
@@ -118,12 +118,12 @@ struct SetRowView: View {
         if let text = previousLabelText {
             Text(text)
                 .font(DesignSystem.Typography.prevLine)
-                .foregroundStyle(DesignSystem.Colors.brickText.opacity(0.7))
+                .foregroundStyle(DesignSystem.Colors.brickText)
                 .lineLimit(1)
         } else {
             Text("—")
                 .font(DesignSystem.Typography.prevLine)
-                .foregroundStyle(DesignSystem.Colors.brickText.opacity(0.7))
+                .foregroundStyle(DesignSystem.Colors.brickText)
         }
     }
 
@@ -165,14 +165,14 @@ struct SetRowView: View {
                 if equipmentType == .weightedBodyweight {
                     Text("+BW")
                         .font(DesignSystem.Typography.sans(10, weight: .regular))
-                        .foregroundStyle(DesignSystem.Colors.brickText.opacity(0.5))
+                        .foregroundStyle(DesignSystem.Colors.brickText)
                 }
                 brickWeightInput(sync: sync)
                 brickRepsInput(sync: sync)
             } else if equipmentType == .repsOnly {
                 Text("BW")
                     .font(DesignSystem.Typography.sans(10, weight: .regular))
-                    .foregroundStyle(DesignSystem.Colors.brickText.opacity(0.5))
+                    .foregroundStyle(DesignSystem.Colors.brickText)
                 brickRepsInput(sync: sync)
             } else if equipmentType == .weightedDistance {
                 brickWeightInput(sync: sync)
@@ -193,13 +193,14 @@ struct SetRowView: View {
                 incrementStep: 1.0,
                 onValueChanged: sync,
                 textColor: DesignSystem.Colors.brickText,
+                placeholderColor: DesignSystem.Colors.brickText,
                 showUnderline: false,
                 width: 44,
                 allowsNegative: true
             )
             Text("lb")
                 .font(DesignSystem.Typography.sans(10, weight: .regular))
-                .foregroundStyle(DesignSystem.Colors.brickText.opacity(0.5))
+                .foregroundStyle(DesignSystem.Colors.brickText)
         }
     }
 
@@ -214,6 +215,7 @@ struct SetRowView: View {
                 incrementStep: 1.0,
                 onValueChanged: sync,
                 textColor: DesignSystem.Colors.brickText,
+                placeholderColor: DesignSystem.Colors.brickText,
                 showUnderline: false,
                 width: 36
             )
@@ -228,12 +230,13 @@ struct SetRowView: View {
                 incrementStep: 0.1,
                 onValueChanged: sync,
                 textColor: DesignSystem.Colors.brickText,
+                placeholderColor: DesignSystem.Colors.brickText,
                 showUnderline: false,
                 width: 44
             )
             Text("mi")
                 .font(DesignSystem.Typography.sans(10, weight: .regular))
-                .foregroundStyle(DesignSystem.Colors.brickText.opacity(0.5))
+                .foregroundStyle(DesignSystem.Colors.brickText)
         }
     }
 
@@ -245,12 +248,13 @@ struct SetRowView: View {
                 incrementStep: 5.0,
                 onValueChanged: sync,
                 textColor: DesignSystem.Colors.brickText,
+                placeholderColor: DesignSystem.Colors.brickText,
                 showUnderline: false,
                 width: 44
             )
             Text("s")
                 .font(DesignSystem.Typography.sans(10, weight: .regular))
-                .foregroundStyle(DesignSystem.Colors.brickText.opacity(0.5))
+                .foregroundStyle(DesignSystem.Colors.brickText)
         }
     }
 

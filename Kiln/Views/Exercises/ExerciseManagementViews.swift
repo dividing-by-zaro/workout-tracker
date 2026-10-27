@@ -23,7 +23,7 @@ struct ExerciseRenameSheet: View {
         NavigationStack {
             Form {
                 Section("Exercise name") {
-                    TextField("Exercise name", text: $name)
+                    TextField("Exercise name", text: $name, prompt: Text("Exercise name").foregroundStyle(DesignSystem.Colors.ink3))
                         .textInputAutocapitalization(.words)
                         .autocorrectionDisabled()
                 }

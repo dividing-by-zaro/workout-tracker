@@ -13,18 +13,21 @@ enum DesignSystem {
         static let hair            = Color.black.opacity(0.06)
         static let mortar          = Color(red: 0xE8/255.0, green: 0xDD/255.0, blue: 0xC9/255.0)   // #E8DDC9 — rest timer fill
 
-        // Ink (text)
+        // Ink (text). All three meet WCAG AA (4.5:1) on every surface, including
+        // the darkest ones (bgDeeper brick wall, mortar rest-timer fill).
         static let ink             = Color(red: 0x1B/255.0, green: 0x16/255.0, blue: 0x12/255.0)   // #1B1612
-        static let ink2            = Color(red: 0x5C/255.0, green: 0x54/255.0, blue: 0x4A/255.0)   // #5C544A
-        static let ink3            = Color(red: 0x9A/255.0, green: 0x90/255.0, blue: 0x89/255.0)   // #9A9089
+        static let ink2            = Color(red: 0x4B/255.0, green: 0x45/255.0, blue: 0x3D/255.0)   // #4B453D — 7.2:1 on bgDeeper
+        static let ink3            = Color(red: 0x69/255.0, green: 0x60/255.0, blue: 0x5A/255.0)   // #69605A — 4.6:1 on bgDeeper/mortar
 
         // Brick accent family
-        static let brick1          = Color(red: 0xB8/255.0, green: 0x54/255.0, blue: 0x3A/255.0)   // #B8543A
+        // brick1 darkened from #B8543A so brickText on the gradient top and brick1
+        // text on bg/card both clear 4.5:1.
+        static let brick1          = Color(red: 0xA6/255.0, green: 0x4C/255.0, blue: 0x34/255.0)   // #A64C34
         static let brick2          = Color(red: 0x9C/255.0, green: 0x3E/255.0, blue: 0x26/255.0)   // #9C3E26
         static let brickShade      = Color(red: 0x7A/255.0, green: 0x2D/255.0, blue: 0x18/255.0)   // #7A2D18
         static let brickText       = Color(red: 0xFB/255.0, green: 0xE8/255.0, blue: 0xDA/255.0)   // #FBE8DA
         static let accent          = Color(red: 0xC2/255.0, green: 0x6B/255.0, blue: 0x3F/255.0)   // #C26B3F
-        static let red             = Color(red: 0xB4/255.0, green: 0x3B/255.0, blue: 0x2E/255.0)   // #B43B2E
+        static let red             = Color(red: 0xA6/255.0, green: 0x36/255.0, blue: 0x2A/255.0)   // #A6362A — 4.9:1 on mortar
 
         // Tab bar active pill
         static let tabActiveBg     = Color(red: 0xF4/255.0, green: 0xE5/255.0, blue: 0xD7/255.0)   // #F4E5D7
@@ -49,7 +52,8 @@ enum DesignSystem {
         // Charts
         static let chartLine       = brick1
         static let chartArea       = brick1.opacity(0.14)
-        static let chartGrid       = ink3.opacity(0.18)
+        // Pinned to the original ink3 tone so darkening ink3 doesn't heavy-up gridlines.
+        static let chartGrid       = Color(red: 0x9A/255.0, green: 0x90/255.0, blue: 0x89/255.0).opacity(0.18)
     }
 
     // MARK: - Shadows

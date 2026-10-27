@@ -19,7 +19,7 @@ struct TemplateEditorView: View {
         NavigationStack {
             Form {
                 Section("Template Name") {
-                    TextField("e.g. Push Day", text: $name)
+                    TextField("e.g. Push Day", text: $name, prompt: Text("e.g. Push Day").foregroundStyle(DesignSystem.Colors.ink3))
                         .font(DesignSystem.Typography.sans(15, weight: .regular))
                         .foregroundStyle(DesignSystem.Colors.ink)
                 }

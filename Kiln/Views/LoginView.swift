@@ -43,7 +43,7 @@ struct LoginView: View {
                     .multilineTextAlignment(.center)
                     .padding(.top, 16)
 
-                TextField("API key", text: $apiKey)
+                TextField("API key", text: $apiKey, prompt: Text("API key").foregroundStyle(DesignSystem.Colors.ink3))
                     .textContentType(.password)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)

@@ -7,6 +7,8 @@ struct CustomInputTextField: UIViewRepresentable {
     let config: NumericKeyboardConfig
     var onValueChanged: (() -> Void)? = nil
     var textColor: Color = DesignSystem.Colors.ink
+    /// Explicit placeholder color — UIKit's default `placeholderText` is ~1.6:1 on white.
+    var placeholderColor: Color = DesignSystem.Colors.ink3
 
     func makeCoordinator() -> Coordinator {
         Coordinator(value: $value, config: config, onValueChanged: onValueChanged)
@@ -14,7 +16,10 @@ struct CustomInputTextField: UIViewRepresentable {
 
     func makeUIView(context: Context) -> UITextField {
         let textField = UITextField()
-        textField.placeholder = placeholder
+        textField.attributedPlaceholder = NSAttributedString(
+            string: placeholder,
+            attributes: [.foregroundColor: UIColor(placeholderColor)]
+        )
         textField.borderStyle = .none
         textField.textAlignment = .center
         textField.font = UIFont.monospacedSystemFont(ofSize: 15, weight: .bold)
@@ -211,6 +216,7 @@ struct NumericInputField: View {
     var incrementStep: Double = 1.0
     var onValueChanged: (() -> Void)? = nil
     var textColor: Color = DesignSystem.Colors.ink
+    var placeholderColor: Color = DesignSystem.Colors.ink3
     var showUnderline: Bool = true
     var width: CGFloat = 56
     var allowsNegative: Bool = false
@@ -225,7 +231,8 @@ struct NumericInputField: View {
                 allowsNegative: allowsNegative
             ),
             onValueChanged: onValueChanged,
-            textColor: textColor
+            textColor: textColor,
+            placeholderColor: placeholderColor
         )
         .frame(width: width, height: 30)
         .overlay(alignment: .bottom) {
@@ -244,6 +251,7 @@ struct IntInputField: View {
     var incrementStep: Double = 1.0
     var onValueChanged: (() -> Void)? = nil
     var textColor: Color = DesignSystem.Colors.ink
+    var placeholderColor: Color = DesignSystem.Colors.ink3
     var showUnderline: Bool = true
     var width: CGFloat = 56
 
@@ -263,7 +271,8 @@ struct IntInputField: View {
                 incrementStep: incrementStep
             ),
             onValueChanged: onValueChanged,
-            textColor: textColor
+            textColor: textColor,
+            placeholderColor: placeholderColor
         )
         .frame(width: width, height: 30)
         .overlay(alignment: .bottom) {

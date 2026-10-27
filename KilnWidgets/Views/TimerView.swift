@@ -67,7 +67,7 @@ struct TimerView: View {
                 } else if summary.isCompleted {
                     Text(summary.label)
                         .font(WidgetDesign.Typo.mono(11))
-                        .foregroundColor(WidgetDesign.Color.textSecondary.opacity(0.55))
+                        .foregroundColor(WidgetDesign.Color.textTertiary)
                         .lineLimit(1)
                 } else {
                     Text(summary.label)

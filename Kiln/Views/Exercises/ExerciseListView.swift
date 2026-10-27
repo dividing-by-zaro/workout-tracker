@@ -54,7 +54,7 @@ struct ExerciseListView: View {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 13))
                 .foregroundStyle(DesignSystem.Colors.ink3)
-            TextField("Search exercises", text: $searchText)
+            TextField("Search exercises", text: $searchText, prompt: Text("Search exercises").foregroundStyle(DesignSystem.Colors.ink3))
                 .font(DesignSystem.Typography.sans(14, weight: .regular))
                 .foregroundStyle(DesignSystem.Colors.ink)
                 .textFieldStyle(.plain)

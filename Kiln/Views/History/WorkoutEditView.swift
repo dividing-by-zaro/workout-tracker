@@ -96,7 +96,7 @@ struct WorkoutEditView: View {
     }
 
     private var nameField: some View {
-        TextField("Workout Name", text: $workout.name)
+        TextField("Workout Name", text: $workout.name, prompt: Text("Workout Name").foregroundStyle(DesignSystem.Colors.ink3))
             .font(DesignSystem.Typography.h2Display)
             .foregroundStyle(DesignSystem.Colors.ink)
             .padding(DesignSystem.Spacing.md)

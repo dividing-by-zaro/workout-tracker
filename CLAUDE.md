@@ -104,7 +104,7 @@ KilnWidgets/
 ├── Views/                         # SetView, TimerView, CompleteView (lock screen presentations),
 │                                  #   SetSummariesFlow (wrapping space-around Layout for the set row)
 ├── WorkoutLiveActivityIntents+Widget.swift  # Stub perform() bodies
-└── Assets.xcassets/               # 7 widget color sets (WidgetPrimary, WidgetBackground, etc.)
+└── Assets.xcassets/               # 14 widget color sets (WidgetPrimary, WidgetBackground, WidgetTextTertiary, etc.) mirroring DesignSystem tokens
 ```
 
 ## Key Decisions
@@ -120,7 +120,8 @@ KilnWidgets/
 - **EquipmentType** (9 cases) with `equipmentCategory` computed property mapping to 5 display categories: weightReps, repsOnly, duration, distance, weightDistance — used by Live Activity for adaptive input fields
 - **BodyPart** (9 cases) with custom PNG icons in asset catalog (template rendering mode for tint color)
 - Body part + equipment type are pre-enriched in the CSV — no runtime inference needed for imported data
-- **Theme**: Fire light theme — warm cream backgrounds, fire red primary accent (#BF3326), warm brown/charcoal secondary tones, grain texture overlay (multiply blend), warm-tinted shadows
+- **Theme**: Kiln v3 fired-clay light theme — parchment backgrounds, brick accent (brick1 #A64C34 → brick2 #9C3E26 gradient), warm ink text tones, grain texture overlay (multiply blend), warm-tinted shadows
+- **Text contrast**: every text color pair must meet WCAG AA (4.5:1) on the darkest surface it can sit on (bgDeeper brick wall #E8DFCE, mortar #E8DDC9). Use solid tokens (`ink2`/`ink3`, widget `textTertiary`) for de-emphasis rather than `.opacity()` on text; placeholders get an explicit `ink3` color.
 - **DesignSystem** expanded: 14 color tokens, Shadows (cardShadow, elevatedShadow), CornerRadius, GrainedBackground modifier (multiply blend, 0.12 opacity), CardGrainOverlay view (0.06 opacity)
 - Forced light mode via Info.plist `UIUserInterfaceStyle: Light` + `.preferredColorScheme(.light)`
 - **Live Activity timer display**: `Text(timerInterval:countsDown:)` shows "1:--" on Simulator (reduced fidelity mode) — works correctly on real device. `ProgressView(timerInterval:countsDown:)` for auto-updating progress bar.

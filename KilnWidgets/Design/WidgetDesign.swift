@@ -13,6 +13,9 @@ enum WidgetDesign {
         static let surface       = SwiftUI.Color("WidgetSurface")
         static let textPrimary   = SwiftUI.Color("WidgetTextPrimary")
         static let textSecondary = SwiftUI.Color("WidgetTextSecondary")
+        /// De-emphasized text (completed set summaries). Solid color instead of an
+        /// opacity so it still clears 4.5:1 on the white activity background.
+        static let textTertiary  = SwiftUI.Color("WidgetTextTertiary")
         static let destructive   = SwiftUI.Color("WidgetDestructive")
         static let timerBg       = SwiftUI.Color("WidgetTimerBackground")
         static let brick1        = SwiftUI.Color("WidgetBrick1")

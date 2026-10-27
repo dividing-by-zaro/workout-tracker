@@ -116,7 +116,7 @@ struct ExercisePickerView: View {
         NavigationStack {
             Form {
                 Section("Exercise Name") {
-                    TextField("Exercise name", text: $newExerciseName)
+                    TextField("Exercise name", text: $newExerciseName, prompt: Text("Exercise name").foregroundStyle(DesignSystem.Colors.ink3))
                 }
                 Section("Equipment Type") {
                     Picker("Equipment", selection: $newEquipmentType) {

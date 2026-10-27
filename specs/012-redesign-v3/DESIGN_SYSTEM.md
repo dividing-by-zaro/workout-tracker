@@ -38,18 +38,18 @@ All values are sRGB hex (or rgba). The palette is warm-neutral with a single fir
 | Token | Value | Usage |
 |---|---|---|
 | `--ink` | `#1B1612` | Primary text, titles, input values |
-| `--ink-2` | `#5C544A` | Secondary text, body copy |
-| `--ink-3` | `#9A9089` | Tertiary text, labels, helper copy |
+| `--ink-2` | `#4B453D` | Secondary text, body copy |
+| `--ink-3` | `#69605A` | Tertiary text, labels, helper copy |
 
 ### 2.3 Brick (the accent family)
 
 | Token | Value | Usage |
 |---|---|---|
-| `--brick-1` | `#B8543A` | Brick top (gradient start), "Firing" indicator dot, primary brick accent |
+| `--brick-1` | `#A64C34` | Brick top (gradient start), "Firing" indicator dot, primary brick accent |
 | `--brick-2` | `#9C3E26` | Brick bottom (gradient end), tabbar active text |
 | `--brick-shade` | `#7A2D18` | 1px hard-shadow under bricks (mortar line) |
 | `--accent` | `#C26B3F` | Reserved for secondary accents (e.g. orange CTA), use sparingly |
-| `--red` | `#B43B2E` | Destructive — End button, Skip text |
+| `--red` | `#A6362A` | Destructive — End button, Skip text |
 
 Bricks are always rendered as **a vertical gradient from `--brick-1` → `--brick-2`**, with a `0 1px 0 --brick-shade, 0 2px 4px rgba(122,45,24,.18)` shadow to simulate the mortar line + ambient depth.
 
@@ -230,7 +230,7 @@ All three live in the same vertical stack inside the exercise card, separated by
 This is the centerpiece. A brick is a gradient-filled, full-bleed-but-inset row:
 
 ```css
-background: linear-gradient(180deg, #B8543A 0%, #9C3E26 100%);
+background: linear-gradient(180deg, #A64C34 0%, #9C3E26 100%);
 border-radius: 4px;
 padding: 10px 12px;
 color: #FBE8DA;
@@ -481,7 +481,7 @@ This is the single most important visual decision in the Live Activity — it re
 
 ```css
 width: 72; height: 32; padding: 0;
-background: linear-gradient(180deg, #B8543A 0%, #9C3E26 100%);
+background: linear-gradient(180deg, #A64C34 0%, #9C3E26 100%);
 border: none;
 border-radius: 4px;       /* sharp, like a brick */
 color: #FBE8DA;
